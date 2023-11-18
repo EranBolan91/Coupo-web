@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { CouponBrand } from "../types/Types";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
@@ -15,9 +16,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// const getCoupons = async () => {
-//     const getCoupons = await getDocs(collection(db, "users"));
-//         querySnapshot.forEach((doc) => {
-//         console.log(`${doc.id} => ${doc.data()}`);
-// });
-// }
+const getCouponsBrands = async () => {
+  const couponsBrands: CouponBrand[] = [];
+  const getCoupons = await getDocs(collection(db, "Brands"));
+  getCoupons.forEach((doc) => {
+    couponsBrands.push(doc.data() as CouponBrand);
+  });
+  return couponsBrands;
+};
+
+export { getCouponsBrands };
