@@ -1,6 +1,13 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
-import { CouponBrand } from "../types/Types";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  setDoc,
+  doc,
+  addDoc,
+} from "firebase/firestore";
+import { Coupon } from "../types/Types";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
@@ -17,12 +24,27 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const getCouponsBrands = async () => {
-  const couponsBrands: CouponBrand[] = [];
+  const couponsBrands: string[] = [];
   const getCoupons = await getDocs(collection(db, "Brands"));
-  getCoupons.forEach((doc) => {
-    couponsBrands.push(doc.data() as CouponBrand);
+  getCoupons.forEach((coupon) => {
+    couponsBrands.push(coupon.data().brand);
   });
   return couponsBrands;
 };
 
-export { getCouponsBrands };
+const getCategories = async () => {
+  const categories: string[] = [];
+  const getCategories = await getDocs(collection(db, "Category"));
+  getCategories.forEach((category) => {
+    categories.push(category.data().category);
+  });
+  return categories;
+};
+
+const saveNewCoupon = async (coupon: Coupon) => {
+  await addDoc(collection(db, "Coupons"), {
+    coupon,
+  });
+};
+
+export { getCouponsBrands, saveNewCoupon, getCategories };
