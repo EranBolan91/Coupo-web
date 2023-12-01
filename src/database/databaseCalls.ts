@@ -1,13 +1,14 @@
 import { initializeApp } from "firebase/app";
 import {
-  getFirestore,
-  collection,
-  getDocs,
-  setDoc,
-  doc,
-  addDoc,
-} from "firebase/firestore";
+  getStorage,
+  ref,
+  getDownloadURL,
+  uploadBytesResumable,
+} from "firebase/storage";
 import { Coupon } from "../types/Types";
+import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
+import toast from "react-hot-toast";
+import { get } from "http";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
@@ -22,6 +23,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage();
 
 const getCouponsBrands = async () => {
   const couponsBrands: string[] = [];
@@ -47,4 +49,23 @@ const saveNewCoupon = async (coupon: Coupon) => {
   });
 };
 
-export { getCouponsBrands, saveNewCoupon, getCategories };
+const saveImageBrand = async (imgFile: any, imageName: string) => {
+  const storageRef = ref(storage, imageName + ".svg");
+  const uploadTask = uploadBytesResumable(storageRef, imgFile);
+  uploadTask.on(
+    "state_changed",
+    (snapshot) => {},
+    (error) => console.log(error),
+    async () => {
+      const downloadImgURL = await getDownloadURL(uploadTask.snapshot.ref);
+      addDoc(collection(db, "Brands"), {
+        brand: imageName,
+        imgUrl: downloadImgURL,
+      }).catch((err) => {
+        throw new Error(err);
+      });
+    }
+  );
+};
+
+export { getCouponsBrands, saveNewCoupon, getCategories, saveImageBrand };

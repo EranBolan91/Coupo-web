@@ -1,12 +1,12 @@
 import { Fragment, useState } from "react";
 import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
-import { useController } from "react-hook-form";
 
 type Props = {
   selectTitle: string;
   data: any[];
   control: any;
+  handleChange: (value: string) => void;
 };
 
 function classNames(...classes: string[]) {
@@ -16,8 +16,14 @@ function classNames(...classes: string[]) {
 const Select = (props: Props) => {
   const [selected, setSelected] = useState<string>(props.data[0]);
   const { data } = props;
+
+  const handleSelectChange = (value: string) => {
+    setSelected(value);
+    props.handleChange(value);
+  };
+
   return (
-    <Listbox value={selected} onChange={setSelected}>
+    <Listbox value={selected} onChange={handleSelectChange}>
       {({ open }) => (
         <>
           <Listbox.Label className="block text-sm font-medium leading-6 text-gray-900">
@@ -59,11 +65,6 @@ const Select = (props: Props) => {
                       {({ selected, active }) => (
                         <>
                           <div className="flex items-center">
-                            {/* <img
-                            src={person.avatar}
-                            alt=""
-                            className="h-5 w-5 flex-shrink-0 rounded-full"
-                          /> */}
                             <span
                               className={classNames(
                                 selected ? "font-semibold" : "font-normal",
