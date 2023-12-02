@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { Coupon } from "../types/Types";
+import { Coupon, CouponBrand } from "../types/Types";
 import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
 import {
   getStorage,
@@ -23,11 +23,24 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage();
 
+const getAllCoupons = async () => {
+  const coupons: Coupon[] = [];
+  const getCoupons = await getDocs(collection(db, "Coupons"));
+  getCoupons.forEach((coupon) => {
+    coupons.push(coupon.data().coupon);
+  });
+  console.log(coupons);
+  return coupons;
+};
+
 const getCouponsBrands = async () => {
-  const couponsBrands: string[] = [];
+  const couponsBrands: CouponBrand[] = [];
   const getCoupons = await getDocs(collection(db, "Brands"));
   getCoupons.forEach((coupon) => {
-    couponsBrands.push(coupon.data().brand);
+    couponsBrands.push({
+      brand: coupon.data().brand,
+      imgURL: coupon.data().imgUrl,
+    });
   });
   return couponsBrands;
 };
@@ -66,4 +79,10 @@ const saveImageBrand = async (imgFile: any, imageName: string) => {
   );
 };
 
-export { getCouponsBrands, saveNewCoupon, getCategories, saveImageBrand };
+export {
+  getCouponsBrands,
+  saveNewCoupon,
+  getCategories,
+  saveImageBrand,
+  getAllCoupons,
+};

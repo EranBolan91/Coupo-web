@@ -1,5 +1,4 @@
 type Coupon = {
-  id: string;
   name: string;
   description: string;
   imgUrl: string;
@@ -11,4 +10,9 @@ type Coupon = {
   updatedAt: Date;
 };
 
-export type { Coupon };
+type CouponBrand = {
+  brand: string;
+  imgURL: string;
+};
+
+export type { Coupon, CouponBrand };

@@ -1,46 +1,65 @@
-type Coupon = {
-  id: number;
-  name: string;
-  description: string;
-  imgUrl: string;
-  code: string;
-  category: string;
-  expiry: string;
-  discount: string;
-  createdAt: string;
-  updatedAt: string;
-};
+import { Coupon } from "../../types/Types";
+import styled from "styled-components";
+
+interface StyledDivProps {
+  left?: boolean;
+  right?: boolean;
+}
+
+const CouponWraper = styled.div`
+  background: linear-gradient(135deg, #7158fe, #9d4de6);
+  color: #fff;
+  text-align: center;
+  padding: 25px 70px;
+  border-radius: 15px;
+  box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.15);
+  position: relative;
+  margin-bottom: 20px;
+  max-width: 40%;
+  width: 40%;
+`;
+
+const Circle = styled.div<StyledDivProps>`
+  background: #242424;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: ${(props) => (props.left ? "-25px" : "unset")};
+  right: ${(props) => (props.right ? "-25px" : "unset")};
+`;
 
 const CouponCard = (props: Coupon) => {
+  const date = new Date(props.expiry).toLocaleDateString();
   return (
-    <div className="card w-1/3 md:w-1/2 lg:w-1/2 h-32 shadow grid grid-cols-12 my-2 container bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-md">
-      <div className="col-span-2">
-        {/* <div
-          style={{ right: "1rem", top: "3rem", backgroundColor: "#242424" }}
-          className="rounded-full bg-white w-8 h-8 relative"
-        ></div> */}
-        <img src={props.imgUrl}></img>
+    <CouponWraper>
+      <div className="text-center rounded-2xl">
+        <img className="m-auto" height={150} width={150} src={props.imgUrl} />
+        <h3 className="text-2xl font-normal my-3 text-4xl">
+          {props.description}
+        </h3>
+        <div className="flex items-center w-fit m-auto my-3">
+          <span
+            style={{ borderRight: "0px" }}
+            className="border-dashed border border-neutral-50 py-3 px-5"
+          >
+            {props.code}
+          </span>
+          <span
+            style={{ color: "#7158fe" }}
+            className="border-solid border cursor-pointer py-3 px-5 bg-white"
+          >
+            Copy
+          </span>
+        </div>
+        <span className="my-2 font-bold">{props.discount}% off</span>
+        <p className="text-base mt-2"> Expires on {date}</p>
+        <Circle left />
+        <Circle right />
       </div>
-      <div className="col-span-8 flex flex-col justify-center">
-        <h1 className="text-sm md:text-lg lg:text-lg font-bold">
-          {props.name}
-        </h1>
-        <p>{props.description}</p>
-      </div>
-      <div className="col-span-2 flex flex-col justify-center items-center ">
-        {/* <div
-          style={{ left: "7.2rem", backgroundColor: "#242424" }}
-          className="rounded-full bg-white w-8 h-8 relative"
-        ></div> */}
-        <span className="text-xs md:text-md lg:text-lg">{props.code}</span>
-        <button
-          type="button"
-          className="bg-gradient-to-r from-green-400 to-blue-500 hover:from-pink-500 hover:to-yellow-500"
-        >
-          Copy
-        </button>
-      </div>
-    </div>
+    </CouponWraper>
   );
 };
 

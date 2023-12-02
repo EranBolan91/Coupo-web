@@ -1,6 +1,6 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { useEffect, useState } from "react";
-import { Coupon } from "../../types/Types";
+import { Coupon, CouponBrand } from "../../types/Types";
 import Select from "./components/Select";
 import { DevTool } from "@hookform/devtools";
 import {
@@ -8,22 +8,25 @@ import {
   saveNewCoupon,
   getCategories,
 } from "../../database/databaseCalls";
+import toast from "react-hot-toast";
 
 const AdminPage = () => {
-  const [couponBrands, setCouponBrands] = useState<string[]>([]);
+  const [couponBrands, setCouponBrands] = useState<CouponBrand[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [brand, setBrand] = useState<string>("");
+  const [brand, setBrand] = useState<CouponBrand>({ brand: "", imgURL: "" });
   const [category, setCategory] = useState<string>("");
   const form = useForm<Coupon>();
   const {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors },
   } = form;
 
   const handleBrandChange = (value: string) => {
-    setBrand(value);
+    const imgUrl = couponBrands.find((brand) => brand.brand === value)?.imgURL;
+    setBrand({ brand: value, imgURL: imgUrl ? imgUrl : "" });
   };
 
   const handleCategoryChange = (value: string) => {
@@ -33,9 +36,14 @@ const AdminPage = () => {
   const onSubmit: SubmitHandler<Coupon> = (data) => {
     data.createdAt = new Date();
     data.category = category;
-    data.name = brand;
-    data.imgUrl = "https://cdn.worldvectorlogo.com/logos/asus-rog-1.svg";
-    saveNewCoupon(data);
+    data.name = brand.brand;
+    data.imgUrl = brand.imgURL;
+    toast.promise(saveNewCoupon(data), {
+      loading: "Saving coupon...",
+      success: `${brand.brand} coupon saved!`,
+      error: "Error saving coupon",
+    });
+    reset();
   };
 
   useEffect(() => {
@@ -73,7 +81,7 @@ const AdminPage = () => {
                   {couponBrands.length > 0 && (
                     <Select
                       selectTitle="Brand"
-                      data={couponBrands}
+                      data={couponBrands.map((brand) => brand.brand)}
                       control={register["name"]}
                       handleChange={handleBrandChange}
                     />
