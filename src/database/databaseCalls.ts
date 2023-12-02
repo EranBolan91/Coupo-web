@@ -1,14 +1,12 @@
 import { initializeApp } from "firebase/app";
+import { Coupon } from "../types/Types";
+import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
 import {
   getStorage,
   ref,
   getDownloadURL,
   uploadBytesResumable,
 } from "firebase/storage";
-import { Coupon } from "../types/Types";
-import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
-import toast from "react-hot-toast";
-import { get } from "http";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,

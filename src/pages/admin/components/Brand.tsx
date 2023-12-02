@@ -1,4 +1,3 @@
-import Sidebar from "./Sidebar";
 import { DevTool } from "@hookform/devtools";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { PhotoIcon } from "@heroicons/react/24/solid";
@@ -48,16 +47,9 @@ export default function Brand() {
     }
   };
 
-  const handleCancel = () => {
-    window.location.reload();
-  };
-
   return (
     <div className="grid grid-cols-12">
-      <div className="col-span-2">
-        <Sidebar />
-      </div>
-      <div className="p-3 h-screen col-span-10">
+      <div className="h-screen col-span-12">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col justify-center items-center bg-white p-1 h-full"

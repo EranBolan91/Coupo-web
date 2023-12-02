@@ -2,7 +2,6 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { Coupon } from "../../types/Types";
 import Select from "./components/Select";
-import Sidebar from "./components/Sidebar";
 import { DevTool } from "@hookform/devtools";
 import {
   getCouponsBrands,
@@ -57,10 +56,7 @@ const AdminPage = () => {
 
   return (
     <div className="grid grid-cols-12">
-      <div className="col-span-2">
-        <Sidebar />
-      </div>
-      <div className="p-3 h-screen col-span-10">
+      <div className="h-screen col-span-12">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex flex-col justify-center items-center bg-white p-1 h-full"
