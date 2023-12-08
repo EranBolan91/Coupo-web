@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   BookOpenIcon,
   Bars3BottomRightIcon,
@@ -39,8 +39,8 @@ const Header = () => {
             open ? "top-12" : "top-[-490px]"
           }`}
         >
-          {Links.map((link) => (
-            <li className="md:ml-8 md:my-0 my-7 font-semibold">
+          {Links.map((link, index) => (
+            <li key={index} className="md:ml-8 md:my-0 my-7 font-semibold">
               <a
                 href={link.link}
                 className="text-gray-800 hover:text-blue-400 duration-500"

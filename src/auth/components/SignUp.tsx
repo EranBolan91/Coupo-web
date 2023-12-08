@@ -1,7 +1,35 @@
+import { useForm, SubmitHandler } from "react-hook-form";
+import { UserAuth } from "../AuthProvider";
+
+type SignUpForm = {
+  email: string;
+  password: string;
+};
+
 const SignUp = () => {
+  const { SigninWthGoogle, createUserWithEmailPassword } = UserAuth();
+  const form = useForm<SignUpForm>();
+  const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = form;
+
   const handleSigninWithGoogle = async () => {
     try {
-      await SigninWthGoogle();
+      SigninWthGoogle();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleSigninWithEmailPassword: SubmitHandler<SignUpForm> = async (
+    data
+  ) => {
+    try {
+      createUserWithEmailPassword(data.email, data.password);
+      reset();
     } catch (err) {
       console.log(err);
     }
@@ -22,7 +50,10 @@ const SignUp = () => {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form className="space-y-6" action="#" method="POST">
+          <form
+            className="space-y-6"
+            onSubmit={handleSubmit(handleSigninWithEmailPassword)}
+          >
             <div>
               <label
                 htmlFor="email"
@@ -33,13 +64,16 @@ const SignUp = () => {
               <div className="mt-2">
                 <input
                   id="email"
-                  name="email"
                   type="email"
                   autoComplete="email"
-                  required
+                  {...register("email", { required: "Email is required" })}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 />
               </div>
+              <p style={{ fontStyle: "oblique" }} className="text-red-600">
+                {" "}
+                {errors?.email?.message}{" "}
+              </p>
             </div>
 
             <div>
@@ -62,13 +96,22 @@ const SignUp = () => {
               <div className="mt-2">
                 <input
                   id="password"
-                  name="password"
                   type="password"
                   autoComplete="current-password"
-                  required
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Password must be at least 8 characters",
+                    },
+                  })}
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                 />
               </div>
+              <p style={{ fontStyle: "oblique" }} className="text-red-600">
+                {" "}
+                {errors?.password?.message}{" "}
+              </p>
             </div>
 
             <div>
@@ -93,7 +136,7 @@ const SignUp = () => {
                     version="1.1"
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 48 48"
-                    style={{ display: "block;" }}
+                    style={{ display: "block" }}
                   >
                     <path
                       fill="#EA4335"
@@ -136,6 +179,3 @@ const SignUp = () => {
 };
 
 export default SignUp;
-function SigninWthGoogle() {
-  throw new Error("Function not implemented.");
-}

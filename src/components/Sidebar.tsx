@@ -2,24 +2,28 @@ import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { BsArrowLeftCircle } from "react-icons/bs";
+import { RiLogoutBoxLine } from "react-icons/ri";
 import { AiFillPieChart } from "react-icons/ai";
 import { SiFuturelearn } from "react-icons/si";
 import { SiOpenaccess } from "react-icons/si";
 import { CgProfile } from "react-icons/cg";
+import { UserAuth } from "../auth/AuthProvider";
+import { Tooltip } from "react-tooltip";
 // import Logo from "../assets/images/logo.svg";
 // import HamburgerButton from "./HamburgerMenuButton/HamburgerButton";
+
+const Menus = [
+  { title: "Dashboard", path: "/dashboard", src: <AiFillPieChart /> },
+  { title: "Course", path: "/course", src: <SiFuturelearn /> },
+  { title: "Profile", path: "/profile", src: <CgProfile /> },
+  { title: "Signin", path: "/login", src: <SiOpenaccess />, gap: "true" },
+];
 
 const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation();
-
-  const Menus = [
-    { title: "Dashboard", path: "/dashboard", src: <AiFillPieChart /> },
-    { title: "Course", path: "/course", src: <SiFuturelearn /> },
-    { title: "Profile", path: "/profile", src: <CgProfile /> },
-    { title: "Signin", path: "/login", src: <SiOpenaccess />, gap: "true" },
-  ];
+  const { user } = UserAuth();
 
   return (
     <>
@@ -50,6 +54,7 @@ const Sidebar = () => {
           {Menus.map((menu, index) => (
             <Link to={menu.path} key={index}>
               <li
+                id={menu.title}
                 className={`flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700
                         ${menu.gap ? "mt-9" : "mt-2"} ${
                   location.pathname === menu.path &&
@@ -65,8 +70,37 @@ const Sidebar = () => {
                   {menu.title}
                 </span>
               </li>
+              {!open && (
+                <Tooltip anchorSelect={`#${menu.title}`} place="right">
+                  {" "}
+                  {menu.title}
+                </Tooltip>
+              )}
             </Link>
           ))}
+          {user && (
+            <Link to={""}>
+              <li
+                id="logout"
+                className={`logout flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 mt-2`}
+              >
+                <span className="text-2xl">
+                  <RiLogoutBoxLine />
+                </span>
+                <span
+                  className={`${
+                    !open && "hidden"
+                  } origin-left duration-300 hover:block`}
+                >
+                  {""}
+                </span>
+              </li>
+              <Tooltip anchorSelect=".logout" place="right">
+                {" "}
+                Logout
+              </Tooltip>
+            </Link>
+          )}
         </ul>
       </div>
       {/* Mobile Menu */}
