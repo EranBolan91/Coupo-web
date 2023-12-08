@@ -18,8 +18,9 @@
   -webkit-text-size-adjust: 100%;
 }
 
-#root{
+#root {
   width: 100%;
+  height: 100vh;
 }
 a {
   font-weight: 500;
@@ -53,13 +54,6 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-/* button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-} */
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -74,31 +68,9 @@ button:focus-visible {
   }
 }
 
-.right::after{
+.right::after {
   content: "";
   border-left: 3px dashed #696db3;
   height: 80%;
   margin-right: 1rem;
 }
-
-/* .card::before{
-  content: "";
-  border-radius: 50%;
-  width: 2rem;
-  height: 2rem;
-  background-color: #242424;
-  position: relative;
-  top: 3.1rem;
-  right: 1rem;
-} */
-
-/* .card::after{
-  content: "";
-  border-radius: 50%;
-  width: 2rem;
-  height: 2rem;
-  background-color: #242424;
-  position: relative;
-  top: 3.1rem;
-  left: 3.2rem;
-} */

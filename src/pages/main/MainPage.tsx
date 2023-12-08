@@ -28,13 +28,17 @@ const MainPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <div className="w-full flex items-center justify-center fixed top-24">
+      <div className="flex w-3/4 items-center justify-center top-24 absolute">
         <SearchBar filter={handleCouponsFilter} />
       </div>
-      <div className="flex flex-col justify-center items-center w-full fixed top-15">
+      <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 p-0 md:p-0 lg:p-0 justify-center items-center top-15 absolute top-1/4 justify-items-center">
         {filteredCoupons &&
           filteredCoupons.map((coupon, index) => {
-            return <CouponCard key={index} {...coupon} />;
+            return (
+              <div className="col-span-4">
+                <CouponCard key={index} {...coupon} />{" "}
+              </div>
+            );
           })}
       </div>
     </div>

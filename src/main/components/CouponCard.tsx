@@ -1,3 +1,4 @@
+import toast from "react-hot-toast";
 import { Coupon } from "../../types/Types";
 import styled from "styled-components";
 
@@ -15,8 +16,7 @@ const CouponWraper = styled.div`
   box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.15);
   position: relative;
   margin-bottom: 20px;
-  max-width: 40%;
-  width: 40%;
+  width: 95%;
 `;
 
 const Circle = styled.div<StyledDivProps>`
@@ -33,10 +33,21 @@ const Circle = styled.div<StyledDivProps>`
 
 const CouponCard = (props: Coupon) => {
   const date = new Date(props.expiry).toLocaleDateString();
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(props.code);
+    toast.success(`Copied ${props.code} to clipboard`);
+  };
   return (
     <CouponWraper>
       <div className="text-center rounded-2xl">
-        <img className="m-auto" height={150} width={150} src={props.imgUrl} />
+        <img
+          style={{ maxWidth: "none", height: "70px" }}
+          className="m-auto"
+          height={100}
+          width={100}
+          src={props.imgUrl}
+        />
         <h3 className="text-2xl font-normal my-3 text-4xl">
           {props.description}
         </h3>
@@ -50,6 +61,7 @@ const CouponCard = (props: Coupon) => {
           <span
             style={{ color: "#7158fe" }}
             className="border-solid border cursor-pointer py-3 px-5 bg-white"
+            onClick={handleCopyCode}
           >
             Copy
           </span>
