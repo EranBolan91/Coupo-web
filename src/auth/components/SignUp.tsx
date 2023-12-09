@@ -1,5 +1,6 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { UserAuth } from "../AuthProvider";
+import { useNavigate } from "react-router-dom";
 
 type SignUpForm = {
   email: string;
@@ -9,6 +10,7 @@ type SignUpForm = {
 const SignUp = () => {
   const { SigninWthGoogle, createUserWithEmailPassword } = UserAuth();
   const form = useForm<SignUpForm>();
+  const navigate = useNavigate();
   const {
     handleSubmit,
     register,
@@ -17,22 +19,25 @@ const SignUp = () => {
   } = form;
 
   const handleSigninWithGoogle = async () => {
-    try {
-      SigninWthGoogle();
-    } catch (err) {
-      console.log(err);
-    }
+    // const isSignup = await
+    // if (isSignup) navigate("/profile");
+    await SigninWthGoogle();
+    navigate("/profile");
   };
 
   const handleSigninWithEmailPassword: SubmitHandler<SignUpForm> = async (
     data
   ) => {
-    try {
-      createUserWithEmailPassword(data.email, data.password);
-      reset();
-    } catch (err) {
-      console.log(err);
-    }
+    const res = await createUserWithEmailPassword(data.email, data.password);
+    console.log(res);
+    // .then((user: any) => {
+    //   console.log(user);
+    // })
+    // .catch((err: any) => {
+    //   console.log(err.message);
+    // });
+    // reset();
+    // navigate("/profile");
   };
 
   return (
@@ -45,7 +50,7 @@ const SignUp = () => {
             alt="Your Company"
           />
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            Sign in to your account
+            Sign up to Coupo
           </h2>
         </div>
 
@@ -119,7 +124,7 @@ const SignUp = () => {
                 type="submit"
                 className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                Sign in
+                Sign up
               </button>
             </div>
           </form>
@@ -158,7 +163,7 @@ const SignUp = () => {
                   </svg>
                 </div>
                 <span className="gsi-material-button-contents">
-                  Sign in with Google
+                  Sign up with Google
                 </span>
               </div>
             </button>

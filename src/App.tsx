@@ -5,33 +5,69 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Brand from "./pages/admin/components/Brand";
 import { Toaster } from "react-hot-toast";
 import Sidebar from "./components/Sidebar";
+import AdminSidebar from "./pages/admin/components/Sidebar";
 import Navbar from "./components/Navbar";
 import SignUp from "./auth/components/SignUp";
+import Profile from "./pages/profile/Profile";
+import ProtectedRoute from "./auth/components/ProtectedRoute";
 
 function App() {
   const location = useLocation();
-  const displaySidebar = location.pathname.includes("/admin");
+  const displayAdminSidebar = location.pathname.includes("/admin");
 
   return (
     <>
       <div className="grid grid-cols-12">
-        {displaySidebar && (
+        {displayAdminSidebar && (
           <div className="col-span-2">
-            <Sidebar />
+            <AdminSidebar />
           </div>
         )}
-        <div className={`${!displaySidebar ? "col-span-12" : "col-span-10"}`}>
+        <div
+          className={`${!displayAdminSidebar ? "col-span-12" : "col-span-10"}`}
+        >
           <Navbar />
           <div className="grid grid-cols-12">
-            <div className="col-span-1">
-              <Sidebar />
+            <div
+              className={`${
+                !displayAdminSidebar ? "col-span-1" : "col-span-0"
+              }`}
+            >
+              {!displayAdminSidebar ? <Sidebar /> : ""}
             </div>
-            <div className="col-span-11">
+            <div
+              className={`${
+                !displayAdminSidebar ? "col-span-11" : "col-span-12"
+              }`}
+            >
               <Routes>
                 <Route path="/" element={<MainPage />} />
-                <Route path="/login" element={<SignUp />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/admin/addBrand" element={<Brand />} />
+                <Route path="/signup" element={<SignUp />} />
+
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <AdminPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/addBrand"
+                  element={
+                    <ProtectedRoute>
+                      <Brand />
+                    </ProtectedRoute>
+                  }
+                />
               </Routes>
             </div>
           </div>

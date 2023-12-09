@@ -1,14 +1,14 @@
 import { useForm, SubmitHandler } from "react-hook-form";
-import { useEffect, useState } from "react";
 import { Coupon, CouponBrand } from "../../types/Types";
-import Select from "./components/Select";
 import { DevTool } from "@hookform/devtools";
+import { useEffect, useState } from "react";
+import Select from "./components/Select";
+import toast from "react-hot-toast";
 import {
   getCouponsBrands,
   saveNewCoupon,
   getCategories,
 } from "../../database/databaseCalls";
-import toast from "react-hot-toast";
 
 const AdminPage = () => {
   const [couponBrands, setCouponBrands] = useState<CouponBrand[]>([]);
@@ -17,8 +17,8 @@ const AdminPage = () => {
   const [category, setCategory] = useState<string>("");
   const form = useForm<Coupon>();
   const {
-    register,
     handleSubmit,
+    register,
     control,
     reset,
     formState: { errors },

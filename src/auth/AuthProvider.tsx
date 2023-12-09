@@ -13,6 +13,7 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
+import toast from "react-hot-toast";
 
 const AuthContext = createContext<any>(null);
 const provider = new GoogleAuthProvider();
@@ -21,12 +22,22 @@ const auth = getAuth();
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<{} | null>(null);
 
-  const createUserWithEmailPassword = (email: string, password: string) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+  const createUserWithEmailPassword = async (
+    email: string,
+    password: string
+  ) => {
+    const res = await createUserWithEmailAndPassword(auth, email, password);
+    console.log(res);
+    // .then((userCredential) => {
+
+    // })
+    // .catch((err) => {
+    //   console.log(err);
+    // });
   };
 
-  const SigninWthGoogle = () => {
-    signInWithPopup(auth, provider)
+  const SigninWthGoogle = async () => {
+    const res = await signInWithPopup(auth, provider)
       .then((result) => {
         // This gives you a Google Access Token. You can use it to access the Google API.
         const credential = GoogleAuthProvider.credentialFromResult(result);
@@ -35,9 +46,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const user = result.user;
         // IdP data available using getAdditionalUserInfo(result)
         // ...
-        console.log(user);
-        console.log(token);
         setUser(user);
+        return user;
       })
       .catch((error) => {
         // Handle Errors here.
@@ -48,11 +58,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // The AuthCredential type that was used.
         const credential = GoogleAuthProvider.credentialFromError(error);
         // ...
+        setUser(null);
+        return error;
       });
+    console.log(res);
+    return res;
   };
 
   const Logout = async () => {
-    return signOut(auth);
+    signOut(auth)
+      .then(() => {
+        setUser(null);
+      })
+      .catch((error) => {
+        toast.error(error.message);
+      });
   };
 
   useEffect(() => {

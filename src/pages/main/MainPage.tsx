@@ -35,7 +35,7 @@ const MainPage = () => {
         {filteredCoupons &&
           filteredCoupons.map((coupon, index) => {
             return (
-              <div className="col-span-4">
+              <div key={index} className="col-span-4">
                 <CouponCard key={index} {...coupon} />{" "}
               </div>
             );

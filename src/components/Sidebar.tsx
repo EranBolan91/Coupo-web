@@ -1,29 +1,38 @@
-import React, { useState } from "react";
+import { SiGnuprivacyguard } from "react-icons/si";
 import { Link, useLocation } from "react-router-dom";
-
+import { MdAddCircleOutline } from "react-icons/md";
 import { BsArrowLeftCircle } from "react-icons/bs";
 import { RiLogoutBoxLine } from "react-icons/ri";
-import { AiFillPieChart } from "react-icons/ai";
-import { SiFuturelearn } from "react-icons/si";
-import { SiOpenaccess } from "react-icons/si";
-import { CgProfile } from "react-icons/cg";
 import { UserAuth } from "../auth/AuthProvider";
+import { CgProfile } from "react-icons/cg";
 import { Tooltip } from "react-tooltip";
+import { useState } from "react";
+import Avatar from "./Avatar";
 // import Logo from "../assets/images/logo.svg";
 // import HamburgerButton from "./HamburgerMenuButton/HamburgerButton";
 
 const Menus = [
-  { title: "Dashboard", path: "/dashboard", src: <AiFillPieChart /> },
-  { title: "Course", path: "/course", src: <SiFuturelearn /> },
-  { title: "Profile", path: "/profile", src: <CgProfile /> },
-  { title: "Signin", path: "/login", src: <SiOpenaccess />, gap: "true" },
+  { title: "Profile", path: "/profile", src: <CgProfile />, gap: "false" },
+  {
+    title: "Add Coupon",
+    path: "/addCoupon",
+    src: <MdAddCircleOutline />,
+    gap: "false",
+  },
+  // { title: "Signup", path: "/signup", src: <SiOpenaccess />, gap: "true" },
 ];
 
 const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation();
-  const { user } = UserAuth();
+  const { user, Logout } = UserAuth();
+
+  const handleLogout = () => {
+    if (user) {
+      Logout();
+    }
+  };
 
   return (
     <>
@@ -61,7 +70,11 @@ const Sidebar = () => {
                   "bg-gray-200 dark:bg-gray-700"
                 }`}
               >
-                <span className="text-2xl">{menu.src}</span>
+                {user ? (
+                  <Avatar imgURL={user.photoURL} />
+                ) : (
+                  <span className="text-2xl">{menu.src}</span>
+                )}
                 <span
                   className={`${
                     !open && "hidden"
@@ -78,11 +91,12 @@ const Sidebar = () => {
               )}
             </Link>
           ))}
-          {user && (
+          {user ? (
             <Link to={""}>
               <li
                 id="logout"
-                className={`logout flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 mt-2`}
+                onClick={() => handleLogout()}
+                className={`flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 mt-2`}
               >
                 <span className="text-2xl">
                   <RiLogoutBoxLine />
@@ -92,13 +106,39 @@ const Sidebar = () => {
                     !open && "hidden"
                   } origin-left duration-300 hover:block`}
                 >
-                  {""}
+                  Logout
                 </span>
               </li>
-              <Tooltip anchorSelect=".logout" place="right">
-                {" "}
-                Logout
-              </Tooltip>
+              {!open && (
+                <Tooltip anchorSelect="#logout" place="right">
+                  {" "}
+                  Logout
+                </Tooltip>
+              )}
+            </Link>
+          ) : (
+            <Link to={"/signup"}>
+              <li
+                id="signup"
+                className={`flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 mt-2`}
+              >
+                <span className="text-2xl">
+                  <SiGnuprivacyguard />
+                </span>
+                <span
+                  className={`${
+                    !open && "hidden"
+                  } origin-left duration-300 hover:block`}
+                >
+                  Signup
+                </span>
+              </li>
+              {!open && (
+                <Tooltip anchorSelect="#signup" place="right">
+                  {" "}
+                  Signup
+                </Tooltip>
+              )}
             </Link>
           )}
         </ul>
