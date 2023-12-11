@@ -3,8 +3,10 @@ import { UserAuth } from "../AuthProvider";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import authErrors from "../AuthErrors";
+import { useState } from "react";
+import Spinner from "../../components/Spinner";
 
-type SignUpForm = {
+type LoginForm = {
   email: string;
   password: string;
 };
@@ -21,9 +23,10 @@ const cleanAuthErrorMessage = (message: string) => {
   return cleanErrorMsg;
 };
 
-const SignUp = () => {
-  const { SigninWthGoogle, createUserWithEmailPassword } = UserAuth();
-  const form = useForm<SignUpForm>();
+const Login = () => {
+  const { signinWthGoogle, loginUserWithEmailPassword } = UserAuth();
+  const [spinner, setSpinner] = useState<boolean>(false);
+  const form = useForm<LoginForm>();
   const navigate = useNavigate();
   const {
     handleSubmit,
@@ -33,19 +36,22 @@ const SignUp = () => {
   } = form;
 
   const handleSigninWithGoogle = async () => {
-    await SigninWthGoogle();
+    await signinWthGoogle();
     navigate("/profile");
   };
 
-  const handleSigninWithEmailPassword: SubmitHandler<SignUpForm> = async (
+  const handleLoginWithEmailPassword: SubmitHandler<LoginForm> = async (
     data
   ) => {
     try {
-      const res = await createUserWithEmailPassword(data.email, data.password);
+      setSpinner(true);
+      const res = await loginUserWithEmailPassword(data.email, data.password);
       console.log(res);
+      setSpinner(false);
     } catch (error: any) {
       const cleanErrorMsg = cleanAuthErrorMessage(error.message);
       toast.error(authErrors[cleanErrorMsg]);
+      setSpinner(false);
     }
   };
 
@@ -59,14 +65,14 @@ const SignUp = () => {
             alt="Your Company"
           />
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-            Sign up to Coupo
+            Login to Coupo
           </h2>
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
           <form
             className="space-y-6"
-            onSubmit={handleSubmit(handleSigninWithEmailPassword)}
+            onSubmit={handleSubmit(handleLoginWithEmailPassword)}
           >
             <div>
               <label
@@ -98,6 +104,14 @@ const SignUp = () => {
                 >
                   Password
                 </label>
+                <div className="text-sm">
+                  <a
+                    href="#"
+                    className="font-semibold text-indigo-600 hover:text-indigo-500"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
               </div>
               <div className="mt-2">
                 <input
@@ -119,13 +133,18 @@ const SignUp = () => {
                 {errors?.password?.message}{" "}
               </p>
             </div>
-
+            <div>
+              <span className="text-gray-900">
+                Not registered? <Link to={"/signup"}> click here</Link>
+              </span>
+            </div>
             <div>
               <button
                 type="submit"
                 className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
-                Sign up
+                Login
+                {spinner && <Spinner classes={"relative left-36 top-0.5"} />}
               </button>
             </div>
           </form>
@@ -172,7 +191,7 @@ const SignUp = () => {
                   </svg>
                 </div>
                 <span className="gsi-material-button-contents">
-                  Sign up with Google
+                  Login with Google
                 </span>
               </div>
             </button>
@@ -183,4 +202,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default Login;

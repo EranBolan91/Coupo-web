@@ -12,8 +12,11 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
 import toast from "react-hot-toast";
+import { redirect } from "react-router-dom";
 
 const AuthContext = createContext<any>(null);
 const provider = new GoogleAuthProvider();
@@ -26,17 +29,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string,
     password: string
   ) => {
-    const res = await createUserWithEmailAndPassword(auth, email, password);
-    console.log(res);
-    // .then((userCredential) => {
-
-    // })
-    // .catch((err) => {
-    //   console.log(err);
-    // });
+    try {
+      const newUser = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      if (newUser !== null && auth.currentUser !== null) {
+        const res = await sendEmailVerification(auth.currentUser);
+        if (res !== null) {
+          toast.success("Email verification sent!");
+          setUser(newUser);
+          return auth.currentUser;
+        }
+      }
+    } catch (error: any) {
+      console.log(error.message);
+      throw new Error(error.message);
+    }
   };
 
-  const SigninWthGoogle = async () => {
+  const loginUserWithEmailPassword = async (
+    email: string,
+    password: string
+  ) => {
+    try {
+      const loginUser = await signInWithEmailAndPassword(auth, email, password);
+      if (loginUser !== null) {
+        setUser(loginUser.user);
+        redirect("/profile");
+        return loginUser.user;
+      }
+    } catch (error: any) {
+      console.log(error.message);
+      throw new Error(error.message);
+    }
+  };
+
+  const signinWthGoogle = async () => {
     const res = await signInWithPopup(auth, provider)
       .then((result) => {
         // This gives you a Google Access Token. You can use it to access the Google API.
@@ -61,23 +91,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(null);
         return error;
       });
-    console.log(res);
     return res;
   };
 
-  const Logout = async () => {
+  const logout = async () => {
     signOut(auth)
       .then(() => {
+        toast.success("Logout successfully");
         setUser(null);
       })
       .catch((error) => {
         toast.error(error.message);
+        throw new Error(error.message);
       });
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log(currentUser);
       setUser(currentUser);
     });
     return () => {
@@ -87,7 +117,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, SigninWthGoogle, createUserWithEmailPassword, Logout }}
+      value={{
+        user,
+        signinWthGoogle,
+        createUserWithEmailPassword,
+        loginUserWithEmailPassword,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>

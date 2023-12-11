@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import CouponCard from "../../main/components/CouponCard";
-import SearchBar from "../../main/Searchbar";
+import CouponCard from "./components/CouponCard";
+import SearchBar from "./components/Searchbar";
 import { getAllCoupons } from "../../database/databaseCalls";
 import { Coupon } from "../../types/Types";
 

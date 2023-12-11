@@ -8,29 +8,37 @@ import { CgProfile } from "react-icons/cg";
 import { Tooltip } from "react-tooltip";
 import { useState } from "react";
 import Avatar from "./Avatar";
+import toast from "react-hot-toast";
 // import Logo from "../assets/images/logo.svg";
 // import HamburgerButton from "./HamburgerMenuButton/HamburgerButton";
 
 const Menus = [
-  { title: "Profile", path: "/profile", src: <CgProfile />, gap: "false" },
   {
+    id: "profile",
+    title: "Profile",
+    path: "/profile",
+    src: <CgProfile />,
+    gap: "false",
+  },
+  {
+    id: "addCoupon",
     title: "Add Coupon",
     path: "/addCoupon",
     src: <MdAddCircleOutline />,
     gap: "false",
   },
-  // { title: "Signup", path: "/signup", src: <SiOpenaccess />, gap: "true" },
 ];
 
 const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation();
-  const { user, Logout } = UserAuth();
+  const { user, logout } = UserAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (user) {
-      Logout();
+      await logout();
+      toast.success("You have logged out");
     }
   };
 
@@ -63,7 +71,7 @@ const Sidebar = () => {
           {Menus.map((menu, index) => (
             <Link to={menu.path} key={index}>
               <li
-                id={menu.title}
+                id={menu.id}
                 className={`flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700
                         ${menu.gap ? "mt-9" : "mt-2"} ${
                   location.pathname === menu.path &&
@@ -84,7 +92,7 @@ const Sidebar = () => {
                 </span>
               </li>
               {!open && (
-                <Tooltip anchorSelect={`#${menu.title}`} place="right">
+                <Tooltip anchorSelect={`#${menu.id}`} place="right">
                   {" "}
                   {menu.title}
                 </Tooltip>
@@ -96,7 +104,9 @@ const Sidebar = () => {
               <li
                 id="logout"
                 onClick={() => handleLogout()}
-                className={`flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 mt-2`}
+                className={`flex items-center ${
+                  open ? "" : "justify-center"
+                } gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 mt-2`}
               >
                 <span className="text-2xl">
                   <RiLogoutBoxLine />
@@ -117,9 +127,9 @@ const Sidebar = () => {
               )}
             </Link>
           ) : (
-            <Link to={"/signup"}>
+            <Link to={"/login"}>
               <li
-                id="signup"
+                id="login"
                 className={`flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700 mt-2`}
               >
                 <span className="text-2xl">
@@ -130,13 +140,13 @@ const Sidebar = () => {
                     !open && "hidden"
                   } origin-left duration-300 hover:block`}
                 >
-                  Signup
+                  Login
                 </span>
               </li>
               {!open && (
-                <Tooltip anchorSelect="#signup" place="right">
+                <Tooltip anchorSelect="#login" place="right">
                   {" "}
-                  Signup
+                  Login
                 </Tooltip>
               )}
             </Link>

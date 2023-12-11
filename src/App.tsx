@@ -10,6 +10,7 @@ import Navbar from "./components/Navbar";
 import SignUp from "./auth/components/SignUp";
 import Profile from "./pages/profile/Profile";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
+import Login from "./auth/components/Login";
 
 function App() {
   const location = useLocation();
@@ -43,6 +44,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<MainPage />} />
                 <Route path="/signup" element={<SignUp />} />
+                <Route path="/login" element={<Login />} />
 
                 <Route
                   path="/admin"
