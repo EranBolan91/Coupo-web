@@ -1,6 +1,13 @@
 import { initializeApp } from "firebase/app";
 import { Coupon, CouponBrand } from "../types/Types";
-import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  addDoc,
+  doc,
+  setDoc,
+} from "firebase/firestore";
 import {
   getStorage,
   ref,
@@ -51,6 +58,21 @@ const saveNewCoupon = async (coupon: Coupon) => {
   });
 };
 
+const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
+  await addDoc(collection(db, "Coupons"), {
+    coupon,
+  });
+  await saveCouponToUsersCoupon(coupon, userID);
+};
+
+// This should be in cloud functions
+// Saving coupon to users document
+const saveCouponToUsersCoupon = async (coupon: Coupon, userID: string) => {
+  const ref = doc(db, "UsersCoupons", userID);
+  const colRef = collection(ref, "coupons");
+  addDoc(colRef, coupon);
+};
+
 const saveImageBrand = async (imgFile: any, imageName: string) => {
   const storageRef = ref(storage, imageName + ".svg");
   const uploadTask = uploadBytesResumable(storageRef, imgFile);
@@ -76,4 +98,5 @@ export {
   getCategories,
   saveImageBrand,
   getAllCoupons,
+  saveUserNewCoupon,
 };

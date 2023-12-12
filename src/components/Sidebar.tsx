@@ -5,6 +5,7 @@ import { BsArrowLeftCircle } from "react-icons/bs";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { UserAuth } from "../auth/AuthProvider";
 import { CgProfile } from "react-icons/cg";
+import { IoMdHome } from "react-icons/io";
 import { Tooltip } from "react-tooltip";
 import { useState } from "react";
 import Avatar from "./Avatar";
@@ -13,6 +14,13 @@ import toast from "react-hot-toast";
 // import HamburgerButton from "./HamburgerMenuButton/HamburgerButton";
 
 const Menus = [
+  {
+    id: "home",
+    title: "Home",
+    path: "/",
+    src: <IoMdHome />,
+    gap: "false",
+  },
   {
     id: "profile",
     title: "Profile",
@@ -23,7 +31,7 @@ const Menus = [
   {
     id: "addCoupon",
     title: "Add Coupon",
-    path: "/addCoupon",
+    path: "/addcoupon",
     src: <MdAddCircleOutline />,
     gap: "false",
   },
@@ -38,7 +46,7 @@ const Sidebar = () => {
   const handleLogout = async () => {
     if (user) {
       await logout();
-      toast.success("You have logged out");
+      toast("You have logged out. Byebye", { icon: "👏" });
     }
   };
 

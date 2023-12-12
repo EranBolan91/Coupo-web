@@ -1,5 +1,5 @@
 import toast from "react-hot-toast";
-import { Coupon } from "../../types/Types";
+import { Coupon } from "../../../types/Types";
 import styled from "styled-components";
 
 interface StyledDivProps {
@@ -48,9 +48,7 @@ const CouponCard = (props: Coupon) => {
           width={100}
           src={props.imgUrl}
         />
-        <h3 className="text-2xl font-normal my-3 text-4xl">
-          {props.description}
-        </h3>
+        <h3 className="text-2xl font-normal my-3">{props.description}</h3>
         <div className="flex items-center w-fit m-auto my-3">
           <span
             style={{ borderRight: "0px" }}

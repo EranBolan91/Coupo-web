@@ -97,7 +97,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     signOut(auth)
       .then(() => {
-        toast.success("Logout successfully");
         setUser(null);
       })
       .catch((error) => {

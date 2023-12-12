@@ -11,6 +11,7 @@ import SignUp from "./auth/components/SignUp";
 import Profile from "./pages/profile/Profile";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
 import Login from "./auth/components/Login";
+import AddUserCoupon from "./pages/addCoupon/AddUserCoupon";
 
 function App() {
   const location = useLocation();
@@ -46,6 +47,14 @@ function App() {
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/login" element={<Login />} />
 
+                <Route
+                  path="/addcoupon"
+                  element={
+                    <ProtectedRoute>
+                      <AddUserCoupon />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   path="/admin"
                   element={
