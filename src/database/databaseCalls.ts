@@ -6,7 +6,6 @@ import {
   getDocs,
   addDoc,
   doc,
-  setDoc,
 } from "firebase/firestore";
 import {
   getStorage,
@@ -52,6 +51,28 @@ const getCategories = async () => {
   return categories;
 };
 
+// Need to find a better way to destruct the data
+const getUserCoupons = async (userID: string) => {
+  const coupons: Coupon[] = [];
+  const ref = await getDocs(collection(db, "UsersCoupons", userID, "coupons"));
+  ref.forEach((doc) => {
+    console.log(doc.id, " => ", doc.data());
+    coupons.push({
+      ...doc.data(),
+      name: doc.data().name,
+      description: doc.data().description,
+      imgUrl: doc.data().imgUrl,
+      code: doc.data().code,
+      category: doc.data().category,
+      expiry: doc.data().expiry,
+      discount: doc.data().discount,
+      createdAt: doc.data().createdAt,
+      updatedAt: doc.data().updatedAt,
+    });
+  });
+  return coupons;
+};
+
 const saveNewCoupon = async (coupon: Coupon) => {
   await addDoc(collection(db, "Coupons"), {
     coupon,
@@ -78,7 +99,7 @@ const saveImageBrand = async (imgFile: any, imageName: string) => {
   const uploadTask = uploadBytesResumable(storageRef, imgFile);
   uploadTask.on(
     "state_changed",
-    (snapshot) => {},
+    () => {},
     (error) => console.log(error),
     async () => {
       const downloadImgURL = await getDownloadURL(uploadTask.snapshot.ref);
@@ -99,4 +120,5 @@ export {
   saveImageBrand,
   getAllCoupons,
   saveUserNewCoupon,
+  getUserCoupons,
 };

@@ -21,12 +21,14 @@ function App() {
     <>
       <div className="grid grid-cols-12">
         {displayAdminSidebar && (
-          <div className="col-span-2">
+          <div className="col-span-2 md:col-span-2 lg:col-span-2">
             <AdminSidebar />
           </div>
         )}
         <div
-          className={`${!displayAdminSidebar ? "col-span-12" : "col-span-10"}`}
+          className={`col-span-12 ${
+            !displayAdminSidebar ? "col-span-12" : "col-span-10"
+          }`}
         >
           <Navbar />
           <div className="grid grid-cols-12">
@@ -56,18 +58,18 @@ function App() {
                   }
                 />
                 <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute>
-                      <AdminPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
                   path="/profile"
                   element={
                     <ProtectedRoute>
                       <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute>
+                      <AdminPage />
                     </ProtectedRoute>
                   }
                 />

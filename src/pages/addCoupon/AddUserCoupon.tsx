@@ -39,12 +39,16 @@ const AddUserCoupon = () => {
     data.category = category;
     data.name = brand.brand;
     data.imgUrl = brand.imgURL;
-    toast.promise(saveUserNewCoupon(data, user.uid), {
-      loading: "Saving coupon...",
-      success: `${brand.brand} coupon saved!`,
-      error: "Error saving coupon",
-    });
-    //reset();
+    toast
+      .promise(saveUserNewCoupon(data, user.uid), {
+        loading: "Saving coupon...",
+        success: `${brand.brand} coupon saved!`,
+        error: "Error saving coupon",
+      })
+      .then(() => {
+        reset();
+      })
+      .catch(() => {});
   };
 
   useEffect(() => {

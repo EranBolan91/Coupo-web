@@ -1,19 +1,25 @@
-import { Fragment, useRef, useState } from "react";
+import { Fragment, useRef } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
-export default function Modal() {
-  const [open, setOpen] = useState(true);
+type Props = {
+  open: boolean;
+  func: () => void;
+  setOpen: (open: boolean) => void;
+};
 
+const Modal = (props: Props) => {
   const cancelButtonRef = useRef(null);
 
   return (
-    <Transition.Root show={open} as={Fragment}>
+    <Transition.Root show={props.open} as={Fragment}>
       <Dialog
         as="div"
         className="relative z-10"
         initialFocus={cancelButtonRef}
-        onClose={setOpen}
+        onClose={() => {
+          props.setOpen(false);
+        }}
       >
         <Transition.Child
           as={Fragment}
@@ -52,13 +58,11 @@ export default function Modal() {
                         as="h3"
                         className="text-base font-semibold leading-6 text-gray-900"
                       >
-                        Deactivate account
+                        Removing Coupon
                       </Dialog.Title>
                       <div className="mt-2">
                         <p className="text-sm text-gray-500">
-                          Are you sure you want to deactivate your account? All
-                          of your data will be permanently removed. This action
-                          cannot be undone.
+                          Are you sure you want to delete your coupon?
                         </p>
                       </div>
                     </div>
@@ -68,17 +72,17 @@ export default function Modal() {
                   <button
                     type="button"
                     className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
-                    onClick={() => setOpen(false)}
+                    onClick={() => props.func()}
                   >
-                    Deactivate
+                    YES
                   </button>
                   <button
                     type="button"
                     className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                    onClick={() => setOpen(false)}
+                    onClick={() => props.setOpen(false)}
                     ref={cancelButtonRef}
                   >
-                    Cancel
+                    NO
                   </button>
                 </div>
               </Dialog.Panel>
@@ -88,4 +92,6 @@ export default function Modal() {
       </Dialog>
     </Transition.Root>
   );
-}
+};
+
+export default Modal;
