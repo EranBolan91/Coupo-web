@@ -3,6 +3,7 @@ import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
 type Props = {
+  title: string;
   open: boolean;
   func: () => void;
   setOpen: (open: boolean) => void;
@@ -58,11 +59,11 @@ const Modal = (props: Props) => {
                         as="h3"
                         className="text-base font-semibold leading-6 text-gray-900"
                       >
-                        Removing Coupon
+                        Removing "{props.title}" coupon
                       </Dialog.Title>
                       <div className="mt-2">
                         <p className="text-sm text-gray-500">
-                          Are you sure you want to delete your coupon?
+                          Are you sure you want to delete it?
                         </p>
                       </div>
                     </div>

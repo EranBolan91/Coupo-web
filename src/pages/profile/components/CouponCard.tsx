@@ -1,37 +1,44 @@
+import { removeUserCoupon } from "../../../database/databaseCalls";
+import { UserAuth } from "../../../auth/AuthProvider";
+import Modal from "../../../components/Modal";
 import { Coupon } from "../../../types/Types";
 import { FaThumbsDown } from "react-icons/fa";
 import { FaThumbsUp } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
-import Modal from "../../../components/Modal";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 const CouponCard = (props: Coupon) => {
   const [openModal, setOpenModal] = useState(false);
+  const { user } = UserAuth();
 
   const handleOpenModal = (open: boolean) => {
     setOpenModal(open);
   };
   const handleRemoveCoupon = () => {
-    console.log("remove coupon");
+    toast.promise(removeUserCoupon(user.uid, props.id), {
+      loading: `Removing ${props.code}, please wait...`,
+      success: `${props.code} is removed!`,
+      error: "Error removing copuon",
+    });
+    setOpenModal(false);
   };
 
   const convertDate = (seconds: any): string => {
     const milliseconds = seconds * 1000;
     const date = new Date(milliseconds);
-
     // Adjust for local time zone
     const localDate = new Date(date.toLocaleString());
-
     // Extract date components
     const day = String(localDate.getDate()).padStart(2, "0");
     const month = String(localDate.getMonth() + 1).padStart(2, "0"); // Months are zero-based
     const year = localDate.getFullYear();
-
     // Format the date
     const formattedDate = `${day}/${month}/${year}`;
 
     return formattedDate;
   };
+
   return (
     <div className="grid grid-cols-12 w-full h-40 bg-white rounded my-3 shadow shadow-blue-500/40 hover:shadow-indigo-500/40">
       <div className="col-span-2 flex justify-center items-center">
@@ -89,6 +96,7 @@ const CouponCard = (props: Coupon) => {
         setOpen={handleOpenModal}
         func={handleRemoveCoupon}
         open={openModal}
+        title={props.code}
       />
     </div>
   );

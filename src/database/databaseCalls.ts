@@ -1,4 +1,3 @@
-import { initializeApp } from "firebase/app";
 import { Coupon, CouponBrand } from "../types/Types";
 import {
   getFirestore,
@@ -6,6 +5,7 @@ import {
   getDocs,
   addDoc,
   doc,
+  deleteDoc,
 } from "firebase/firestore";
 import {
   getStorage,
@@ -13,10 +13,9 @@ import {
   getDownloadURL,
   uploadBytesResumable,
 } from "firebase/storage";
-import config from "../firebaseConfig";
+import app from "../firebaseConfig";
 
 // Initialize Firebase
-const app = initializeApp(config.firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage();
 
@@ -26,7 +25,6 @@ const getAllCoupons = async () => {
   getCoupons.forEach((coupon) => {
     coupons.push(coupon.data().coupon);
   });
-  console.log(coupons);
   return coupons;
 };
 
@@ -56,9 +54,9 @@ const getUserCoupons = async (userID: string) => {
   const coupons: Coupon[] = [];
   const ref = await getDocs(collection(db, "UsersCoupons", userID, "coupons"));
   ref.forEach((doc) => {
-    console.log(doc.id, " => ", doc.data());
     coupons.push({
       ...doc.data(),
+      id: doc.id,
       name: doc.data().name,
       description: doc.data().description,
       imgUrl: doc.data().imgUrl,
@@ -71,6 +69,11 @@ const getUserCoupons = async (userID: string) => {
     });
   });
   return coupons;
+};
+
+const removeUserCoupon = async (userID: string, couponID: string) => {
+  const ref = doc(db, "UsersCoupons", userID, "coupons", couponID);
+  await deleteDoc(ref);
 };
 
 const saveNewCoupon = async (coupon: Coupon) => {
@@ -114,11 +117,12 @@ const saveImageBrand = async (imgFile: any, imageName: string) => {
 };
 
 export {
-  getCouponsBrands,
-  saveNewCoupon,
-  getCategories,
   saveImageBrand,
-  getAllCoupons,
   saveUserNewCoupon,
+  saveNewCoupon,
+  getCouponsBrands,
+  getCategories,
+  getAllCoupons,
   getUserCoupons,
+  removeUserCoupon,
 };

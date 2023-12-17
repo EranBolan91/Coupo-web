@@ -6,7 +6,6 @@ import {
   useEffect,
 } from "react";
 import {
-  getAuth,
   signOut,
   onAuthStateChanged,
   signInWithPopup,
@@ -17,10 +16,10 @@ import {
 } from "firebase/auth";
 import toast from "react-hot-toast";
 import { redirect } from "react-router-dom";
+import { auth } from "../firebaseConfig";
 
 const AuthContext = createContext<any>(null);
 const provider = new GoogleAuthProvider();
-const auth = getAuth();
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<{} | null>(null);
@@ -107,12 +106,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      console.log(currentUser);
+      if (currentUser) {
+        setUser(currentUser);
+      }
     });
     return () => {
       unsubscribe();
     };
-  }, []);
+  }, [setUser]);
 
   return (
     <AuthContext.Provider
@@ -130,5 +132,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const UserAuth = () => {
+  // const res = await useContext(AuthContext);
+  // console.log(res);
+  const d = useContext(AuthContext);
+  console.log(d);
   return useContext(AuthContext);
 };

@@ -1,3 +1,6 @@
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
   authDomain: import.meta.env.VITE_AUTH_DOMAIN,
@@ -8,13 +11,7 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_MEASUREMENT_ID,
 };
 
-const actionCodeSettings = {
-  // URL you want to redirect back to. The domain (www.example.com) for this
-  // URL must be in the authorized domains list in the Firebase Console.
-  url: "https://www.example.com/finishSignUp?cartId=1234",
-  // This must be true.
-  handleCodeInApp: true,
-  dynamicLinkDomain: "example.page.link",
-};
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
 
-export default { firebaseConfig, actionCodeSettings };
+export default app;

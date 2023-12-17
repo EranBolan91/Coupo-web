@@ -12,6 +12,7 @@ import Profile from "./pages/profile/Profile";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
 import Login from "./auth/components/Login";
 import AddUserCoupon from "./pages/addCoupon/AddUserCoupon";
+import TestMain from "./pages/main/TestMain";
 
 function App() {
   const location = useLocation();
@@ -19,71 +20,47 @@ function App() {
 
   return (
     <>
-      <div className="grid grid-cols-12">
-        {displayAdminSidebar && (
-          <div className="col-span-2 md:col-span-2 lg:col-span-2">
-            <AdminSidebar />
-          </div>
-        )}
-        <div
-          className={`col-span-12 ${
-            !displayAdminSidebar ? "col-span-12" : "col-span-10"
-          }`}
-        >
-          <Navbar />
-          <div className="grid grid-cols-12">
-            <div
-              className={`${
-                !displayAdminSidebar ? "col-span-1" : "col-span-0"
-              }`}
-            >
-              {!displayAdminSidebar ? <Sidebar /> : ""}
-            </div>
-            <div
-              className={`${
-                !displayAdminSidebar ? "col-span-11" : "col-span-12"
-              }`}
-            >
-              <Routes>
-                <Route path="/" element={<MainPage />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/login" element={<Login />} />
+      <div className="flex">
+        <div>{displayAdminSidebar ? <AdminSidebar /> : <Sidebar />}</div>
+        <div className={"w-full"}>
+          <Routes>
+            <Route path="/" element={<MainPage />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<Login />} />
 
-                <Route
-                  path="/addcoupon"
-                  element={
-                    <ProtectedRoute>
-                      <AddUserCoupon />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute>
-                      <AdminPage />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/addBrand"
-                  element={
-                    <ProtectedRoute>
-                      <Brand />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </div>
-          </div>
+            <Route
+              path="/addcoupon"
+              element={
+                <ProtectedRoute>
+                  <AddUserCoupon />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/addBrand"
+              element={
+                <ProtectedRoute>
+                  <Brand />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
         </div>
       </div>
       <Toaster position="top-right" reverseOrder={false} />
