@@ -23,6 +23,7 @@ const provider = new GoogleAuthProvider();
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<{} | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const createUserWithEmailPassword = async (
     email: string,
@@ -106,15 +107,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log(currentUser);
+      setLoading(false);
       if (currentUser) {
         setUser(currentUser);
       }
     });
     return () => {
-      unsubscribe();
+      if (unsubscribe) unsubscribe();
     };
-  }, [setUser]);
+  }, [user]);
 
   return (
     <AuthContext.Provider
@@ -126,15 +127,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
       }}
     >
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
 
 export const UserAuth = () => {
-  // const res = await useContext(AuthContext);
-  // console.log(res);
-  const d = useContext(AuthContext);
-  console.log(d);
   return useContext(AuthContext);
 };

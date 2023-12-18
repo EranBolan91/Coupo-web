@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 
 const Profile = () => {
   const [coupons, setCoupons] = useState<Coupon[] | null>(null);
-  const { user } = UserAuth();
+  const { user }: any = UserAuth();
 
   useEffect(() => {
     const fetchUserCoupons = async () => {
