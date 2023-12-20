@@ -52,7 +52,7 @@ const CouponCard = (props: Coupon) => {
         </div>
         <div>
           <span className="text-black">
-            Code coupon: <b>{props.code}</b>{" "}
+            Code: <b>{props.code}</b>{" "}
           </span>
         </div>
         <div>

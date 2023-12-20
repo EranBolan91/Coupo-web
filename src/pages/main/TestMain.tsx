@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { getAllCoupons } from "../../database/databaseCalls";
+import { Coupon } from "../../types/Types";
+import SearchBar from "./components/Searchbar";
+import CouponCard from "./components/CouponCard";
+import TestCard from "./components/TestCard";
 
 const navigation = [
   { name: "Product", href: "#" },
@@ -11,6 +16,26 @@ const navigation = [
 
 export default function Example() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [globalCoupons, setGlobalCoupons] = useState<Coupon[] | null>(null);
+  const [filteredCoupons, setFilteredCoupons] = useState<Coupon[] | null>(null);
+
+  const handleCouponsFilter = (text: string) => {
+    if (text === "") {
+      setFilteredCoupons(globalCoupons);
+      return;
+    }
+    const filteredData = filteredCoupons?.filter((coupon) =>
+      coupon.name.toLowerCase().includes(text.toLowerCase())
+    );
+    setFilteredCoupons(filteredData ? filteredData : []);
+  };
+
+  useEffect(() => {
+    getAllCoupons().then((fetchedCoupons) => {
+      setGlobalCoupons(fetchedCoupons);
+      setFilteredCoupons(fetchedCoupons);
+    });
+  }, []);
 
   return (
     <div className="bg-white h-full">
@@ -159,6 +184,22 @@ export default function Example() {
               </a>
             </div>
           </div>
+        </div>
+      </div>
+      <div className="flex flex-col items-center justify-center">
+        <div className="flex w-3/4 items-center justify-center">
+          <SearchBar filter={handleCouponsFilter} />
+        </div>
+        <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 p-0 md:p-0 lg:p-0 justify-center items-center  justify-items-center">
+          {filteredCoupons &&
+            filteredCoupons.map((coupon, index) => {
+              return (
+                <div key={index} className="col-span-4">
+                  {/* <CouponCard key={index} {...coupon} />{" "} */}
+                  <TestCard />
+                </div>
+              );
+            })}
         </div>
       </div>
     </div>

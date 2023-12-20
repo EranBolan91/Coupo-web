@@ -20,11 +20,11 @@ function App() {
 
   return (
     <>
-      <div className="flex">
+      <div className="flex h-full">
         <div>{displayAdminSidebar ? <AdminSidebar /> : <Sidebar />}</div>
         <div className={"w-full"}>
           <Routes>
-            <Route path="/" element={<MainPage />} />
+            <Route path="/" element={<TestMain />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
 
