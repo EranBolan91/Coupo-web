@@ -18,7 +18,7 @@ const Profile = () => {
   }, []);
 
   return (
-    <div className="absolute top-24">
+    <div className="absolute w-full h-full bg-white">
       <div className="border-b-2 p-3 w-full">
         <h1>Hi, {user.displayName}</h1>
       </div>

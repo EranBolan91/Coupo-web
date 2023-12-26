@@ -34,7 +34,6 @@ const AdminPage = () => {
   };
 
   const onSubmit: SubmitHandler<Coupon> = (data) => {
-    data.createdAt = new Date();
     data.category = category;
     data.name = brand.brand;
     data.imgUrl = brand.imgURL;

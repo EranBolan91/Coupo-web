@@ -10,8 +10,6 @@ import { Tooltip } from "react-tooltip";
 import { useState } from "react";
 import Avatar from "./Avatar";
 import toast from "react-hot-toast";
-// import Logo from "../assets/images/logo.svg";
-// import HamburgerButton from "./HamburgerMenuButton/HamburgerButton";
 
 const Menus = [
   {

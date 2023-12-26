@@ -9,6 +9,8 @@ type Coupon = {
   discount: string;
   createdAt: Date;
   updatedAt: Date;
+  likes: number;
+  dislikes: number;
 };
 
 type CouponBrand = {

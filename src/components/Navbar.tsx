@@ -1,62 +1,125 @@
 import { useState } from "react";
-import {
-  BookOpenIcon,
-  Bars3BottomRightIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid";
+import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/solid";
+import { Dialog } from "@headlessui/react";
+import { UserAuth } from "../auth/AuthProvider";
+import Avatar from "./Avatar";
+import { Link } from "react-router-dom";
 
-const Links = [
-  { name: "HOME", link: "/" },
-  { name: "SERVICE", link: "/" },
-  { name: "ABOUT", link: "/" },
-  { name: "CONTACT", link: "/" },
+const navigation = [
+  { name: "Home", href: "/" },
+  { name: "Coupons", href: "/coupons" },
+  { name: "Features", href: "#" },
+  { name: "Marketplace", href: "#" },
+  { name: "Company", href: "#" },
 ];
 
-const Header = () => {
-  const [open, setOpen] = useState(true);
+const Navbar = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user } = UserAuth();
 
   return (
-    <div
-      style={{ color: "#242424b8" }}
-      className="shadow-md w-full absolute top-0 left-0"
-    >
-      <div className="md:flex items-center justify-between bg-white py-4 md:px-10 px-7">
-        {/* logo section */}
-        <div className="font-bold text-2xl cursor-pointer flex items-center gap-1">
-          <BookOpenIcon className="w-7 h-7 text-blue-600" />
-          <span>Coupo</span>
+    <header className="absolute inset-x-0 top-0 z-50">
+      <nav
+        className="flex items-center justify-between p-6 lg:px-8"
+        aria-label="Global"
+      >
+        <div className="flex lg:flex-1">
+          <Link to="#" className="-m-1.5 p-1.5">
+            <span className="sr-only">Your Company</span>
+            <img
+              className="h-8 w-auto"
+              src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+              alt=""
+            />
+          </Link>
         </div>
-        {/* Menu icon */}
-        <div
-          onClick={() => setOpen(!open)}
-          className="absolute right-8 top-6 cursor-pointer md:hidden w-7 h-7"
-        >
-          {open ? <XMarkIcon /> : <Bars3BottomRightIcon />}
-        </div>
-        {/* linke items */}
-        <ul
-          className={`md:flex md:items-center md:pb-0 pb-12 absolute md:static bg-white md:z-auto z-[-1] left-0 w-full md:w-auto md:pl-0 pl-9 transition-all duration-500 ease-in ${
-            open ? "top-12" : "top-[-490px]"
-          }`}
-        >
-          {Links.map((link, index) => (
-            <li key={index} className="md:ml-8 md:my-0 my-7 font-semibold">
-              <a
-                href={link.link}
-                className="text-gray-800 hover:text-blue-400 duration-500"
-              >
-                {link.name}
-              </a>
-            </li>
-          ))}
-          <button className="btn bg-blue-600 text-white md:ml-8 font-semibold px-3 py-1 rounded duration-500 md:static">
-            Get Started
+        <div className="flex lg:hidden">
+          <button
+            type="button"
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+            onClick={() => setMobileMenuOpen(true)}
+          >
+            <span className="sr-only">Open main menu</span>
+            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
           </button>
-        </ul>
-        {/* button */}
-      </div>
-    </div>
+        </div>
+        <div className="hidden lg:flex lg:gap-x-12">
+          {navigation.map((item) => (
+            <Link
+              to={item.href}
+              key={item.name}
+              className="text-sm font-semibold leading-6 text-gray-900"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </div>
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+          {user ? (
+            <Avatar imgURL={user.photoURL} />
+          ) : (
+            <Link
+              to="/login"
+              className="text-sm font-semibold leading-6 text-gray-900"
+            >
+              Log in <span aria-hidden="true">&rarr;</span>
+            </Link>
+          )}
+        </div>
+      </nav>
+      <Dialog
+        as="div"
+        className="lg:hidden"
+        open={mobileMenuOpen}
+        onClose={setMobileMenuOpen}
+      >
+        <div className="fixed inset-0 z-50" />
+        <Dialog.Panel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+          <div className="flex items-center justify-between">
+            <Link to={""} className="-m-1.5 p-1.5">
+              <span className="sr-only">Your Company</span>
+              <img
+                className="h-8 w-auto"
+                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
+                alt=""
+              />
+            </Link>
+            <button
+              type="button"
+              className="-m-2.5 rounded-md p-2.5 text-gray-700"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <span className="sr-only">Close menu</span>
+              <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="mt-6 flow-root">
+            <div className="-my-6 divide-y divide-gray-500/10">
+              <div className="space-y-2 py-6">
+                {navigation.map((item) => (
+                  <Link
+                    to={item.href}
+                    key={item.name}
+                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </div>
+              <div className="py-6">
+                <Link
+                  to="/login"
+                  className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                >
+                  Log in
+                </Link>
+              </div>
+            </div>
+          </div>
+        </Dialog.Panel>
+      </Dialog>
+    </header>
   );
 };
 
-export default Header;
+export default Navbar;

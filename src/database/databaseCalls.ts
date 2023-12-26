@@ -6,6 +6,7 @@ import {
   addDoc,
   doc,
   deleteDoc,
+  setDoc,
 } from "firebase/firestore";
 import {
   getStorage,
@@ -23,7 +24,10 @@ const getAllCoupons = async () => {
   const coupons: Coupon[] = [];
   const getCoupons = await getDocs(collection(db, "Coupons"));
   getCoupons.forEach((coupon) => {
-    coupons.push(coupon.data().coupon);
+    coupons.push({
+      id: coupon.id,
+      ...coupon.data().coupon,
+    });
   });
   return coupons;
 };
@@ -49,13 +53,12 @@ const getCategories = async () => {
   return categories;
 };
 
-// Need to find a better way to destruct the data
+//TODO: Need to find a better way to destruct the data
 const getUserCoupons = async (userID: string) => {
   const coupons: Coupon[] = [];
   const ref = await getDocs(collection(db, "UsersCoupons", userID, "coupons"));
   ref.forEach((doc) => {
     coupons.push({
-      ...doc.data(),
       id: doc.id,
       name: doc.data().name,
       description: doc.data().description,
@@ -66,6 +69,8 @@ const getUserCoupons = async (userID: string) => {
       discount: doc.data().discount,
       createdAt: doc.data().createdAt,
       updatedAt: doc.data().updatedAt,
+      likes: doc.data().likes,
+      dislikes: doc.data().dislikes,
     });
   });
   return coupons;
@@ -77,12 +82,18 @@ const removeUserCoupon = async (userID: string, couponID: string) => {
 };
 
 const saveNewCoupon = async (coupon: Coupon) => {
+  coupon.createdAt = new Date();
+  coupon.likes = 0;
+  coupon.dislikes = 0;
   await addDoc(collection(db, "Coupons"), {
     coupon,
   });
 };
 
 const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
+  coupon.createdAt = new Date();
+  coupon.likes = 0;
+  coupon.dislikes = 0;
   await addDoc(collection(db, "Coupons"), {
     coupon,
   });
@@ -116,13 +127,49 @@ const saveImageBrand = async (imgFile: any, imageName: string) => {
   );
 };
 
+const saveCouponVote = async (
+  couponID: string,
+  userID: string,
+  vote: number
+) => {
+  let subCollectionName = "";
+  if (vote) {
+    subCollectionName = "Likes";
+  } else {
+    subCollectionName = "Dislikes";
+  }
+  const ref = doc(db, "CouponVoting", couponID);
+  const colRef = collection(ref, subCollectionName);
+  addDoc(colRef, { userID });
+};
+
+const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean) => {
+  try {
+    let subCollectionName = "";
+    if (vote) {
+      subCollectionName = "likes";
+    } else {
+      subCollectionName = "dislikes";
+    }
+
+    await setDoc(doc(db, "UserVoting", userID, subCollectionName, coupon.id), {
+      coupon,
+    });
+  } catch (err: any) {
+    console.log(err);
+    throw new Error(err);
+  }
+};
+
 export {
-  saveImageBrand,
   saveUserNewCoupon,
-  saveNewCoupon,
   getCouponsBrands,
-  getCategories,
-  getAllCoupons,
-  getUserCoupons,
   removeUserCoupon,
+  saveImageBrand,
+  getUserCoupons,
+  saveCouponVote,
+  getAllCoupons,
+  getCategories,
+  saveNewCoupon,
+  saveUserVote,
 };

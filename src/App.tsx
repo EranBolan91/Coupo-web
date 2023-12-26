@@ -1,18 +1,17 @@
 import "./App.css";
-import MainPage from "./pages/main/MainPage";
-import AdminPage from "./pages/admin/Admin";
 import { Routes, Route, useLocation } from "react-router-dom";
-import Brand from "./pages/admin/components/Brand";
-import { Toaster } from "react-hot-toast";
-import Sidebar from "./components/Sidebar";
-import AdminSidebar from "./pages/admin/components/Sidebar";
-import Navbar from "./components/Navbar";
-import SignUp from "./auth/components/SignUp";
-import Profile from "./pages/profile/Profile";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
-import Login from "./auth/components/Login";
 import AddUserCoupon from "./pages/addCoupon/AddUserCoupon";
-import TestMain from "./pages/main/TestMain";
+import AdminSidebar from "./pages/admin/components/Sidebar";
+import CouponsPage from "./pages/coupons/CouponsPage";
+import Brand from "./pages/admin/components/Brand";
+import Profile from "./pages/profile/Profile";
+import SignUp from "./auth/components/SignUp";
+import MainPage from "./pages/main/MainPage";
+import Login from "./auth/components/Login";
+import AdminPage from "./pages/admin/Admin";
+import { Toaster } from "react-hot-toast";
+import Navbar from "./components/Navbar";
 
 function App() {
   const location = useLocation();
@@ -21,10 +20,11 @@ function App() {
   return (
     <>
       <div className="flex h-full">
-        <div>{displayAdminSidebar ? <AdminSidebar /> : <Sidebar />}</div>
-        <div className={"w-full"}>
+        <div>{displayAdminSidebar ? <AdminSidebar /> : <Navbar />}</div>
+        <div className={"w-full h-full bg-white"}>
           <Routes>
-            <Route path="/" element={<TestMain />} />
+            <Route path="/" element={<MainPage />} />
+            <Route path="/coupons" element={<CouponsPage />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
 
