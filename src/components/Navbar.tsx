@@ -1,9 +1,9 @@
-import { useState } from "react";
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/solid";
-import { Dialog } from "@headlessui/react";
 import { UserAuth } from "../auth/AuthProvider";
-import Avatar from "./Avatar";
+import { Dialog } from "@headlessui/react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import Avatar from "./Avatar";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -48,7 +48,7 @@ const Navbar = () => {
             <Link
               to={item.href}
               key={item.name}
-              className="text-sm font-semibold leading-6 text-gray-900"
+              className="text-sm font-semibold leading-6 text-primary"
             >
               {item.name}
             </Link>

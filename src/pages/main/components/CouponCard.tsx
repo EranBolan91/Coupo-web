@@ -27,6 +27,7 @@ const Circle = styled.div<StyledDivProps>`
 `;
 
 const CouponCard = (props: Coupon) => {
+  console.log("coupon card render");
   const { user }: any = UserAuth();
 
   const handleCopyCode = () => {
@@ -50,7 +51,7 @@ const CouponCard = (props: Coupon) => {
   return (
     <div
       style={{ width: "32rem" }}
-      className="card card-side bg-base-100 shadow-xl m-2 bg-gradient-to-r from-cyan-500 to-blue-500 min-w-min"
+      className="card card-side text-primary bg-base-100 shadow-xl m-2 bg-gradient-to-r from-cyan-500 to-blue-500 min-w-min"
     >
       <div
         className="flex justify-center items-center p-4 bg-blue-500"

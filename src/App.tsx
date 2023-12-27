@@ -12,6 +12,7 @@ import Login from "./auth/components/Login";
 import AdminPage from "./pages/admin/Admin";
 import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 function App() {
   const location = useLocation();
@@ -19,9 +20,11 @@ function App() {
 
   return (
     <>
-      <div className="flex h-full">
-        <div>{displayAdminSidebar ? <AdminSidebar /> : <Navbar />}</div>
-        <div className={"w-full h-full bg-white"}>
+      <div className="flex flex-col h-full">
+        <div className="h-20">
+          {displayAdminSidebar ? <AdminSidebar /> : <Navbar />}
+        </div>
+        <div>
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/coupons" element={<CouponsPage />} />
@@ -61,6 +64,9 @@ function App() {
               }
             />
           </Routes>
+        </div>
+        <div>
+          <Footer />
         </div>
       </div>
       <Toaster position="top-right" reverseOrder={false} />

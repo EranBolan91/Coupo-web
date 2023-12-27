@@ -25,8 +25,9 @@ const CouponsPage = () => {
       setFilteredCoupons(fetchedCoupons);
     });
   }, []);
+
   return (
-    <div className="flex flex-col items-center justify-center h-full">
+    <div className="flex flex-col items-center justify-center mt-10">
       <div className="flex w-3/4 items-center justify-center">
         <SearchBar filter={handleCouponsFilter} />
       </div>

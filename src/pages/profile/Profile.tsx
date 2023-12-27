@@ -20,7 +20,7 @@ const Profile = () => {
   return (
     <div className="absolute w-full h-full bg-white">
       <div className="border-b-2 p-3 w-full">
-        <h1>Hi, {user.displayName}</h1>
+        <h1 className="text-black">Hi, {user.displayName}</h1>
       </div>
       <div className="mt-2">
         <h3 className="font-bold text-lg">Your Coupons</h3>
