@@ -60,7 +60,7 @@ const Navbar = () => {
           ) : (
             <Link
               to="/login"
-              className="text-sm font-semibold leading-6 text-gray-900"
+              className="text-sm font-semibold leading-6 text-primary"
             >
               Log in <span aria-hidden="true">&rarr;</span>
             </Link>

@@ -7,6 +7,12 @@ import {
   doc,
   deleteDoc,
   setDoc,
+  limit,
+  query,
+  QuerySnapshot,
+  DocumentData,
+  startAfter,
+  Query,
 } from "firebase/firestore";
 import {
   getStorage,
@@ -15,10 +21,46 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import app from "../firebaseConfig";
+import { orderBy } from "firebase/firestore/lite";
 
 // Initialize Firebase
 const db = getFirestore(app);
 const storage = getStorage();
+
+let documentCoursor: any = {};
+
+const getPaginatedCoupons = async (limitPage: number, lastDoc: any = {}) => {
+  try {
+    const coupons: Coupon[] = [];
+    let documentSnapshots: QuerySnapshot<DocumentData>;
+    let fetchQuery: Query;
+    if (Object.keys(lastDoc).length === 0) {
+      fetchQuery = query(
+        collection(db, "Coupons"),
+        orderBy("createdAt"),
+        limit(limitPage)
+      );
+    } else {
+      fetchQuery = query(
+        collection(db, "Coupons"),
+        orderBy("createdAt", "desc"),
+        startAfter(documentCoursor),
+        limit(limitPage)
+      );
+    }
+    documentSnapshots = await getDocs(fetchQuery);
+    documentCoursor = documentSnapshots.docs[documentSnapshots.docs.length - 1];
+    documentSnapshots.docs.forEach((doc) => {
+      coupons.push({
+        id: doc.id,
+        ...doc.data().coupon,
+      });
+    });
+    return coupons?.length > 0 ? coupons : [];
+  } catch (err) {
+    console.log(err);
+  }
+};
 
 const getAllCoupons = async () => {
   const coupons: Coupon[] = [];
@@ -162,6 +204,7 @@ const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean) => {
 };
 
 export {
+  getPaginatedCoupons,
   saveUserNewCoupon,
   getCouponsBrands,
   removeUserCoupon,

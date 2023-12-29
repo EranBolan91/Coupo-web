@@ -47,14 +47,14 @@ button {
 
 @layer base {
   :root {
-    --color-background: #ffffff;
+    --color-background: 360deg 0% 100%;
     --color-primary: 360deg 6% 7%;
     --color-secondary: 360deg 6% 17%;
   }
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --color-background: #213547;
+      --color-background: 130deg 10% 13%;
       --color-primary: 100deg 100% 100%;
       --color-secondary: 360deg 0% 89%;
     }

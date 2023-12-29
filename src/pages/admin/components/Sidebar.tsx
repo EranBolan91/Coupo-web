@@ -6,7 +6,7 @@ const Sidebar = () => {
   const location = useLocation();
 
   return (
-    <div className="relative bg-white dark:bg-gray-800">
+    <div className="absolute bg-white dark:bg-gray-800">
       <div className="flex flex-col sm:flex-row sm:justify-around">
         <div className="h-screen w-72">
           <div className="flex items-center justify-start mx-6 mt-10">
