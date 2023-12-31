@@ -55,11 +55,10 @@ const CouponCard = (props: Props) => {
   return (
     <div
       ref={props.innerRef}
-      style={{ width: "32rem" }}
-      className="card card-side  text-primary bg-base-100 shadow-xl m-2 bg-gradient-to-r from-cyan-500 to-blue-500 min-w-min"
+      className="card card-side w-80 sm:w-full md:w-9/12  text-primary bg-base-100 shadow-xl m-2 bg-gradient-to-r from-cyan-500 to-blue-500 min-w-min"
     >
       <div
-        className="flex justify-center items-center p-4 bg-blue-500"
+        className="hidden md:flex justify-center items-center p-4 bg-blue-500"
         style={{
           borderBottomLeftRadius: "18px",
           borderTopLeftRadius: "18px",
@@ -73,21 +72,23 @@ const CouponCard = (props: Props) => {
         </span>
       </div>
       <div className="card-body">
-        <div className="flex flex-col-reverse md:flex-row justify-between">
+        <div className="flex flex-col-reverse items-center md:flex-row md:justify-between">
           <span
             style={{ textShadow: " 3px 1px 2px pink" }}
-            className="card-title text-4xl"
+            className="card-title text-4xl text-left md:text-center"
           >
             {card.discount}% - {card.name}
           </span>
           <Avatar imgUrl={card.imgUrl} />
         </div>
-        <p className="font-semibold text-current">{card.description}</p>
-        <div className="card-actions justify-between items-end">
+        <p className="font-semibold text-current text-center md:text-left">
+          {card.description}
+        </p>
+        <div className="card-actions justify-center md:justify-between items-end">
           <div className="flex flex-col">
             <span
               onClick={handleCopyCode}
-              className="text-3xl font-bold italic cursor-pointer"
+              className="text-3xl font-bold italic cursor-pointer text-center md:text-left"
             >
               {card.code}
             </span>

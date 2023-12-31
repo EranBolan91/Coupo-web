@@ -4,7 +4,7 @@ interface Props {
 
 const SearchBar = (props: Props) => {
   return (
-    <div className="w-1/2">
+    <div className="w-full md:w-1/2">
       <div className="relative">
         <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
           <svg

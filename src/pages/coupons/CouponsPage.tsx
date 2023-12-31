@@ -1,13 +1,9 @@
-import {
-  getAllCoupons,
-  getPaginatedCoupons,
-} from "../../database/databaseCalls";
+import { getPaginatedCoupons } from "../../database/databaseCalls";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import CouponCard from "../main/components/CouponCard";
 import SearchBar from "../main/components/Searchbar";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Coupon } from "../../types/Types";
-import { useIntersection } from "@mantine/hooks";
 import { useInView } from "react-intersection-observer";
 
 const CouponsPage = () => {
@@ -16,22 +12,20 @@ const CouponsPage = () => {
   const { ref, inView } = useInView();
   const { data, status, error, hasNextPage, fetchNextPage } = useInfiniteQuery({
     queryKey: ["coupons"],
-    queryFn: (context) =>
-      getPaginatedCoupons(
-        context.pageParam,
-        data?.pages[data?.pages.length - 1]
-      ),
+    queryFn: getPaginatedCoupons,
     initialPageParam: 1,
+    staleTime: Infinity,
     getNextPageParam: (lastPage, allPages) => {
+      console.log("lastPage", lastPage);
       const nextPage = lastPage?.length ? allPages.length + 1 : undefined;
       return nextPage;
     },
   });
 
-  const d = data?.pages.flatMap((coupon) => coupon);
+  const coupons = data?.pages.flatMap((coupon) => coupon);
+
   useEffect(() => {
     if (inView && hasNextPage) {
-      console.log("Fire!");
       fetchNextPage();
     }
   }, [inView, hasNextPage, fetchNextPage]);
@@ -53,11 +47,14 @@ const CouponsPage = () => {
         <SearchBar filter={handleCouponsFilter} />
       </div>
       <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 p-0 md:p-0 lg:p-0 justify-center items-center mt-11 justify-items-center">
-        {d &&
-          d.map((coupon, index) => {
-            if (index === d.length - 1) {
+        {coupons &&
+          coupons.map((coupon, index) => {
+            if (index === coupons.length - 1) {
               return (
-                <div key={index} className="col-span-12 md:col-span-4">
+                <div
+                  key={index}
+                  className="flex justify-center col-span-12 sm:col-span-12 md:col-span-4 w-full"
+                >
                   {coupon && (
                     <CouponCard innerRef={ref} card={coupon} key={index} />
                   )}{" "}
@@ -65,7 +62,10 @@ const CouponsPage = () => {
               );
             } else {
               return (
-                <div key={index} className="col-span-12 md:col-span-4">
+                <div
+                  key={index}
+                  className="flex justify-center col-span-12 sm:col-span-12 md:col-span-4 w-full"
+                >
                   {coupon && <CouponCard card={coupon} key={index} />}{" "}
                 </div>
               );

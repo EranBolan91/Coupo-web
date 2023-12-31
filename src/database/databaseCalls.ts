@@ -29,23 +29,24 @@ const storage = getStorage();
 
 let documentCoursor: any = {};
 
-const getPaginatedCoupons = async (limitPage: number, lastDoc: any = {}) => {
+const getPaginatedCoupons = async ({ pageParam }: { pageParam: any }) => {
+  const dataLimit = 5;
   try {
     const coupons: Coupon[] = [];
     let documentSnapshots: QuerySnapshot<DocumentData>;
     let fetchQuery: Query;
-    if (Object.keys(lastDoc).length === 0) {
+    if (pageParam === 1) {
       fetchQuery = query(
         collection(db, "Coupons"),
         orderBy("createdAt"),
-        limit(limitPage)
+        limit(dataLimit)
       );
     } else {
       fetchQuery = query(
         collection(db, "Coupons"),
         orderBy("createdAt", "desc"),
         startAfter(documentCoursor),
-        limit(limitPage)
+        limit(dataLimit)
       );
     }
     documentSnapshots = await getDocs(fetchQuery);
