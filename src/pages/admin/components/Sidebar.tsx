@@ -11,7 +11,9 @@ const Sidebar = () => {
         <div className="h-screen w-72">
           <div className="flex items-center justify-start mx-6 mt-10">
             <Link to={"/"}>
-              <img className="h-10" src="/icons/rocket.svg" />
+              <img className="h-10" src="/coupo_logo.svg" />
+              <img className="h-10" src="/coupo_logo.jpeg" />
+              <img className="h-10" src="/coupo_logo1.png" />
               <span className="text-gray-600 dark:text-gray-300 ml-4 text-2xl font-bold">
                 Coupo
               </span>

@@ -45,11 +45,83 @@ button {
   transition: border-color 0.25s;
 }
 
+.level0from {
+  background: linear-gradient(
+    21deg,
+    hsl(var(--color-level-0-from)) 0%,
+    hsl(var(--color-level-0-to)) 100%
+  );
+}
+
+.level0to {
+  background: linear-gradient(
+    345deg,
+    hsl(var(--color-level-0-from)) 0%,
+    hsl(var(--color-level-0-to)) 100%
+  );
+}
+
+.level1from {
+  background: linear-gradient(
+    21deg,
+    hsl(var(--color-level-1-from)) 0%,
+    hsl(var(--color-level-1-to)) 100%
+  );
+}
+
+level1to {
+  background: linear-gradient(
+    345deg,
+    hsl(var(--color-level-1-from)) 0%,
+    hsl(var(--color-level-1-to)) 100%
+  );
+}
+
+.level2from {
+  background: linear-gradient(
+    21deg,
+    hsl(var(--color-level-2-from)) 0%,
+    hsl(var(--color-level-2-to)) 100%
+  );
+}
+
+level2to {
+  background: linear-gradient(
+    345deg,
+    hsl(var(--color-level-2-from)) 0%,
+    hsl(var(--color-level-2-to)) 100%
+  );
+}
+
+.level3from {
+  background: linear-gradient(
+    75deg,
+    hsl(var(--color-level-3-from)) 0%,
+    hsl(var(--color-level-3-to)) 100%
+  );
+}
+
+level3to {
+  background: linear-gradient(
+    30deg,
+    hsl(var(--color-level-3-from)) 0%,
+    hsl(var(--color-level-3-to)) 100%
+  );
+}
+
 @layer base {
   :root {
     --color-background: 360deg 0% 100%;
     --color-primary: 360deg 6% 7%;
     --color-secondary: 360deg 6% 17%;
+    --color-level-0-from: 21deg, 90%, 48%;
+    --color-level-0-to: 345deg, 83%, 41%;
+    --color-level-1-from: 263deg, 70%, 50%;
+    --color-level-1-to: 295deg, 70%, 33%;
+    --color-level-2-from: 85deg, 63%, 40%;
+    --color-level-2-to: 88deg, 61%, 20%;
+    --color-level-3-from: 38deg, 92%, 50%;
+    --color-level-3-to: 23deg, 83%, 31%;
   }
 
   @media (prefers-color-scheme: dark) {

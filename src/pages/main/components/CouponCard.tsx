@@ -30,6 +30,32 @@ const Circle = styled.div<StyledDivProps>`
     props.$right !== undefined ? `-${props.$right}px` : "unset"};
 `;
 
+const colorCard = (discount: string) => {
+  const discountNumber = parseInt(discount);
+  if (discountNumber > 0 && discountNumber <= 25) {
+    return "level0from level0to";
+  } else if (discountNumber > 25 && discountNumber <= 50) {
+    return "level1from level1to";
+  } else if (discountNumber > 50 && discountNumber <= 75) {
+    return "level2from level2to";
+  } else if (discountNumber > 75 && discountNumber <= 100) {
+    return "level3from level3to";
+  }
+};
+
+const colorSideTitle = (discount: string) => {
+  const discountNumber = parseInt(discount);
+  if (discountNumber > 0 && discountNumber <= 25) {
+    return "level0to";
+  } else if (discountNumber > 25 && discountNumber <= 50) {
+    return "level1to";
+  } else if (discountNumber > 50 && discountNumber <= 75) {
+    return "level2to";
+  } else if (discountNumber > 75 && discountNumber <= 100) {
+    return "level3to";
+  }
+};
+
 const CouponCard = (props: Props) => {
   const card = props.card;
   const { user }: any = UserAuth();
@@ -51,14 +77,18 @@ const CouponCard = (props: Props) => {
       });
     }
   };
-
+  //from-cyan-500 to-blue-500
   return (
     <div
       ref={props.innerRef}
-      className="card card-side w-80 sm:w-full md:w-9/12  text-primary bg-base-100 shadow-xl m-2 bg-gradient-to-r from-cyan-500 to-blue-500 min-w-min"
+      className={`card card-side w-80 sm:w-full md:w-9/12  text-primary bg-base-100 shadow-xl m-2 bg-gradient-to-r ${colorCard(
+        props.card.discount
+      )}  min-w-min`}
     >
       <div
-        className="hidden md:flex justify-center items-center p-4 bg-blue-500"
+        className={`hidden md:flex justify-center items-center p-4 ${colorCard(
+          props.card.discount
+        )}`}
         style={{
           borderBottomLeftRadius: "18px",
           borderTopLeftRadius: "18px",

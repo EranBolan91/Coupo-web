@@ -21,7 +21,7 @@ function App() {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="h-20">
+        <div className="h-20 z-50">
           {displayAdminSidebar ? <AdminSidebar /> : <Navbar />}
         </div>
         <div>
@@ -65,7 +65,7 @@ function App() {
             />
           </Routes>
         </div>
-        <div className="">
+        <div className="mt-auto">
           <Footer />
         </div>
       </div>
