@@ -14,6 +14,7 @@ const Sidebar = () => {
               <img className="h-10" src="/coupo_logo.svg" />
               <img className="h-10" src="/coupo_logo.jpeg" />
               <img className="h-10" src="/coupo_logo1.png" />
+              <img className="h-15" src="/just_logo.png" />
               <span className="text-gray-600 dark:text-gray-300 ml-4 text-2xl font-bold">
                 Coupo
               </span>

@@ -1,30 +1,58 @@
 import { useEffect, useState } from "react";
-import { getUserCoupons } from "../../../database/databaseCalls";
+import {
+  getUserCoupons,
+  removeUserCoupon,
+} from "../../../database/databaseCalls";
 import { UserAuth } from "../../../auth/AuthProvider";
 import { Coupon } from "../../../types/Types";
+import Modal from "../../../components/Modal";
+import toast from "react-hot-toast";
 
 const Table = () => {
   const [coupons, setCoupons] = useState<Coupon[] | null>(null);
-  const { user }: any = UserAuth();
+  const [openModal, setOpenModal] = useState(false);
+  const { user } = UserAuth();
+
+  const handleOpenModal = (open: boolean) => {
+    setOpenModal(open);
+  };
+
+  // const handleRemoveCoupon = (coupon: Coupon) => {
+  //   toast.promise(removeUserCoupon(user.uid, coupon.id), {
+  //     loading: `Removing ${coupon.code}, please wait...`,
+  //     success: `${coupon.code} is removed!`,
+  //     error: "Error removing copuon",
+  //   });
+  //   setOpenModal(false);
+  // };
+
+  const modal = (coupon: Coupon) => {
+    return (
+      <Modal
+        coupon={coupon}
+        open={true}
+        setOpen={handleOpenModal}
+        title={coupon.name}
+      />
+    );
+  };
 
   useEffect(() => {
     const fetchUserCoupons = async () => {
       const res = await getUserCoupons(user.uid);
       setCoupons(res);
+      console.log("coupons", res);
     };
     fetchUserCoupons();
   }, []);
+
   return (
     <div className="overflow-x-auto">
       <table className="table">
         {/* head */}
         <thead>
           <tr>
-            <th>
-              <label>
-                <input type="checkbox" className="checkbox" />
-              </label>
-            </th>
+            <th></th>
             <th>Name</th>
             <th>Description</th>
             <th>Category</th>
@@ -37,25 +65,18 @@ const Table = () => {
           </tr>
         </thead>
         <tbody>
-          {/* row 1 */}
           {coupons?.map((coupon, index) => (
             <tr key={index}>
               <th>
-                <label>
-                  <input type="checkbox" className="checkbox" />
-                </label>
+                <div className="avatar">
+                  <div className="mask mask-squircle w-14 h-14">
+                    <img src={coupon.imgUrl} style={{ objectFit: "fill" }} />
+                  </div>
+                </div>
               </th>
               <td>
                 <div className="flex items-center gap-3">
-                  <div className="avatar">
-                    <div className="mask mask-squircle w-14 h-14">
-                      <img src={coupon.imgUrl} style={{ objectFit: "fill" }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="font-bold">{coupon.name}</div>
-                    {/* <div className="text-sm opacity-50">United States</div> */}
-                  </div>
+                  <div className="font-bold">{coupon.name}</div>
                 </div>
               </td>
               <td className="w-1/4">
@@ -80,7 +101,18 @@ const Table = () => {
                 <div className="text-sm">{coupon.expiry.toString()}</div>
               </td>
               <th>
-                <button className="btn btn-ghost btn-xs">details</button>
+                <button
+                  onClick={() => handleOpenModal(true)}
+                  className="btn btn-ghost btn-xs"
+                >
+                  Remove
+                </button>
+                <Modal
+                  coupon={coupon}
+                  open={openModal}
+                  setOpen={handleOpenModal}
+                  title={coupon.name}
+                />
               </th>
             </tr>
           ))}

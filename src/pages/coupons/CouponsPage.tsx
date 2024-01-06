@@ -15,15 +15,16 @@ const CouponsPage = () => {
     queryFn: getPaginatedCoupons,
     initialPageParam: 1,
     staleTime: Infinity,
+    refetchOnWindowFocus: false,
     getNextPageParam: (lastPage, allPages) => {
-      console.log("lastPage", lastPage);
       const nextPage = lastPage?.length ? allPages.length + 1 : undefined;
       return nextPage;
     },
   });
 
-  const coupons = data?.pages.flatMap((coupon) => coupon);
-
+  const coupons: Coupon[] = (
+    data?.pages.flatMap((coupon) => coupon) || []
+  ).filter((coupon): coupon is Coupon => coupon !== undefined);
   useEffect(() => {
     if (inView && hasNextPage) {
       fetchNextPage();
@@ -35,7 +36,7 @@ const CouponsPage = () => {
       setFilteredCoupons(globalCoupons);
       return;
     }
-    const filteredData = filteredCoupons?.filter((coupon) =>
+    const filteredData = coupons?.filter((coupon) =>
       coupon.name.toLowerCase().includes(text.toLowerCase())
     );
     setFilteredCoupons(filteredData ? filteredData : []);

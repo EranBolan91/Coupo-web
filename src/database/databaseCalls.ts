@@ -1,4 +1,3 @@
-import { Coupon, CouponBrand } from "../types/Types";
 import {
   getFirestore,
   collection,
@@ -13,6 +12,7 @@ import {
   DocumentData,
   startAfter,
   Query,
+  where,
 } from "firebase/firestore";
 import {
   getStorage,
@@ -22,6 +22,7 @@ import {
 } from "firebase/storage";
 import app from "../firebaseConfig";
 import { orderBy } from "firebase/firestore/lite";
+import { Coupon, CouponBrand } from "../types/Types";
 
 // Initialize Firebase
 const db = getFirestore(app);
@@ -30,33 +31,36 @@ const storage = getStorage();
 let documentCoursor: any = {};
 
 const getPaginatedCoupons = async ({ pageParam }: { pageParam: any }) => {
-  const dataLimit = 5;
+  const dataLimit = 10;
   try {
     const coupons: Coupon[] = [];
     let documentSnapshots: QuerySnapshot<DocumentData>;
     let fetchQuery: Query;
+
     if (pageParam === 1) {
       fetchQuery = query(
         collection(db, "Coupons"),
-        orderBy("createdAt"),
+        // where("name", "==", "amazon"),
+        orderBy("createdAt", "desc"),
         limit(dataLimit)
       );
     } else {
       fetchQuery = query(
         collection(db, "Coupons"),
+        // where("name", "==", "amazon"),
         orderBy("createdAt", "desc"),
         startAfter(documentCoursor),
         limit(dataLimit)
       );
     }
+
     documentSnapshots = await getDocs(fetchQuery);
     documentCoursor = documentSnapshots.docs[documentSnapshots.docs.length - 1];
     documentSnapshots.docs.forEach((doc) => {
-      coupons.push({
-        id: doc.id,
-        ...doc.data().coupon,
-      });
+      const coupon = { id: doc.id, ...doc.data() };
+      coupons.push(coupon as Coupon);
     });
+
     return coupons?.length > 0 ? coupons : [];
   } catch (err) {
     console.log(err);
@@ -96,25 +100,12 @@ const getCategories = async () => {
   return categories;
 };
 
-//TODO: Need to find a better way to destruct the data
 const getUserCoupons = async (userID: string) => {
   const coupons: Coupon[] = [];
   const ref = await getDocs(collection(db, "UsersCoupons", userID, "coupons"));
   ref.forEach((doc) => {
-    coupons.push({
-      id: doc.id,
-      name: doc.data().name,
-      description: doc.data().description,
-      imgUrl: doc.data().imgUrl,
-      code: doc.data().code,
-      category: doc.data().category,
-      expiry: doc.data().expiry,
-      discount: doc.data().discount,
-      createdAt: doc.data().createdAt,
-      updatedAt: doc.data().updatedAt,
-      likes: doc.data().likes,
-      dislikes: doc.data().dislikes,
-    });
+    const coupon = { id: doc.id, ...doc.data() };
+    coupons.push(coupon as Coupon);
   });
   return coupons;
 };
@@ -129,7 +120,7 @@ const saveNewCoupon = async (coupon: Coupon) => {
   coupon.likes = 0;
   coupon.dislikes = 0;
   await addDoc(collection(db, "Coupons"), {
-    coupon,
+    ...coupon,
   });
 };
 
@@ -137,9 +128,7 @@ const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
   coupon.createdAt = new Date();
   coupon.likes = 0;
   coupon.dislikes = 0;
-  await addDoc(collection(db, "Coupons"), {
-    coupon,
-  });
+  await addDoc(collection(db, "Coupons"), coupon);
   await saveCouponToUsersCoupon(coupon, userID);
 };
 
@@ -170,22 +159,6 @@ const saveImageBrand = async (imgFile: any, imageName: string) => {
   );
 };
 
-const saveCouponVote = async (
-  couponID: string,
-  userID: string,
-  vote: number
-) => {
-  let subCollectionName = "";
-  if (vote) {
-    subCollectionName = "Likes";
-  } else {
-    subCollectionName = "Dislikes";
-  }
-  const ref = doc(db, "CouponVoting", couponID);
-  const colRef = collection(ref, subCollectionName);
-  addDoc(colRef, { userID });
-};
-
 const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean) => {
   try {
     let subCollectionName = "";
@@ -211,7 +184,6 @@ export {
   removeUserCoupon,
   saveImageBrand,
   getUserCoupons,
-  saveCouponVote,
   getAllCoupons,
   getCategories,
   saveNewCoupon,
