@@ -30,28 +30,46 @@ const storage = getStorage();
 
 let documentCoursor: any = {};
 
-const getPaginatedCoupons = async ({ pageParam }: { pageParam: any }) => {
+const getPaginatedCoupons = async (queryParam: string, pageParam: any) => {
   const dataLimit = 10;
+  console.log("queryParam", queryParam);
   try {
     const coupons: Coupon[] = [];
     let documentSnapshots: QuerySnapshot<DocumentData>;
     let fetchQuery: Query;
 
-    if (pageParam === 1) {
-      fetchQuery = query(
-        collection(db, "Coupons"),
-        // where("name", "==", "amazon"),
-        orderBy("createdAt", "desc"),
-        limit(dataLimit)
-      );
+    if (pageParam === null) {
+      if (queryParam === "") {
+        fetchQuery = query(
+          collection(db, "Coupons"),
+          orderBy("createdAt", "desc"),
+          limit(dataLimit)
+        );
+      } else {
+        fetchQuery = query(
+          collection(db, "Coupons"),
+          orderBy("createdAt", "desc"),
+          where("name", "==", queryParam),
+          limit(dataLimit)
+        );
+      }
     } else {
-      fetchQuery = query(
-        collection(db, "Coupons"),
-        // where("name", "==", "amazon"),
-        orderBy("createdAt", "desc"),
-        startAfter(documentCoursor),
-        limit(dataLimit)
-      );
+      if (queryParam === "") {
+        fetchQuery = query(
+          collection(db, "Coupons"),
+          orderBy("createdAt", "desc"),
+          startAfter(documentCoursor),
+          limit(dataLimit)
+        );
+      } else {
+        fetchQuery = query(
+          collection(db, "Coupons"),
+          orderBy("createdAt", "desc"),
+          where("name", "==", queryParam),
+          startAfter(documentCoursor),
+          limit(dataLimit)
+        );
+      }
     }
 
     documentSnapshots = await getDocs(fetchQuery);
