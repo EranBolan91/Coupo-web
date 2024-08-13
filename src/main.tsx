@@ -1,11 +1,11 @@
-import React from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ErrorBoundary from "./errorBoundary/ErrorBoundary.tsx";
+import { AuthProvider } from "./auth/AuthProvider.tsx";
+import { BrowserRouter } from "react-router-dom";
 import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
+import React from "react";
 import "./index.css";
-import { BrowserRouter } from "react-router-dom";
-import { AuthProvider } from "./auth/AuthProvider.tsx";
-import ErrorBoundary from "./errorBoundary/ErrorBoundary.tsx";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const queryClient = new QueryClient();
 

@@ -68,10 +68,10 @@ const AddUserCoupon = () => {
 
   return (
     <div className="grid grid-cols-12">
-      <div className="h-screen col-span-12">
+      <div className="col-span-12">
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col justify-center items-center bg-white p-1 h-full"
+          className="flex flex-col justify-center items-center bg-white p-8 h-full"
           noValidate
         >
           <div className="space-y-12 w-1/2 bg-white p-3">

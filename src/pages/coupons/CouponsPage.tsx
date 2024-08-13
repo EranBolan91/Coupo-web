@@ -1,17 +1,19 @@
 import { getPaginatedCoupons } from "../../database/databaseCalls";
 import { useInfiniteQuery } from "@tanstack/react-query";
-import CouponCard from "../main/components/CouponCard";
+import { useInView } from "react-intersection-observer";
+import CouponCard from "./CouponCard";
 import SearchBar from "../main/components/Searchbar";
+import useDebounce from "../../hooks/useDebounce";
 import { useEffect, useState } from "react";
 import { Coupon } from "../../types/Types";
-import { useInView } from "react-intersection-observer";
-import useDebounce from "../../hooks/useDebounce";
+import CouponTest from "./CouponTest";
 
 const CouponsPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debounceSearch = useDebounce(searchQuery, 700);
   const { ref, inView } = useInView();
-  const debounceSearch = useDebounce(searchQuery, 1000);
-  const { data, status, error, hasNextPage, fetchNextPage } = useInfiniteQuery({
+
+  const { data, hasNextPage, fetchNextPage } = useInfiniteQuery({
     queryKey: ["coupons", debounceSearch],
     queryFn: ({
       pageParam = null,
@@ -44,34 +46,32 @@ const CouponsPage = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="flex flex-col w-3/4 items-center justify-center bg-slate-800 w-full p-28">
-        <h2 className="text-7xl text-primary mb-20">
+    <div className="flex flex-col items-center justify-center py-3">
+      <div className="flex flex-col items-center justify-center bg-slate-800 w-full p-4 md:p-28">
+        <h2 className="text-2xl md:text-7xl text-primary mb-6 md:mb-20">
           Save upto 50% online now
         </h2>
         <SearchBar filter={handleCouponsFilter} />
       </div>
-      <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 p-0 md:p-0 lg:p-0 justify-center items-center mt-11 justify-items-center">
+      <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center">
         {coupons &&
-          coupons.map((coupon, index) => {
+          coupons.map((coupon: Coupon, index: number) => {
             if (index === coupons.length - 1) {
               return (
                 <div
                   key={index}
-                  className="flex justify-center col-span-12 sm:col-span-12 md:col-span-4 w-full"
+                  className="flex justify-center col-span-12  md:col-span-4 w-full"
                 >
-                  {coupon && (
-                    <CouponCard innerRef={ref} card={coupon} key={index} />
-                  )}{" "}
+                  <CouponTest innerRef={ref} coupon={coupon} key={index} />
                 </div>
               );
             } else {
               return (
                 <div
                   key={index}
-                  className="flex justify-center col-span-12 sm:col-span-12 md:col-span-4 w-full"
+                  className="flex justify-center col-span-12 md:col-span-4 w-full"
                 >
-                  {coupon && <CouponCard card={coupon} key={index} />}{" "}
+                  <CouponTest coupon={coupon} key={index} />
                 </div>
               );
             }

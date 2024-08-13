@@ -1,10 +1,10 @@
-import { Fragment, useRef } from "react";
-import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
-import { Coupon } from "../types/Types";
 import { removeUserCoupon } from "../database/databaseCalls";
-import toast from "react-hot-toast";
+import { Dialog, Transition } from "@headlessui/react";
 import { UserAuth } from "../auth/AuthProvider";
+import { Fragment, useRef } from "react";
+import { Coupon } from "../types/Types";
+import toast from "react-hot-toast";
 
 type Props = {
   coupon: Coupon;
@@ -16,7 +16,7 @@ type Props = {
 const Modal = (props: Props) => {
   const cancelButtonRef = useRef(null);
   const { user } = UserAuth();
-  console.log("title", props.title);
+
   const handleRemoveCoupon = () => {
     toast.promise(removeUserCoupon(user.uid, props.coupon.id), {
       loading: `Removing ${props.coupon.code}, please wait...`,
