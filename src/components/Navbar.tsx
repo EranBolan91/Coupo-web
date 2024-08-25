@@ -8,6 +8,7 @@ import Avatar from "./Avatar";
 const navigation = [
   { name: "Home", href: "/" },
   { name: "Coupons", href: "/coupons" },
+  { name: "Categories", href: "/categories" },
 ];
 
 const Navbar = () => {

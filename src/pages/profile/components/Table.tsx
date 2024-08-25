@@ -1,25 +1,22 @@
 import { getUserCoupons } from "../../../database/databaseCalls";
 import { UserAuth } from "../../../auth/AuthProvider";
+import { useQuery } from "@tanstack/react-query";
 import RemoveCouponBtn from "./RemoveCouponBtn";
+import ModalEditCoupon from "./ModalEditCoupon";
 import { Coupon } from "../../../types/Types";
-import { useEffect, useState } from "react";
+import { ref } from "firebase/storage";
 
 const Table = () => {
-  const [coupons, setCoupons] = useState<Coupon[] | null>(null);
   const { user } = UserAuth();
 
-  useEffect(() => {
-    const fetchUserCoupons = async () => {
-      const res = await getUserCoupons(user.uid);
-      setCoupons(res);
-    };
-    fetchUserCoupons();
-  }, []);
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["usercoupons"],
+    queryFn: () => getUserCoupons(user.uid),
+  });
 
   return (
     <div className="overflow-x-auto">
       <table className="table">
-        {/* head */}
         <thead>
           <tr>
             <th></th>
@@ -35,7 +32,7 @@ const Table = () => {
           </tr>
         </thead>
         <tbody>
-          {coupons?.map((coupon: Coupon, index: number) => (
+          {data?.map((coupon: Coupon, index: number) => (
             <tr key={index}>
               <th>
                 <div className="avatar">
@@ -72,6 +69,12 @@ const Table = () => {
               </td>
               <th>
                 <RemoveCouponBtn {...coupon} />
+                <ModalEditCoupon
+                  key={index}
+                  coupon={coupon}
+                  index={index}
+                  refetchData={refetch}
+                />
               </th>
             </tr>
           ))}

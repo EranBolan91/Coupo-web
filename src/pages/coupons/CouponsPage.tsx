@@ -1,7 +1,6 @@
 import { getPaginatedCoupons } from "../../database/databaseCalls";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import CouponCard from "./CouponCard";
 import SearchBar from "../main/components/Searchbar";
 import useDebounce from "../../hooks/useDebounce";
 import { useEffect, useState } from "react";
@@ -15,13 +14,8 @@ const CouponsPage = () => {
 
   const { data, hasNextPage, fetchNextPage } = useInfiniteQuery({
     queryKey: ["coupons", debounceSearch],
-    queryFn: ({
-      pageParam = null,
-      searchQuery,
-    }: {
-      pageParam?: number[] | null;
-      searchQuery?: string;
-    }) => getPaginatedCoupons(debounceSearch, pageParam),
+    queryFn: ({ pageParam = null }: { pageParam?: number[] | null }) =>
+      getPaginatedCoupons(debounceSearch, pageParam),
     initialPageParam: null,
     staleTime: 2000,
     refetchOnWindowFocus: false,
@@ -41,9 +35,7 @@ const CouponsPage = () => {
     }
   }, [inView, hasNextPage, debounceSearch]);
 
-  const handleCouponsFilter = (text: string) => {
-    setSearchQuery(text);
-  };
+  const handleCouponsFilter = (text: string) => setSearchQuery(text);
 
   return (
     <div className="flex flex-col items-center justify-center py-3">

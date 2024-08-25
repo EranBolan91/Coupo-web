@@ -13,6 +13,7 @@ import {
   startAfter,
   Query,
   where,
+  updateDoc,
 } from "firebase/firestore";
 import {
   getStorage,
@@ -30,9 +31,11 @@ const storage = getStorage();
 
 let documentCoursor: any = {};
 
-const getPaginatedCoupons = async (queryParam: string, pageParam: any) => {
+export const getPaginatedCoupons = async (
+  queryParam: string,
+  pageParam: any
+) => {
   const dataLimit = 10;
-  console.log("queryParam", queryParam);
   try {
     const coupons: Coupon[] = [];
     let documentSnapshots: QuerySnapshot<DocumentData>;
@@ -85,7 +88,53 @@ const getPaginatedCoupons = async (queryParam: string, pageParam: any) => {
   }
 };
 
-const getAllCoupons = async () => {
+export const getPaginatedCouponsByCategory = async (
+  pageParam: any,
+  categoryName: string | undefined
+) => {
+  const dataLimit = 10;
+  try {
+    const coupons: Coupon[] = [];
+    let documentSnapshots: QuerySnapshot<DocumentData>;
+    let fetchQuery: Query;
+
+    if (categoryName !== undefined) {
+      if (pageParam === null) {
+        fetchQuery = query(
+          collection(db, "Coupons"),
+          orderBy("createdAt", "desc"),
+          where("category", "==", categoryName),
+          limit(dataLimit)
+        );
+      } else {
+        fetchQuery = query(
+          collection(db, "Coupons"),
+          orderBy("createdAt", "desc"),
+          where("category", "==", categoryName),
+          startAfter(documentCoursor),
+          limit(dataLimit)
+        );
+      }
+
+      documentSnapshots = await getDocs(fetchQuery);
+      documentCoursor =
+        documentSnapshots.docs[documentSnapshots.docs.length - 1];
+      documentSnapshots.docs.forEach((doc) => {
+        const coupon = { id: doc.id, ...doc.data() };
+        coupons.push(coupon as Coupon);
+      });
+    }
+    // const coupons: Coupon[] = (
+    //   data?.pages.flatMap((coupon) => coupon) || []
+    // ).filter((coupon): coupon is Coupon => coupon !== undefined);
+
+    return coupons?.length > 0 ? coupons : [];
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const getAllCoupons = async () => {
   const coupons: Coupon[] = [];
   const getCoupons = await getDocs(collection(db, "Coupons"));
   getCoupons.forEach((coupon) => {
@@ -97,7 +146,7 @@ const getAllCoupons = async () => {
   return coupons;
 };
 
-const getCouponsBrands = async () => {
+export const getCouponsBrands = async () => {
   const couponsBrands: CouponBrand[] = [];
   const getCoupons = await getDocs(collection(db, "Brands"));
   getCoupons.forEach((coupon) => {
@@ -109,7 +158,7 @@ const getCouponsBrands = async () => {
   return couponsBrands;
 };
 
-const getCategories = async () => {
+export const getCategories = async () => {
   const categories: string[] = [];
   const getCategories = await getDocs(collection(db, "Category"));
   getCategories.forEach((category) => {
@@ -118,7 +167,7 @@ const getCategories = async () => {
   return categories;
 };
 
-const getUserCoupons = async (userID: string) => {
+export const getUserCoupons = async (userID: string) => {
   const coupons: Coupon[] = [];
   const ref = await getDocs(collection(db, "UsersCoupons", userID, "coupons"));
   ref.forEach((doc) => {
@@ -128,12 +177,12 @@ const getUserCoupons = async (userID: string) => {
   return coupons;
 };
 
-const removeUserCoupon = async (userID: string, couponID: string) => {
+export const removeUserCoupon = async (userID: string, couponID: string) => {
   const ref = doc(db, "UsersCoupons", userID, "coupons", couponID);
   await deleteDoc(ref);
 };
 
-const saveNewCoupon = async (coupon: Coupon) => {
+export const saveNewCoupon = async (coupon: Coupon) => {
   coupon.createdAt = new Date();
   coupon.likes = 0;
   coupon.dislikes = 0;
@@ -142,7 +191,7 @@ const saveNewCoupon = async (coupon: Coupon) => {
   });
 };
 
-const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
+export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
   coupon.createdAt = new Date();
   coupon.likes = 0;
   coupon.dislikes = 0;
@@ -152,13 +201,16 @@ const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
 
 // This should be in cloud functions
 // Saving coupon to users document
-const saveCouponToUsersCoupon = async (coupon: Coupon, userID: string) => {
+export const saveCouponToUsersCoupon = async (
+  coupon: Coupon,
+  userID: string
+) => {
   const ref = doc(db, "UsersCoupons", userID);
   const colRef = collection(ref, "coupons");
   addDoc(colRef, coupon);
 };
 
-const saveImageBrand = async (imgFile: any, imageName: string) => {
+export const saveImageBrand = async (imgFile: any, imageName: string) => {
   const storageRef = ref(storage, imageName + ".svg");
   const uploadTask = uploadBytesResumable(storageRef, imgFile);
   uploadTask.on(
@@ -177,7 +229,11 @@ const saveImageBrand = async (imgFile: any, imageName: string) => {
   );
 };
 
-const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean) => {
+export const saveUserVote = async (
+  coupon: Coupon,
+  userID: string,
+  vote: boolean
+) => {
   try {
     let subCollectionName = "";
     if (vote) {
@@ -195,15 +251,17 @@ const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean) => {
   }
 };
 
-export {
-  getPaginatedCoupons,
-  saveUserNewCoupon,
-  getCouponsBrands,
-  removeUserCoupon,
-  saveImageBrand,
-  getUserCoupons,
-  getAllCoupons,
-  getCategories,
-  saveNewCoupon,
-  saveUserVote,
+export const updateCoupon = async (
+  category: string,
+  discount: string,
+  description: string,
+  couponID: string,
+  userID: string
+) => {
+  const docRef = doc(db, "UsersCoupons", userID, "coupons", couponID);
+  await updateDoc(docRef, {
+    category: category,
+    discount: discount,
+    description: description,
+  });
 };

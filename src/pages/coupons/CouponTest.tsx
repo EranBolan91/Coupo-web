@@ -1,8 +1,7 @@
-import { Coupon } from "../../types/Types";
-import React from "react";
-import Avatar from "../main/components/Avatar";
 import { FaThumbsDown, FaThumbsUp } from "react-icons/fa";
+import { Coupon } from "../../types/Types";
 import toast from "react-hot-toast";
+import React from "react";
 
 interface Props {
   coupon: Coupon;
@@ -24,7 +23,7 @@ const CouponTest = ({ coupon, innerRef }: Props) => {
   return (
     <div
       ref={innerRef}
-      className="card bg-base-100 w-80 md:w-96 h-44 shadow-xl grid grid-cols-12 p-3 bg-slate-500 rounded-md"
+      className="card bg-base-100 w-80 md:w-96 h-44 shadow-xl grid grid-cols-12 p-3  rounded-md"
     >
       <div
         onClick={() => copyCodeCoupon(coupon.code)}
@@ -32,7 +31,7 @@ const CouponTest = ({ coupon, innerRef }: Props) => {
       >
         {coupon.code}
       </div>
-      <div className="col-span-6 p-1 flex flex-col">
+      <div className="col-span-7 p-1 flex flex-col">
         <div className="flex mt-auto">
           <span className="text-3xl md:text-6xl font-bold">
             {coupon.discount}%
@@ -47,9 +46,9 @@ const CouponTest = ({ coupon, innerRef }: Props) => {
           </div>
         </div>
       </div>
-      <div className="col-span-1">
+      {/* <div className="col-span-1">
         <div className="divide-y divide-solid divide-gray-400"></div>
-      </div>
+      </div> */}
       <div className="col-span-5 flex flex-col p-1 justify-center">
         <div className="flex justify-evenly mt-auto">
           <div className="flex flex-col text-red-600 text-lg items-center cursor-pointer mr-1">

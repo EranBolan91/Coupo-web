@@ -1,10 +1,11 @@
-import "./App.css";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
 import AddUserCoupon from "./pages/addCoupon/AddUserCoupon";
 import AdminSidebar from "./pages/admin/components/Sidebar";
+import Categories from "./pages/categories/Categories";
 import CouponsPage from "./pages/coupons/CouponsPage";
 import Brand from "./pages/admin/components/Brand";
+import Category from "./pages/category/Category";
 import Profile from "./pages/profile/Profile";
 import SignUp from "./auth/components/SignUp";
 import MainPage from "./pages/main/MainPage";
@@ -13,6 +14,7 @@ import AdminPage from "./pages/admin/Admin";
 import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import "./App.css";
 
 function App() {
   const location = useLocation();
@@ -27,6 +29,8 @@ function App() {
         <div>
           <Routes>
             <Route path="/" element={<MainPage />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/categories/:categoryName" element={<Category />} />
             <Route path="/coupons" element={<CouponsPage />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
