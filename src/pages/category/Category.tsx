@@ -1,7 +1,7 @@
 import { getPaginatedCouponsByCategory } from "../../database/databaseCalls";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import CouponTest from "../coupons/CouponTest";
+import CouponCard from "../coupons/CouponCard";
 import { useParams } from "react-router-dom";
 import { Coupon } from "../../types/Types";
 import { useEffect } from "react";
@@ -49,7 +49,7 @@ const Category = () => {
                   key={index}
                   className="flex justify-center col-span-12  md:col-span-3 w-full"
                 >
-                  <CouponTest innerRef={ref} coupon={coupon} key={index} />
+                  <CouponCard innerRef={ref} coupon={coupon} key={index} />
                 </div>
               );
             } else {
@@ -58,7 +58,7 @@ const Category = () => {
                   key={index}
                   className="flex justify-center col-span-12 md:col-span-3 w-full"
                 >
-                  <CouponTest coupon={coupon} key={index} />
+                  <CouponCard coupon={coupon} key={index} />
                 </div>
               );
             }

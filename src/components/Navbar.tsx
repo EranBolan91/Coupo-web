@@ -4,6 +4,7 @@ import { Dialog } from "@headlessui/react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import Avatar from "./Avatar";
+import { useLocation } from "react-router-dom";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -14,6 +15,7 @@ const navigation = [
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user } = UserAuth();
+  const location = useLocation();
 
   return (
     <header>
@@ -46,7 +48,11 @@ const Navbar = () => {
             <Link
               to={item.href}
               key={item.name}
-              className="text-sm font-semibold leading-6 text-primary"
+              className={`text-sm font-semibold leading-6 ${
+                location.pathname === item.href
+                  ? "text-indigo-600"
+                  : "text-primary hover:text-indigo-600"
+              }`}
             >
               {item.name}
             </Link>
@@ -98,7 +104,12 @@ const Navbar = () => {
                   <Link
                     to={item.href}
                     key={item.name}
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
+                    className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 ${
+                      location.pathname === item.href
+                        ? "bg-gray-50 text-indigo-600"
+                        : "text-gray-900 hover:bg-gray-50"
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>

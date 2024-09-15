@@ -16,6 +16,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
     coupon.discount
   );
   const [description, setDescription] = useState<string>(coupon.description);
+  const [openEditModal, setOpenEditModal] = useState<boolean>(false);
   const [category, setCategory] = useState<string>(coupon.category);
   const [error, setError] = useState<boolean>(false);
   const { user } = UserAuth();
@@ -23,6 +24,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
   const { data, isLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
+    enabled: openEditModal,
   });
 
   const updateCouponData = async () => {
@@ -54,20 +56,14 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
     }
   };
 
+  const handleOpenEditModal = () => setOpenEditModal(!openEditModal);
+
   return (
     <>
-      <button
-        className="btn"
-        onClick={() => {
-          const dialog = document?.getElementById(
-            `modal-${index}`
-          ) as HTMLDialogElement;
-          dialog?.showModal();
-        }}
-      >
+      <button className="btn" onClick={handleOpenEditModal}>
         edit
       </button>
-      <dialog id={`modal-${index}`} className="modal">
+      <dialog id={`modal-${index}`} className="modal" open={openEditModal}>
         <div className="modal-box">
           <h3 className="font-bold text-lg">Edit coupon - {coupon.name}</h3>
           <div className="w-full my-4">
