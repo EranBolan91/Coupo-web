@@ -4,6 +4,8 @@ import { FaThumbsDown } from "react-icons/fa";
 import { FaThumbsUp } from "react-icons/fa";
 import { Coupon } from "../../types/Types";
 import toast from "react-hot-toast";
+import { useState } from "react";
+import ModalLogin from "./ModalLogin";
 
 interface Props {
   coupon: Coupon;
@@ -22,13 +24,14 @@ const copyCodeCoupon = async (codeCoupon: string) => {
 };
 
 const CouponCard = ({ coupon, innerRef }: Props) => {
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const { user }: any = UserAuth();
 
+  const handleShowLoginModal = () => setShowLoginModal(!showLoginModal);
+
   const handleCouponVote = (vote: boolean) => {
-    console.log(vote);
     if (!user) {
-      toast.error("You must be logged in to vote");
-      return;
+      handleShowLoginModal();
     } else {
       toast.promise(saveUserVote({ ...coupon }, user.uid, vote), {
         loading: ``,
@@ -86,6 +89,7 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
           Expired: {coupon.expiry.toString()}
         </div>
       </div>
+      {showLoginModal && <ModalLogin onClose={handleShowLoginModal} />}
     </div>
   );
 };

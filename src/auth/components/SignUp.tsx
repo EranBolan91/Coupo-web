@@ -1,10 +1,13 @@
 import { useForm, SubmitHandler } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { UserAuth } from "../AuthProvider";
-import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
 import authErrors from "../AuthErrors";
+import toast from "react-hot-toast";
+import { useState } from "react";
 
 type SignUpForm = {
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
 };
@@ -22,30 +25,30 @@ const cleanAuthErrorMessage = (message: string) => {
 };
 
 const SignUp = () => {
-  const { SigninWthGoogle, createUserWithEmailPassword } = UserAuth();
+  const { signinWthGoogle, createUserWithEmailPassword } = UserAuth();
+  const [loading, setLoading] = useState(false);
   const form = useForm<SignUpForm>();
   const navigate = useNavigate();
   const {
     handleSubmit,
     register,
-    reset,
     formState: { errors },
   } = form;
 
   const handleSigninWithGoogle = async () => {
-    await SigninWthGoogle();
+    await signinWthGoogle();
     navigate("/profile");
   };
 
-  const handleSigninWithEmailPassword: SubmitHandler<SignUpForm> = async (
-    data
-  ) => {
+  const handleSigninWithEmailPassword: SubmitHandler<SignUpForm> = async (data) => {
     try {
-      const res = await createUserWithEmailPassword(data.email, data.password);
-      console.log(res);
+      setLoading(true);
+      await createUserWithEmailPassword(data.email, data.password, data.firstName, data.lastName);
+      setLoading(false);
     } catch (error: any) {
       const cleanErrorMsg = cleanAuthErrorMessage(error.message);
       toast.error(authErrors[cleanErrorMsg]);
+      setLoading(false);
     }
   };
 
@@ -64,16 +67,51 @@ const SignUp = () => {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form
-            className="space-y-6"
-            onSubmit={handleSubmit(handleSigninWithEmailPassword)}
-          >
+          <form className="space-y-6" onSubmit={handleSubmit(handleSigninWithEmailPassword)}>
             <div>
               <label
-                htmlFor="email"
+                htmlFor="firstName"
                 className="block text-sm font-medium leading-6 text-gray-900"
               >
-                Email address
+                First Name
+              </label>
+              <div className="mt-2">
+                <input
+                  id="firstName"
+                  type="text"
+                  {...register("firstName", {
+                    required: "First name is required",
+                  })}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+              <p style={{ fontStyle: "oblique" }} className="text-red-600">
+                {errors?.firstName?.message}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+                Last Name
+              </label>
+              <div className="mt-2">
+                <input
+                  id="lastName"
+                  type="text"
+                  {...register("lastName", {
+                    required: "Last name is required",
+                  })}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+              <p style={{ fontStyle: "oblique" }} className="text-red-600">
+                {errors?.lastName?.message}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+                Email
               </label>
               <div className="mt-2">
                 <input
@@ -85,8 +123,7 @@ const SignUp = () => {
                 />
               </div>
               <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                {" "}
-                {errors?.email?.message}{" "}
+                {errors?.email?.message}
               </p>
             </div>
 
@@ -115,34 +152,37 @@ const SignUp = () => {
                 />
               </div>
               <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                {" "}
-                {errors?.password?.message}{" "}
+                {errors?.password?.message}
               </p>
             </div>
 
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                disabled={loading}
+                className={`flex w-full justify-center items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
-                Sign up
+                {loading ? (
+                  <>
+                    <span className="loading loading-spinner loading-xs ml-2"></span>
+                    Please wait...
+                  </>
+                ) : (
+                  "Sign up"
+                )}
               </button>
             </div>
           </form>
           <div className="flex flex-col justify-center items-center text-black">
             <div className="inline-flex items-center justify-center w-full">
               <hr className="w-full h-px my-8 bg-gray-200 border-0" />
-              <span
-                style={{ left: "54%" }}
-                className="absolute px-3 font-normal text-black -translate-x-1/2 bg-white left-1/2"
-              >
+              <span className="absolute px-3 font-normal text-black -translate-x-1/2 bg-white left-1/2">
                 or continue with
               </span>
             </div>
-            <button
-              className="gsi-material-button"
-              onClick={handleSigninWithGoogle}
-            >
+            <button className="gsi-material-button" onClick={handleSigninWithGoogle}>
               <div className="gsi-material-button-state"></div>
               <div className="gsi-material-button-content-wrapper">
                 <div className="gsi-material-button-icon">
@@ -171,9 +211,7 @@ const SignUp = () => {
                     <path fill="none" d="M0 0h48v48H0z"></path>
                   </svg>
                 </div>
-                <span className="gsi-material-button-contents">
-                  Sign up with Google
-                </span>
+                <span className="gsi-material-button-contents">Sign up with Google</span>
               </div>
             </button>
           </div>

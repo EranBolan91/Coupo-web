@@ -23,7 +23,7 @@ import {
 } from "firebase/storage";
 import app from "../firebaseConfig";
 import { orderBy } from "firebase/firestore/lite";
-import { Coupon, CouponBrand } from "../types/Types";
+import { Coupon, CouponBrand, CurrentUser } from "../types/Types";
 
 // Initialize Firebase
 const db = getFirestore(app);
@@ -263,5 +263,11 @@ export const updateCoupon = async (
     category: category,
     discount: discount,
     description: description,
+  });
+};
+
+export const saveUserToDatabase = async (user: CurrentUser) => {
+  await addDoc(collection(db, "Users"), {
+    ...user,
   });
 };

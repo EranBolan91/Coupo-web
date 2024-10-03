@@ -13,21 +13,38 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   signInWithEmailAndPassword,
+  User,
 } from "firebase/auth";
 import toast from "react-hot-toast";
-import { redirect } from "react-router-dom";
 import { auth } from "../firebaseConfig";
+import { redirect } from "react-router-dom";
+import { saveUserToDatabase } from "../database/databaseCalls";
 
 const AuthContext = createContext<any>(null);
 const provider = new GoogleAuthProvider();
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<{} | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setLoading(false);
+      if (currentUser?.emailVerified === true) {
+        setUser(currentUser);
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [user]);
 
   const createUserWithEmailPassword = async (
     email: string,
-    password: string
+    password: string,
+    firstName: string,
+    lastName: string
   ) => {
     try {
       const newUser = await createUserWithEmailAndPassword(
@@ -35,13 +52,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password
       );
+
       if (newUser !== null && auth.currentUser !== null) {
-        const res = await sendEmailVerification(auth.currentUser);
-        if (res !== null) {
-          toast.success("Email verification sent!");
-          setUser(newUser);
-          return auth.currentUser;
-        }
+        await sendEmailVerification(newUser.user);
+        const userEmail = newUser.user.email ?? "";
+        const userUID = newUser.user.uid;
+
+        await saveUserToDatabase({
+          userUID: userUID,
+          firstName: firstName,
+          lastName: lastName,
+          email: userEmail,
+          isEmailVerified: newUser.user.emailVerified,
+          imageURL: "",
+          lastLogin: new Date().toDateString(),
+        });
+
+        toast.success("Email verification sent!");
+      } else {
+        return null;
       }
     } catch (error: any) {
       console.log(error.message);
@@ -104,18 +133,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(error.message);
       });
   };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setLoading(false);
-      if (currentUser) {
-        setUser(currentUser);
-      }
-    });
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [user]);
 
   return (
     <AuthContext.Provider

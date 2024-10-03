@@ -1,10 +1,9 @@
 import { useForm, SubmitHandler } from "react-hook-form";
-import { UserAuth } from "../AuthProvider";
 import { Link, useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { UserAuth } from "../AuthProvider";
 import authErrors from "../AuthErrors";
+import toast from "react-hot-toast";
 import { useState } from "react";
-import Spinner from "../../components/Spinner";
 
 type LoginForm = {
   email: string;
@@ -31,7 +30,6 @@ const Login = () => {
   const {
     handleSubmit,
     register,
-    reset,
     formState: { errors },
   } = form;
 
@@ -40,14 +38,13 @@ const Login = () => {
     navigate("/profile");
   };
 
-  const handleLoginWithEmailPassword: SubmitHandler<LoginForm> = async (
-    data
-  ) => {
+  const handleLoginWithEmailPassword: SubmitHandler<LoginForm> = async (data) => {
     try {
       setSpinner(true);
-      const res = await loginUserWithEmailPassword(data.email, data.password);
-      console.log(res);
+      await loginUserWithEmailPassword(data.email, data.password);
       setSpinner(false);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      navigate("/profile");
     } catch (error: any) {
       const cleanErrorMsg = cleanAuthErrorMessage(error.message);
       toast.error(authErrors[cleanErrorMsg]);
@@ -70,16 +67,10 @@ const Login = () => {
         </div>
 
         <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form
-            className="space-y-6"
-            onSubmit={handleSubmit(handleLoginWithEmailPassword)}
-          >
+          <form className="space-y-6" onSubmit={handleSubmit(handleLoginWithEmailPassword)}>
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium leading-6 text-gray-900"
-              >
-                Email address
+              <label htmlFor="email" className="block text-sm font-medium leading-6 text-gray-900">
+                Email
               </label>
               <div className="mt-2">
                 <input
@@ -105,10 +96,7 @@ const Login = () => {
                   Password
                 </label>
                 <div className="text-sm">
-                  <a
-                    href="#"
-                    className="font-semibold text-indigo-600 hover:text-indigo-500"
-                  >
+                  <a href="#" className="font-semibold text-indigo-600 hover:text-indigo-500">
                     Forgot password?
                   </a>
                 </div>
@@ -141,27 +129,21 @@ const Login = () => {
             <div>
               <button
                 type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                className="flex w-full justify-center items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
                 Login
-                {spinner && <Spinner classes={"relative left-36 top-0.5"} />}
+                {spinner && <span className="loading loading-spinner loading-xs ml-2"></span>}
               </button>
             </div>
           </form>
           <div className="flex flex-col justify-center items-center text-black">
             <div className="inline-flex items-center justify-center w-full">
               <hr className="w-full h-px my-8 bg-gray-200 border-0" />
-              <span
-                style={{ left: "54%" }}
-                className="absolute px-3 font-normal text-black -translate-x-1/2 bg-white left-1/2"
-              >
+              <span className="absolute px-3 font-normal text-black -translate-x-1/2 bg-white left-1/2">
                 or continue with
               </span>
             </div>
-            <button
-              className="gsi-material-button"
-              onClick={handleSigninWithGoogle}
-            >
+            <button className="gsi-material-button" onClick={handleSigninWithGoogle}>
               <div className="gsi-material-button-state"></div>
               <div className="gsi-material-button-content-wrapper">
                 <div className="gsi-material-button-icon">
@@ -190,9 +172,7 @@ const Login = () => {
                     <path fill="none" d="M0 0h48v48H0z"></path>
                   </svg>
                 </div>
-                <span className="gsi-material-button-contents">
-                  Login with Google
-                </span>
+                <span className="gsi-material-button-contents">Login with Google</span>
               </div>
             </button>
           </div>

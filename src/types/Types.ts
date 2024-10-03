@@ -18,4 +18,14 @@ type CouponBrand = {
   imgURL: string;
 };
 
-export type { Coupon, CouponBrand };
+type CurrentUser = {
+  userUID: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  lastLogin: string;
+  imageURL: string;
+  isEmailVerified: boolean;
+};
+
+export type { Coupon, CouponBrand, CurrentUser };
