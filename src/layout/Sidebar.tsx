@@ -8,7 +8,7 @@ import { CgProfile } from "react-icons/cg";
 import { IoMdHome } from "react-icons/io";
 import { Tooltip } from "react-tooltip";
 import { useState } from "react";
-import Avatar from "./Avatar";
+import Avatar from "./Navbar/components/Avatar";
 import toast from "react-hot-toast";
 
 const Menus = [
@@ -66,9 +66,7 @@ const Sidebar = () => {
           <div className={`flex ${open && "gap-x-4"} items-center`}>
             <img src={""} alt="" className="pl-2" />
             {open && (
-              <span className="text-xl font-medium whitespace-nowrap dark:text-white">
-                Coupo
-              </span>
+              <span className="text-xl font-medium whitespace-nowrap dark:text-white">Coupo</span>
             )}
           </div>
         </Link>
@@ -80,8 +78,7 @@ const Sidebar = () => {
                 id={menu.id}
                 className={`flex items-center gap-x-6 p-3 text-base font-normal rounded-lg cursor-pointer dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700
                         ${menu.gap ? "mt-9" : "mt-2"} ${
-                  location.pathname === menu.path &&
-                  "bg-gray-200 dark:bg-gray-700"
+                  location.pathname === menu.path && "bg-gray-200 dark:bg-gray-700"
                 }`}
               >
                 {user ? (
@@ -89,11 +86,7 @@ const Sidebar = () => {
                 ) : (
                   <span className="text-2xl">{menu.src}</span>
                 )}
-                <span
-                  className={`${
-                    !open && "hidden"
-                  } origin-left duration-300 hover:block`}
-                >
+                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>
                   {menu.title}
                 </span>
               </li>
@@ -117,11 +110,7 @@ const Sidebar = () => {
                 <span className="text-2xl">
                   <RiLogoutBoxLine />
                 </span>
-                <span
-                  className={`${
-                    !open && "hidden"
-                  } origin-left duration-300 hover:block`}
-                >
+                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>
                   Logout
                 </span>
               </li>
@@ -141,11 +130,7 @@ const Sidebar = () => {
                 <span className="text-2xl">
                   <SiGnuprivacyguard />
                 </span>
-                <span
-                  className={`${
-                    !open && "hidden"
-                  } origin-left duration-300 hover:block`}
-                >
+                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>
                   Login
                 </span>
               </li>
@@ -173,15 +158,10 @@ const Sidebar = () => {
           } absolute z-50 flex-col items-center self-end py-8 mt-16 space-y-6 font-bold sm:w-auto left-6 right-6 dark:text-white  bg-gray-50 dark:bg-slate-800 drop-shadow md rounded-xl`}
         >
           {Menus.map((menu, index) => (
-            <Link
-              to={menu.path}
-              key={index}
-              onClick={() => setMobileMenu(false)}
-            >
+            <Link to={menu.path} key={index} onClick={() => setMobileMenu(false)}>
               <span
                 className={` ${
-                  location.pathname === menu.path &&
-                  "bg-gray-200 dark:bg-gray-700"
+                  location.pathname === menu.path && "bg-gray-200 dark:bg-gray-700"
                 } p-2 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-700`}
               >
                 {menu.title}

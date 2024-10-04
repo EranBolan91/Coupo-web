@@ -15,15 +15,10 @@ import {
   where,
   updateDoc,
 } from "firebase/firestore";
-import {
-  getStorage,
-  ref,
-  getDownloadURL,
-  uploadBytesResumable,
-} from "firebase/storage";
-import app from "../firebaseConfig";
-import { orderBy } from "firebase/firestore/lite";
+import { getStorage, ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { Coupon, CouponBrand, CurrentUser } from "../types/Types";
+import { orderBy } from "firebase/firestore/lite";
+import app from "../firebaseConfig";
 
 // Initialize Firebase
 const db = getFirestore(app);
@@ -31,10 +26,7 @@ const storage = getStorage();
 
 let documentCoursor: any = {};
 
-export const getPaginatedCoupons = async (
-  queryParam: string,
-  pageParam: any
-) => {
+export const getPaginatedCoupons = async (queryParam: string, pageParam: any) => {
   const dataLimit = 10;
   try {
     const coupons: Coupon[] = [];
@@ -117,16 +109,12 @@ export const getPaginatedCouponsByCategory = async (
       }
 
       documentSnapshots = await getDocs(fetchQuery);
-      documentCoursor =
-        documentSnapshots.docs[documentSnapshots.docs.length - 1];
+      documentCoursor = documentSnapshots.docs[documentSnapshots.docs.length - 1];
       documentSnapshots.docs.forEach((doc) => {
         const coupon = { id: doc.id, ...doc.data() };
         coupons.push(coupon as Coupon);
       });
     }
-    // const coupons: Coupon[] = (
-    //   data?.pages.flatMap((coupon) => coupon) || []
-    // ).filter((coupon): coupon is Coupon => coupon !== undefined);
 
     return coupons?.length > 0 ? coupons : [];
   } catch (err) {
@@ -192,23 +180,28 @@ export const saveNewCoupon = async (coupon: Coupon) => {
 };
 
 export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
-  coupon.createdAt = new Date();
-  coupon.likes = 0;
-  coupon.dislikes = 0;
-  await addDoc(collection(db, "Coupons"), coupon);
-  await saveCouponToUsersCoupon(coupon, userID);
+  try {
+    coupon.createdAt = new Date();
+    coupon.likes = 0;
+    coupon.dislikes = 0;
+
+    const userCouponsRef = collection(db, `UsersCoupons/${userID}/coupons/`);
+    await addDoc(userCouponsRef, coupon);
+  } catch (error: any) {
+    console.log(error);
+  }
 };
 
 // This should be in cloud functions
 // Saving coupon to users document
-export const saveCouponToUsersCoupon = async (
-  coupon: Coupon,
-  userID: string
-) => {
-  const ref = doc(db, "UsersCoupons", userID);
-  const colRef = collection(ref, "coupons");
-  addDoc(colRef, coupon);
-};
+// export const saveCouponToUsersCoupon = async (
+//   coupon: Coupon,
+//   userID: string
+// ) => {
+//   const ref = doc(db, "UsersCoupons", userID);
+//   const colRef = collection(ref, "coupons");
+//   addDoc(colRef, coupon);
+// };
 
 export const saveImageBrand = async (imgFile: any, imageName: string) => {
   const storageRef = ref(storage, imageName + ".svg");
@@ -229,11 +222,7 @@ export const saveImageBrand = async (imgFile: any, imageName: string) => {
   );
 };
 
-export const saveUserVote = async (
-  coupon: Coupon,
-  userID: string,
-  vote: boolean
-) => {
+export const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean) => {
   try {
     let subCollectionName = "";
     if (vote) {
@@ -267,7 +256,6 @@ export const updateCoupon = async (
 };
 
 export const saveUserToDatabase = async (user: CurrentUser) => {
-  await addDoc(collection(db, "Users"), {
-    ...user,
-  });
+  const ref = doc(db, `Users/${user.userUID}`);
+  await setDoc(ref, user);
 };

@@ -3,9 +3,9 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import SearchBar from "../main/components/Searchbar";
 import useDebounce from "../../hooks/useDebounce";
+import CouponCard from "./components/CouponCard";
 import { useEffect, useState } from "react";
 import { Coupon } from "../../types/Types";
-import CouponCard from "./CouponCard";
 
 const CouponsPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -26,9 +26,9 @@ const CouponsPage = () => {
     },
   });
 
-  const coupons: Coupon[] = (
-    data?.pages.flatMap((coupon) => coupon) || []
-  ).filter((coupon): coupon is Coupon => coupon !== undefined);
+  const coupons: Coupon[] = (data?.pages.flatMap((coupon) => coupon) || []).filter(
+    (coupon): coupon is Coupon => coupon !== undefined
+  );
 
   useEffect(() => {
     if (inView && hasNextPage) {
@@ -90,19 +90,13 @@ const CouponsPage = () => {
           sortedCoupons.map((coupon: Coupon, index: number) => {
             if (index === sortedCoupons.length - 1) {
               return (
-                <div
-                  key={index}
-                  className="flex justify-center col-span-12  md:col-span-4 w-full"
-                >
+                <div key={index} className="flex justify-center col-span-12  md:col-span-4 w-full">
                   <CouponCard innerRef={ref} coupon={coupon} key={index} />
                 </div>
               );
             } else {
               return (
-                <div
-                  key={index}
-                  className="flex justify-center col-span-12 md:col-span-4 w-full"
-                >
+                <div key={index} className="flex justify-center col-span-12 md:col-span-4 w-full">
                   <CouponCard coupon={coupon} key={index} />
                 </div>
               );

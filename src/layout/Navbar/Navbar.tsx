@@ -1,10 +1,11 @@
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/solid";
-import { UserAuth } from "../auth/AuthProvider";
+import { UserAuth } from "../../auth/AuthProvider";
 import { useLocation } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
-import Avatar from "./Avatar";
+import Avatar from "./components/Avatar";
+import { User } from "firebase/auth";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -14,7 +15,7 @@ const navigation = [
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user } = UserAuth();
+  const { user }: { user: User } = UserAuth();
   const location = useLocation();
 
   return (
@@ -57,7 +58,7 @@ const Navbar = () => {
         </div>
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
           {user ? (
-            <Avatar imgURL={user.photoURL} />
+            <Avatar imgURL={user.photoURL ?? null} />
           ) : (
             <Link to="/login" className="text-sm font-semibold leading-6 text-primary">
               Log in

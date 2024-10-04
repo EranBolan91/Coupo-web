@@ -1,5 +1,5 @@
 import { Coupon } from "../../../types/Types";
-import Modal from "../../../components/Modal";
+import Modal from "../../../layout/Modal";
 import { useState } from "react";
 
 const RemoveCouponBtn = (coupon: Coupon) => {
@@ -11,12 +11,7 @@ const RemoveCouponBtn = (coupon: Coupon) => {
       <button onClick={handleOpenModal} className="btn btn-ghost btn-xs">
         remove
       </button>
-      <Modal
-        coupon={coupon}
-        open={openModal}
-        setOpen={handleOpenModal}
-        title={coupon.name}
-      />
+      <Modal coupon={coupon} open={openModal} setOpen={handleOpenModal} title={coupon.name} />
     </>
   );
 };

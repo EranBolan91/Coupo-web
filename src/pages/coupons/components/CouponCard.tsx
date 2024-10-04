@@ -1,11 +1,11 @@
-import { saveUserVote } from "../../database/databaseCalls";
-import { UserAuth } from "../../auth/AuthProvider";
+import { saveUserVote } from "../../../database/databaseCalls";
+import { UserAuth } from "../../../auth/AuthProvider";
+import { Coupon } from "../../../types/Types";
 import { FaThumbsDown } from "react-icons/fa";
 import { FaThumbsUp } from "react-icons/fa";
-import { Coupon } from "../../types/Types";
+import ModalLogin from "./ModalLogin";
 import toast from "react-hot-toast";
 import { useState } from "react";
-import ModalLogin from "./ModalLogin";
 
 interface Props {
   coupon: Coupon;
@@ -54,9 +54,7 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
       </div>
       <div className="col-span-7 p-1 flex flex-col">
         <div className="flex mt-auto">
-          <span className="text-3xl md:text-6xl font-bold">
-            {coupon.discount}%
-          </span>
+          <span className="text-3xl md:text-6xl font-bold">{coupon.discount}%</span>
         </div>
         <div className="mt-auto">
           <div className="text-xl md:text-lg font-semibold">

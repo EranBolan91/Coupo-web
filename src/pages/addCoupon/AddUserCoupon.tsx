@@ -1,14 +1,10 @@
+import { getCategories, getCouponsBrands, saveUserNewCoupon } from "../../database/databaseCalls";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { Coupon, CouponBrand } from "../../types/Types";
-import { useEffect, useState } from "react";
-import Select from "../admin/components/Select";
-import toast from "react-hot-toast";
-import {
-  getCategories,
-  getCouponsBrands,
-  saveUserNewCoupon,
-} from "../../database/databaseCalls";
 import { UserAuth } from "../../auth/AuthProvider";
+import Select from "../admin/components/Select";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 const AddUserCoupon = () => {
   const [couponBrands, setCouponBrands] = useState<CouponBrand[]>([]);
@@ -51,10 +47,7 @@ const AddUserCoupon = () => {
   };
 
   useEffect(() => {
-    if (
-      (categories && categories.length === 0) ||
-      (couponBrands && couponBrands.length === 0)
-    ) {
+    if ((categories && categories.length === 0) || (couponBrands && couponBrands.length === 0)) {
       getCouponsBrands().then((brandsData) => {
         setCouponBrands(brandsData);
         setBrand(brandsData[0]);
@@ -76,9 +69,7 @@ const AddUserCoupon = () => {
         >
           <div className="space-y-12 w-1/2 bg-white p-3">
             <div className="border-b border-gray-900/10 pb-12">
-              <h2 className="text-base font-semibold leading-7 text-gray-900">
-                Add New Coupon
-              </h2>
+              <h2 className="text-base font-semibold leading-7 text-gray-900">Add New Coupon</h2>
 
               <div className="mt-10 grid grid-cols-12 md:grid-cols-12 gap-x-6 gap-y-8 ">
                 <div className="col-span-12 md:col-span-6 lg:col-span-6">
@@ -200,10 +191,7 @@ const AddUserCoupon = () => {
           </div>
 
           <div className="mt-6 flex items-center justify-end gap-x-6">
-            <button
-              type="button"
-              className="text-sm font-semibold leading-6 text-gray-900"
-            >
+            <button type="button" className="text-sm font-semibold leading-6 text-gray-900">
               Cancel
             </button>
             <button className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">

@@ -1,7 +1,7 @@
 import { getPaginatedCouponsByCategory } from "../../database/databaseCalls";
+import CouponCard from "../coupons/components/CouponCard";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import CouponCard from "../coupons/CouponCard";
 import { useParams } from "react-router-dom";
 import { Coupon } from "../../types/Types";
 import { useEffect } from "react";
@@ -12,12 +12,8 @@ const Category = () => {
 
   const { data, hasNextPage, fetchNextPage } = useInfiniteQuery({
     queryKey: ["categorycoupons", categoryName],
-    queryFn: ({
-      pageParam = null,
-    }: {
-      pageParam?: number[] | null;
-      searchQuery?: string;
-    }) => getPaginatedCouponsByCategory(pageParam, categoryName),
+    queryFn: ({ pageParam = null }: { pageParam?: number[] | null; searchQuery?: string }) =>
+      getPaginatedCouponsByCategory(pageParam, categoryName),
     initialPageParam: null,
     staleTime: 2000,
     refetchOnWindowFocus: false,
@@ -33,9 +29,9 @@ const Category = () => {
     }
   }, [inView, hasNextPage]);
 
-  const coupons: Coupon[] = (
-    data?.pages.flatMap((coupon) => coupon) || []
-  ).filter((coupon): coupon is Coupon => coupon !== undefined);
+  const coupons: Coupon[] = (data?.pages.flatMap((coupon) => coupon) || []).filter(
+    (coupon): coupon is Coupon => coupon !== undefined
+  );
 
   return (
     <>
@@ -45,19 +41,13 @@ const Category = () => {
           coupons.map((coupon: Coupon, index: number) => {
             if (index === coupons.length - 1) {
               return (
-                <div
-                  key={index}
-                  className="flex justify-center col-span-12  md:col-span-3 w-full"
-                >
+                <div key={index} className="flex justify-center col-span-12  md:col-span-3 w-full">
                   <CouponCard innerRef={ref} coupon={coupon} key={index} />
                 </div>
               );
             } else {
               return (
-                <div
-                  key={index}
-                  className="flex justify-center col-span-12 md:col-span-3 w-full"
-                >
+                <div key={index} className="flex justify-center col-span-12 md:col-span-3 w-full">
                   <CouponCard coupon={coupon} key={index} />
                 </div>
               );

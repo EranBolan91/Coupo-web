@@ -12,8 +12,8 @@ import MainPage from "./pages/main/MainPage";
 import Login from "./auth/components/Login";
 import AdminPage from "./pages/admin/Admin";
 import { Toaster } from "react-hot-toast";
-import Navbar from "./components/Navbar";
-import Footer from "./components/Footer";
+import Navbar from "./layout/Navbar/Navbar";
+import Footer from "./layout/Footer";
 import "./App.css";
 
 function App() {
@@ -23,9 +23,7 @@ function App() {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="h-20 z-50">
-          {displayAdminSidebar ? <AdminSidebar /> : <Navbar />}
-        </div>
+        <div className="h-20 z-50">{displayAdminSidebar ? <AdminSidebar /> : <Navbar />}</div>
         <div>
           <Routes>
             <Route path="/" element={<MainPage />} />
