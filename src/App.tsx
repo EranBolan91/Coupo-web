@@ -24,7 +24,7 @@ function App() {
     <>
       <div className="flex flex-col h-full">
         <div className="h-20 z-50">{displayAdminSidebar ? <AdminSidebar /> : <Navbar />}</div>
-        <div>
+        <div className="grow">
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/categories" element={<Categories />} />
@@ -67,7 +67,8 @@ function App() {
             />
           </Routes>
         </div>
-        <div className="mt-auto">
+        {/* <div className="mt-auto"> */}
+        <div>
           <Footer />
         </div>
       </div>

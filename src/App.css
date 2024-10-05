@@ -1,4 +1,4 @@
-#customBtn {
+/* #customBtn {
   display: inline-block;
   background: white;
   color: #444;
@@ -8,21 +8,24 @@
   box-shadow: 1px 1px 1px grey;
   white-space: nowrap;
 }
+
 #customBtn:hover {
   cursor: pointer;
-}
+} */
+
 span.label {
   font-family: serif;
   font-weight: normal;
 }
+
 span.icon {
-  background: url("/identity/sign-in/g-normal.png") transparent 5px 50%
-    no-repeat;
+  background: url("/identity/sign-in/g-normal.png") transparent 5px 50% no-repeat;
   display: inline-block;
   vertical-align: middle;
   width: 42px;
   height: 42px;
 }
+
 span.buttonText {
   display: inline-block;
   vertical-align: middle;
@@ -58,8 +61,7 @@ span.buttonText {
   padding: 0 12px;
   position: relative;
   text-align: center;
-  -webkit-transition: background-color 0.218s, border-color 0.218s,
-    box-shadow 0.218s;
+  -webkit-transition: background-color 0.218s, border-color 0.218s, box-shadow 0.218s;
   transition: background-color 0.218s, border-color 0.218s, box-shadow 0.218s;
   vertical-align: middle;
   white-space: nowrap;
@@ -132,10 +134,8 @@ span.buttonText {
 }
 
 .gsi-material-button:not(:disabled):hover {
-  -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3),
-    0 1px 3px 1px rgba(60, 64, 67, 0.15);
-  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3),
-    0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
 }
 
 .gsi-material-button:not(:disabled):hover .gsi-material-button-state {

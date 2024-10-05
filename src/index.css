@@ -41,7 +41,7 @@ button {
   transition: border-color 0.25s;
 }
 
-.level0from {
+/* .level0from {
   background: linear-gradient(
     21deg,
     hsl(var(--color-level-0-from)) 0%,
@@ -103,7 +103,7 @@ level3to {
     hsl(var(--color-level-3-from)) 0%,
     hsl(var(--color-level-3-to)) 100%
   );
-}
+} */
 
 @layer base {
   :root {
@@ -133,4 +133,14 @@ level3to {
       background-color: #f9f9f9;
     }
   }
+}
+
+/* Hide scrollbar for Webkit-based browsers (Chrome, Safari, newer versions of Edge) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.hide-scrollbar {
+  scrollbar-width: none; /* For Firefox */
 }

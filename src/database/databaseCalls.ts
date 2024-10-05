@@ -14,6 +14,7 @@ import {
   Query,
   where,
   updateDoc,
+  getDoc,
 } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { Coupon, CouponBrand, CurrentUser } from "../types/Types";
@@ -258,4 +259,23 @@ export const updateCoupon = async (
 export const saveUserToDatabase = async (user: CurrentUser) => {
   const ref = doc(db, `Users/${user.userUID}`);
   await setDoc(ref, user);
+};
+
+export const getUserDetails = async (userUID: string): Promise<CurrentUser | null> => {
+  try {
+    const userDocRef = doc(db, "Users", userUID);
+    const userDocSnap = await getDoc(userDocRef);
+    console.log("userDocSnap", userDocSnap);
+    if (userDocSnap.exists()) {
+      // const currentUser: CurrentUser = userDocSnap.data();
+      // console.log(currentUser);
+      return userDocSnap.data() as CurrentUser; // Fetch the document data
+    } else {
+      console.log("No such document!");
+      return null;
+    }
+  } catch (error: any) {
+    console.error("Error fetching user data:", error);
+    return null;
+  }
 };

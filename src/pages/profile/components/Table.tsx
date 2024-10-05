@@ -4,18 +4,17 @@ import { useQuery } from "@tanstack/react-query";
 import RemoveCouponBtn from "./RemoveCouponBtn";
 import ModalEditCoupon from "./ModalEditCoupon";
 import { Coupon } from "../../../types/Types";
-import { ref } from "firebase/storage";
 
 const Table = () => {
   const { user } = UserAuth();
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, refetch } = useQuery<Coupon[]>({
     queryKey: ["usercoupons"],
     queryFn: () => getUserCoupons(user.uid),
   });
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto overflow-y-auto md:max-h-96 hide-scrollbar">
       <table className="table">
         <thead>
           <tr>
@@ -69,12 +68,7 @@ const Table = () => {
               </td>
               <th>
                 <RemoveCouponBtn {...coupon} />
-                <ModalEditCoupon
-                  key={index}
-                  coupon={coupon}
-                  index={index}
-                  refetchData={refetch}
-                />
+                <ModalEditCoupon key={index} coupon={coupon} index={index} refetchData={refetch} />
               </th>
             </tr>
           ))}
