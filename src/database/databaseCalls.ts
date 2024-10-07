@@ -265,10 +265,8 @@ export const getUserDetails = async (userUID: string): Promise<CurrentUser | nul
   try {
     const userDocRef = doc(db, "Users", userUID);
     const userDocSnap = await getDoc(userDocRef);
-    console.log("userDocSnap", userDocSnap);
+
     if (userDocSnap.exists()) {
-      // const currentUser: CurrentUser = userDocSnap.data();
-      // console.log(currentUser);
       return userDocSnap.data() as CurrentUser; // Fetch the document data
     } else {
       console.log("No such document!");

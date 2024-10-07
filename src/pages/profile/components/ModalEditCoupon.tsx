@@ -12,9 +12,7 @@ interface Props {
 }
 
 const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
-  const [discountPercentage, setDiscountPercentage] = useState<string>(
-    coupon.discount
-  );
+  const [discountPercentage, setDiscountPercentage] = useState<string>(coupon.discount);
   const [description, setDescription] = useState<string>(coupon.description);
   const [openEditModal, setOpenEditModal] = useState<boolean>(false);
   const [category, setCategory] = useState<string>(coupon.category);
@@ -29,20 +27,11 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
 
   const updateCouponData = async () => {
     toast
-      .promise(
-        updateCoupon(
-          category,
-          discountPercentage,
-          description,
-          coupon.id,
-          user.uid
-        ),
-        {
-          success: "successfully updated",
-          loading: "updating",
-          error: "error in updaing",
-        }
-      )
+      .promise(updateCoupon(category, discountPercentage, description, coupon.id, user.uid), {
+        success: "successfully updated",
+        loading: "updating",
+        error: "error in updaing",
+      })
       .then(() => refetchData());
   };
 
@@ -122,7 +111,9 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
           </div>
           <div className="modal-action">
             <form method="dialog">
-              <button className="btn">Close</button>
+              <button onClick={() => setOpenEditModal(false)} className="btn">
+                Close
+              </button>
             </form>
             <form method="dialog">
               <button onClick={updateCouponData} className="btn">

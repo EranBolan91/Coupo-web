@@ -1,4 +1,4 @@
-import PersonalInfo from "./components/PersonalInfo";
+import PersonalInfo from "./components/PersonalInfo/PersonalInfo";
 import { UserAuth } from "../../auth/AuthProvider";
 import { Link } from "react-router-dom";
 import Table from "./components/Table";
