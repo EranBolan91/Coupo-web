@@ -277,3 +277,17 @@ export const getUserDetails = async (userUID: string): Promise<CurrentUser | nul
     return null;
   }
 };
+
+export const updatePersonalUserDetails = async (
+  userUID: string,
+  userDetails: { [key: string]: string }
+) => {
+  try {
+    const userDocRef = doc(db, "Users", userUID);
+    await updateDoc(userDocRef, {
+      ...userDetails,
+    });
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};

@@ -1,11 +1,12 @@
-import { Link } from "react-router-dom";
 import { getCategories } from "../../database/databaseCalls";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 const Categories = () => {
-  const { data, isLoading, refetch } = useQuery({
+  const { data } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(),
+    refetchOnWindowFocus: false,
   });
 
   return (

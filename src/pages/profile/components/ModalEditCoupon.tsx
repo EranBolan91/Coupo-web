@@ -23,6 +23,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
     queryKey: ["categories"],
     queryFn: getCategories,
     enabled: openEditModal,
+    refetchOnWindowFocus: false,
   });
 
   const updateCouponData = async () => {

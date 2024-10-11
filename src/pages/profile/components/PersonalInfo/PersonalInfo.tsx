@@ -9,6 +9,7 @@ const PersonalInfo = ({ userUID }: { userUID: string }) => {
     queryKey: ["PersonalInfo"],
     queryFn: () => getUserDetails(userUID),
     staleTime: Infinity,
+    refetchOnWindowFocus: false,
   });
 
   return (
