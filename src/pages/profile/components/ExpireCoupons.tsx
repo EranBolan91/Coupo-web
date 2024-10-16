@@ -1,6 +1,7 @@
 import { getExpiredCoupons } from "../../../database/databaseCalls";
 import { UserAuth } from "../../../auth/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
+import RemoveCouponBtn from "./RemoveCouponBtn";
 import { Coupon } from "../../../types/Types";
 
 const ExpireCoupon = () => {
@@ -68,11 +69,12 @@ const ExpireCoupon = () => {
                   <div className="text-sm">{coupon.dislikes}</div>
                 </td>
                 <td>
-                  <div className="text-sm">{coupon.expiry.toString()}</div>
+                  <div className="text-sm text-red-600 font-bold">
+                    {coupon.expiry.toDate().toDateString()}
+                  </div>
                 </td>
                 <th>
-                  {/* <RemoveCouponBtn {...coupon} />
-                <ModalEditCoupon key={index} coupon={coupon} index={index} refetchData={refetch} /> */}
+                  <RemoveCouponBtn {...coupon} />
                 </th>
               </tr>
             ))}

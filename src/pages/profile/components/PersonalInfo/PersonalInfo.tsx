@@ -61,7 +61,7 @@ const PersonalInfo = ({ userUID }: { userUID: string }) => {
               <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                 <dt className="text-sm font-medium leading-6 text-primary">Birth of Date</dt>
                 <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">
-                  {userDetails?.birthday}
+                  {userDetails?.birthday?.toDate().toDateString()}
                 </dd>
               </div>
             </dl>

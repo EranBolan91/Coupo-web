@@ -65,7 +65,7 @@ const Table = () => {
                 <div className="text-sm">{coupon.dislikes}</div>
               </td>
               <td>
-                <div className="text-sm">{coupon.expiry.toString()}</div>
+                <div className="text-sm">{coupon.expiry.toDate().toDateString()}</div>
               </td>
               <th>
                 <RemoveCouponBtn {...coupon} />

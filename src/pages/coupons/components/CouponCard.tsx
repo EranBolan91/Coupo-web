@@ -44,7 +44,7 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
   return (
     <div
       ref={innerRef}
-      className="card bg-base-100 w-80 md:w-96 h-44 shadow-xl grid grid-cols-12 p-3  rounded-md"
+      className="card bg-base-100 w-80 md:w-96 h-44 shadow-xl grid grid-cols-12 p-3 rounded-md"
     >
       <div
         onClick={() => copyCodeCoupon(coupon.code)}
@@ -84,7 +84,7 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
           </div>
         </div>
         <div className="text-sm md:text-md flex justify-center mt-auto">
-          Expired: {coupon.expiry.toString()}
+          Expired: {coupon.expiry.toDate().toDateString()}
         </div>
       </div>
       {showLoginModal && <ModalLogin onClose={handleShowLoginModal} />}

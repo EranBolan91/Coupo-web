@@ -159,7 +159,12 @@ export const getCategories = async () => {
 
 export const getUserCoupons = async (userID: string) => {
   const coupons: Coupon[] = [];
-  const ref = await getDocs(collection(db, "UsersCoupons", userID, "coupons"));
+  const today = new Date();
+
+  const couponsRef = collection(db, "UsersCoupons", userID, "coupons");
+  const q = query(couponsRef, where("expiry", ">=", today));
+  const ref = await getDocs(q);
+
   ref.forEach((doc) => {
     const coupon = { id: doc.id, ...doc.data() };
     coupons.push(coupon as Coupon);

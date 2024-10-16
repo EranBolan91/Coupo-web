@@ -42,9 +42,9 @@ const CouponsPage = () => {
     return [...coupons].sort((a, b) => {
       switch (sortOption) {
         case "date-desc":
-          return new Date(b.expiry).getTime() - new Date(a.expiry).getTime();
+          return new Date(b.expiry.toDate()).getTime() - new Date(a.expiry.toDate()).getTime();
         case "date-asc":
-          return new Date(a.expiry).getTime() - new Date(b.expiry).getTime();
+          return new Date(a.expiry.toDate()).getTime() - new Date(b.expiry.toDate()).getTime();
         case "discount-desc":
           return Number(b.discount) - Number(a.discount);
         case "discount-asc":

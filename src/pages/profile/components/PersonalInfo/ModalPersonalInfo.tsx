@@ -1,6 +1,7 @@
 import { updatePersonalUserDetails } from "../../../../database/databaseCalls";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { CurrentUser } from "../../../../types/Types";
+import { Timestamp } from "firebase/firestore";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
@@ -8,7 +9,7 @@ type PersonalInfoForm = {
   firstName: string;
   lastName: string;
   imageUrl: string;
-  birthday: Date;
+  birthday: Timestamp;
 };
 
 export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser }) => {
@@ -17,7 +18,7 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser })
     defaultValues: {
       firstName: currentUser.firstName,
       lastName: currentUser.lastName,
-      birthday: new Date(currentUser.birthday),
+      birthday: currentUser.birthday,
     },
   });
   const {
