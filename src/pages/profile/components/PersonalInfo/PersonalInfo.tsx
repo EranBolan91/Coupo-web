@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { getUserDetails } from "../../../../database/databaseCalls";
+import { ModalPersonalInfo } from "./ModalPersonalInfo";
 import { CurrentUser } from "../../../../types/Types";
 import { useQuery } from "@tanstack/react-query";
-import { ModalPersonalInfo } from "./ModalPersonalInfo";
 
 const PersonalInfo = ({ userUID }: { userUID: string }) => {
   const { data: userDetails, isLoading } = useQuery<CurrentUser | null>({
@@ -57,6 +56,12 @@ const PersonalInfo = ({ userUID }: { userUID: string }) => {
                 <dt className="text-sm font-medium leading-6 text-primary">Email address</dt>
                 <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">
                   {userDetails?.email}
+                </dd>
+              </div>
+              <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                <dt className="text-sm font-medium leading-6 text-primary">Birth of Date</dt>
+                <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">
+                  {userDetails?.birthday}
                 </dd>
               </div>
             </dl>

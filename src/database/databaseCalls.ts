@@ -15,6 +15,7 @@ import {
   where,
   updateDoc,
   getDoc,
+  Timestamp,
 } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { Coupon, CouponBrand, CurrentUser } from "../types/Types";
@@ -166,13 +167,28 @@ export const getUserCoupons = async (userID: string) => {
   return coupons;
 };
 
+export const getExpiredCoupons = async (userID: string) => {
+  const coupons: Coupon[] = [];
+  const today = new Date();
+
+  const couponsRef = collection(db, "UsersCoupons", userID, "coupons");
+  const q = query(couponsRef, where("expiry", "<", today));
+  const ref = await getDocs(q);
+
+  ref.forEach((doc) => {
+    const coupon = { id: doc.id, ...doc.data() };
+    coupons.push(coupon as Coupon);
+  });
+  return coupons;
+};
+
 export const removeUserCoupon = async (userID: string, couponID: string) => {
   const ref = doc(db, "UsersCoupons", userID, "coupons", couponID);
   await deleteDoc(ref);
 };
 
 export const saveNewCoupon = async (coupon: Coupon) => {
-  coupon.createdAt = new Date();
+  coupon.createdAt = Timestamp.fromDate(new Date());
   coupon.likes = 0;
   coupon.dislikes = 0;
   await addDoc(collection(db, "Coupons"), {
@@ -182,27 +198,19 @@ export const saveNewCoupon = async (coupon: Coupon) => {
 
 export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
   try {
-    coupon.createdAt = new Date();
+    coupon.createdAt = Timestamp.fromDate(new Date());
     coupon.likes = 0;
     coupon.dislikes = 0;
+    const expiryDate = new Date(coupon.expiry.toString());
+    coupon.expiry = Timestamp.fromDate(expiryDate);
 
     const userCouponsRef = collection(db, `UsersCoupons/${userID}/coupons/`);
     await addDoc(userCouponsRef, coupon);
   } catch (error: any) {
     console.log(error);
+    throw new Error(error);
   }
 };
-
-// This should be in cloud functions
-// Saving coupon to users document
-// export const saveCouponToUsersCoupon = async (
-//   coupon: Coupon,
-//   userID: string
-// ) => {
-//   const ref = doc(db, "UsersCoupons", userID);
-//   const colRef = collection(ref, "coupons");
-//   addDoc(colRef, coupon);
-// };
 
 export const saveImageBrand = async (imgFile: any, imageName: string) => {
   const storageRef = ref(storage, imageName + ".svg");
@@ -280,7 +288,7 @@ export const getUserDetails = async (userUID: string): Promise<CurrentUser | nul
 
 export const updatePersonalUserDetails = async (
   userUID: string,
-  userDetails: { [key: string]: string }
+  userDetails: { [key: string]: any }
 ) => {
   try {
     const userDocRef = doc(db, "Users", userUID);

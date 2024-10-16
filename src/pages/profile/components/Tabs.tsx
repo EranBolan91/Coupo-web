@@ -15,7 +15,7 @@ const Tabs = ({ tabs }: TabsProps) => {
   const [selectedTab, setSelectedTab] = useState<number>(0);
 
   return (
-    <div className="grow">
+    <div className="flex-grow">
       <div className="flex-wrap mt-2 pl-2">
         {tabs.map((tab: TabContentProps, index: number) => (
           <button

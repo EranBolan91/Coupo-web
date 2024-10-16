@@ -1,13 +1,14 @@
+import { updatePersonalUserDetails } from "../../../../database/databaseCalls";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { CurrentUser } from "../../../../types/Types";
-import { useState } from "react";
-import { updatePersonalUserDetails } from "../../../../database/databaseCalls";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 type PersonalInfoForm = {
   firstName: string;
   lastName: string;
   imageUrl: string;
+  birthday: Date;
 };
 
 export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser }) => {
@@ -16,6 +17,7 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser })
     defaultValues: {
       firstName: currentUser.firstName,
       lastName: currentUser.lastName,
+      birthday: new Date(currentUser.birthday),
     },
   });
   const {
@@ -75,6 +77,23 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser })
               />
             </label>
             {errors.lastName && (
+              <p className="text-red-500 italic font-normal">This field cannot be empty</p>
+            )}
+          </div>
+          <div className="my-4">
+            <label className="form-control w-full">
+              <div className="label">
+                <span className="label-text">Birth of Date</span>
+              </div>
+              <input
+                type="date"
+                className="input input-bordered w-full"
+                {...register("birthday", {
+                  required: "This field cannot be empty",
+                })}
+              />
+            </label>
+            {errors.birthday && (
               <p className="text-red-500 italic font-normal">This field cannot be empty</p>
             )}
           </div>

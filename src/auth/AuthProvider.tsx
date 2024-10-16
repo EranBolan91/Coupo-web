@@ -1,10 +1,4 @@
-import {
-  useState,
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-} from "react";
+import { useState, createContext, ReactNode, useContext, useEffect } from "react";
 import {
   signOut,
   onAuthStateChanged,
@@ -19,6 +13,7 @@ import toast from "react-hot-toast";
 import { auth } from "../firebaseConfig";
 import { redirect } from "react-router-dom";
 import { saveUserToDatabase } from "../database/databaseCalls";
+import { Timestamp } from "firebase/firestore";
 
 const AuthContext = createContext<any>(null);
 const provider = new GoogleAuthProvider();
@@ -44,14 +39,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
+    birthday: string
   ) => {
     try {
-      const newUser = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const newUser = await createUserWithEmailAndPassword(auth, email, password);
 
       if (newUser !== null && auth.currentUser !== null) {
         await sendEmailVerification(newUser.user);
@@ -65,7 +57,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           email: userEmail,
           isEmailVerified: newUser.user.emailVerified,
           imageURL: "",
-          lastLogin: new Date().toDateString(),
+          lastLogin: Timestamp.fromDate(new Date()),
+          creationDate: Timestamp.fromDate(new Date()),
+          birthday: Timestamp.fromDate(new Date(birthday)),
         });
 
         toast.success("Email verification sent!");
@@ -78,10 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const loginUserWithEmailPassword = async (
-    email: string,
-    password: string
-  ) => {
+  const loginUserWithEmailPassword = async (email: string, password: string) => {
     try {
       const loginUser = await signInWithEmailAndPassword(auth, email, password);
       if (loginUser !== null) {

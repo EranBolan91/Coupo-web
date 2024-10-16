@@ -1,4 +1,5 @@
 import PersonalInfo from "./components/PersonalInfo/PersonalInfo";
+import ExpireCoupons from "./components/ExpireCoupons";
 import { UserAuth } from "../../auth/AuthProvider";
 import { Link } from "react-router-dom";
 import Table from "./components/Table";
@@ -16,6 +17,10 @@ const Profile = () => {
       label: "My Coupons",
       content: <Table />,
     },
+    {
+      label: "Expire Coupons",
+      content: <ExpireCoupons />,
+    },
   ];
 
   return (
@@ -26,7 +31,9 @@ const Profile = () => {
           <button className="btn">Add coupon</button>
         </Link>
       </div>
-      <Tabs tabs={tabs} />
+      <div className="flex-grow">
+        <Tabs tabs={tabs} />
+      </div>
     </div>
   );
 };

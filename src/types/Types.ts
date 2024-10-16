@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 type Coupon = {
   id: string;
   name: string;
@@ -5,10 +7,10 @@ type Coupon = {
   imgUrl: string;
   code: string;
   category: string;
-  expiry: Date;
+  expiry: Timestamp;
   discount: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
   likes: number;
   dislikes: number;
 };
@@ -23,9 +25,11 @@ type CurrentUser = {
   email: string;
   firstName: string;
   lastName: string;
-  lastLogin: string;
   imageURL: string;
   isEmailVerified: boolean;
+  birthday?: Timestamp;
+  lastLogin: Timestamp;
+  creationDate: Timestamp;
 };
 
 export type { Coupon, CouponBrand, CurrentUser };

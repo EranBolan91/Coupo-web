@@ -15,7 +15,7 @@ const Table = () => {
   });
 
   return (
-    <div className="overflow-x-auto overflow-y-auto md:max-h-96 hide-scrollbar">
+    <div className="overflow-x-auto overflow-y-auto hide-scrollbar">
       <table className="table">
         <thead>
           <tr>

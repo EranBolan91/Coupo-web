@@ -10,6 +10,7 @@ type SignUpForm = {
   lastName: string;
   email: string;
   password: string;
+  birthday: Date;
 };
 
 const cleanAuthErrorMessage = (message: string) => {
@@ -43,7 +44,13 @@ const SignUp = () => {
   const handleSigninWithEmailPassword: SubmitHandler<SignUpForm> = async (data) => {
     try {
       setLoading(true);
-      await createUserWithEmailPassword(data.email, data.password, data.firstName, data.lastName);
+      await createUserWithEmailPassword(
+        data.email,
+        data.password,
+        data.firstName,
+        data.lastName,
+        data.birthday
+      );
       setLoading(false);
     } catch (error: any) {
       const cleanErrorMsg = cleanAuthErrorMessage(error.message);
@@ -124,6 +131,31 @@ const SignUp = () => {
               </div>
               <p style={{ fontStyle: "oblique" }} className="text-red-600">
                 {errors?.email?.message}
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="birthday"
+                  className="block text-sm font-medium leading-6 text-gray-900"
+                >
+                  Date of Birth
+                </label>
+              </div>
+              <div className="mt-2">
+                <input
+                  id="birthday"
+                  type="date"
+                  autoComplete="current-password"
+                  {...register("birthday", {
+                    required: "Date of birth is required",
+                  })}
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                />
+              </div>
+              <p style={{ fontStyle: "oblique" }} className="text-red-600">
+                {errors?.birthday?.message}
               </p>
             </div>
 
