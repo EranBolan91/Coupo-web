@@ -16,7 +16,6 @@ const Category = () => {
       getPaginatedCouponsByCategory(pageParam, categoryName),
     initialPageParam: null,
     staleTime: 2000,
-    refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       const lastItem = lastPage ? [lastPage?.length - 1] : undefined;
       return lastItem;

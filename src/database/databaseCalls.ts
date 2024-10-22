@@ -245,9 +245,8 @@ export const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean
       subCollectionName = "dislikes";
     }
 
-    await setDoc(doc(db, "UserVoting", userID, subCollectionName, coupon.id), {
-      coupon,
-    });
+    const docRef = doc(db, "UserVoting", userID, subCollectionName, coupon.id);
+    await setDoc(docRef, coupon);
   } catch (err: any) {
     console.log(err);
     throw new Error(err);
@@ -303,4 +302,30 @@ export const updatePersonalUserDetails = async (
   } catch (error: any) {
     throw new Error(error.message);
   }
+};
+
+export const getUserLikesVotes = async (userID: string) => {
+  const coupons: Coupon[] = [];
+  const ref = collection(db, "UserVoting", userID, "likes");
+  const data = await getDocs(ref);
+
+  data.forEach((doc) => {
+    const coupon = { id: doc.id, ...doc.data() };
+    coupons.push(coupon as Coupon);
+  });
+  console.log("coupons", coupons);
+  return coupons;
+};
+
+export const getUserDislikesVotes = async (userID: string) => {
+  const coupons: Coupon[] = [];
+  const ref = collection(db, "UserVoting", userID, "dislikes");
+  const data = await getDocs(ref);
+
+  data.forEach((doc) => {
+    const coupon = { id: doc.id, ...doc.data() };
+    coupons.push(coupon as Coupon);
+  });
+  console.log("coupons", coupons);
+  return coupons;
 };

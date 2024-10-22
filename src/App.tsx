@@ -67,7 +67,6 @@ function App() {
             />
           </Routes>
         </div>
-        {/* <div className="mt-auto"> */}
         <div>
           <Footer />
         </div>

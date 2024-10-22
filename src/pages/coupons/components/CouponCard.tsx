@@ -24,7 +24,8 @@ const copyCodeCoupon = async (codeCoupon: string) => {
 };
 
 const CouponCard = ({ coupon, innerRef }: Props) => {
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [currentCoupon, setCurrentCoupon] = useState<Coupon>(coupon);
   const { user }: any = UserAuth();
 
   const handleShowLoginModal = () => setShowLoginModal(!showLoginModal);
@@ -34,9 +35,17 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
       handleShowLoginModal();
     } else {
       toast.promise(saveUserVote({ ...coupon }, user.uid, vote), {
-        loading: ``,
-        success: ``,
-        error: "",
+        loading: `Voting...`,
+        success: `Thanks for voting!`,
+        error: (err) => `${err}`,
+      }).then(()=>{
+        if(vote === true){
+          currentCoupon.likes = currentCoupon.likes + 1; 
+          setCurrentCoupon({...currentCoupon});
+        }else{
+          currentCoupon.dislikes = currentCoupon.dislikes + 1; 
+          setCurrentCoupon({...currentCoupon});
+        }
       });
     }
   };
@@ -47,21 +56,21 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
       className="card bg-base-100 w-80 md:w-96 h-44 shadow-xl grid grid-cols-12 p-3 rounded-md"
     >
       <div
-        onClick={() => copyCodeCoupon(coupon.code)}
+        onClick={() => copyCodeCoupon(currentCoupon.code)}
         className="absolute -top-4 md:-top-5 left-4 p-1 px-2 bg-purple-600 text-lg cursor-pointer text-white"
       >
-        {coupon.code}
+        {currentCoupon.code}
       </div>
       <div className="col-span-7 p-1 flex flex-col">
         <div className="flex mt-auto">
-          <span className="text-3xl md:text-6xl font-bold">{coupon.discount}%</span>
+          <span className="text-3xl md:text-6xl font-bold">{currentCoupon.discount}%</span>
         </div>
         <div className="mt-auto">
           <div className="text-xl md:text-lg font-semibold">
-            <span>{coupon.name}</span>
+            <span>{currentCoupon.name}</span>
           </div>
           <div className="text-sm md:text-lg overflow-hidden text-ellipsis line-clamp-2">
-            {coupon.description}
+            {currentCoupon.description}
           </div>
         </div>
       </div>
@@ -74,17 +83,17 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
             <span onClick={() => handleCouponVote(false)}>
               <FaThumbsDown />
             </span>
-            <span>{coupon.dislikes}</span>
+            <span>{currentCoupon.dislikes}</span>
           </div>
           <div className="flex flex-col text-green-600 text-lg items-center cursor-pointer">
             <span onClick={() => handleCouponVote(true)}>
               <FaThumbsUp />
             </span>
-            <span>{coupon.likes}</span>
+            <span>{currentCoupon.likes}</span>
           </div>
         </div>
         <div className="text-sm md:text-md flex justify-center mt-auto">
-          Expired: {coupon.expiry.toDate().toDateString()}
+          Expired: {currentCoupon.expiry.toDate().toDateString()}
         </div>
       </div>
       {showLoginModal && <ModalLogin onClose={handleShowLoginModal} />}

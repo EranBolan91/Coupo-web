@@ -1,19 +1,15 @@
+import { getCouponsBrands, saveNewCoupon, getCategories } from "../../database/databaseCalls";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Coupon, CouponBrand } from "../../types/Types";
 import { DevTool } from "@hookform/devtools";
 import { useEffect, useState } from "react";
 import Select from "./components/Select";
 import toast from "react-hot-toast";
-import {
-  getCouponsBrands,
-  saveNewCoupon,
-  getCategories,
-} from "../../database/databaseCalls";
 
 const AdminPage = () => {
+  const [brand, setBrand] = useState<CouponBrand>({ brand: "", imgURL: "" });
   const [couponBrands, setCouponBrands] = useState<CouponBrand[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [brand, setBrand] = useState<CouponBrand>({ brand: "", imgURL: "" });
   const [category, setCategory] = useState<string>("");
   const form = useForm<Coupon>();
   const {
@@ -46,10 +42,7 @@ const AdminPage = () => {
   };
 
   useEffect(() => {
-    if (
-      (categories && categories.length === 0) ||
-      (couponBrands && couponBrands.length === 0)
-    ) {
+    if ((categories && categories.length === 0) || (couponBrands && couponBrands.length === 0)) {
       getCouponsBrands().then((brandsData) => {
         setCouponBrands(brandsData);
         setBrand(brandsData[0]);
@@ -71,9 +64,7 @@ const AdminPage = () => {
         >
           <div className="space-y-12 w-1/2 bg-white p-3">
             <div className="border-b border-gray-900/10 pb-12">
-              <h2 className="text-base font-semibold leading-7 text-gray-900">
-                Add New Coupon
-              </h2>
+              <h2 className="text-base font-semibold leading-7 text-gray-900">Add New Coupon</h2>
 
               <div className="mt-10 grid grid-cols-12 md:grid-cols-12 gap-x-6 gap-y-8 ">
                 <div className="col-span-12 md:col-span-6 lg:col-span-6">
@@ -195,10 +186,7 @@ const AdminPage = () => {
           </div>
 
           <div className="mt-6 flex items-center justify-end gap-x-6">
-            <button
-              type="button"
-              className="text-sm font-semibold leading-6 text-gray-900"
-            >
+            <button type="button" className="text-sm font-semibold leading-6 text-gray-900">
               Cancel
             </button>
             <button className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">

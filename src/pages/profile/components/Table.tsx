@@ -11,7 +11,6 @@ const Table = () => {
   const { data, isLoading, refetch } = useQuery<Coupon[]>({
     queryKey: ["usercoupons"],
     queryFn: () => getUserCoupons(user.uid),
-    refetchOnWindowFocus: false,
   });
 
   return (

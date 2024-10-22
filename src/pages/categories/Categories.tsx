@@ -6,7 +6,6 @@ const Categories = () => {
   const { data } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(),
-    refetchOnWindowFocus: false,
   });
 
   return (
@@ -14,7 +13,7 @@ const Categories = () => {
       <span className="md:text-4xl">Browse by Category</span>
       <div className="flex flex-col flex-wrap md:p-6 w-full md:h-60">
         {data?.map((category) => (
-          <Link to={`${category}`}>
+          <Link key={category} to={`${category}`}>
             <span className="my-2 cursor-pointer">{category}</span>
           </Link>
         ))}

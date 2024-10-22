@@ -10,7 +10,6 @@ const ExpireCoupon = () => {
   const { data, isLoading } = useQuery<Coupon[]>({
     queryKey: ["expireCoupons"],
     queryFn: () => getExpiredCoupons(user.uid),
-    refetchOnWindowFocus: false,
   });
 
   return (

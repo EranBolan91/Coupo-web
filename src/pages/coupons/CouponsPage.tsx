@@ -1,13 +1,15 @@
 import { getPaginatedCoupons } from "../../database/databaseCalls";
+import { VotingCouponsContext } from "../../context/VotingContext";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
+import { useContext, useEffect, useState } from "react";
 import SearchBar from "../main/components/Searchbar";
 import useDebounce from "../../hooks/useDebounce";
 import CouponCard from "./components/CouponCard";
-import { useEffect, useState } from "react";
 import { Coupon } from "../../types/Types";
 
 const CouponsPage = () => {
+  const ccc = useContext(VotingCouponsContext);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const debounceSearch = useDebounce(searchQuery, 700);
   const { ref, inView } = useInView();
@@ -19,7 +21,6 @@ const CouponsPage = () => {
       getPaginatedCoupons(debounceSearch, pageParam),
     initialPageParam: null,
     staleTime: 2000,
-    refetchOnWindowFocus: false,
     getNextPageParam: (lastPage) => {
       const lastItem = lastPage ? [lastPage?.length - 1] : undefined;
       return lastItem;
