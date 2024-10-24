@@ -1,9 +1,6 @@
-import { saveUserVote } from "../../../database/databaseCalls";
-import { UserAuth } from "../../../auth/AuthProvider";
 import { Coupon } from "../../../types/Types";
-import { FaThumbsDown } from "react-icons/fa";
-import { FaThumbsUp } from "react-icons/fa";
-import ModalLogin from "./ModalLogin";
+import DislikeButton from "./DislikeButton";
+import LikeButton from "./LikeButton";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
@@ -24,32 +21,10 @@ const copyCodeCoupon = async (codeCoupon: string) => {
 };
 
 const CouponCard = ({ coupon, innerRef }: Props) => {
-  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
   const [currentCoupon, setCurrentCoupon] = useState<Coupon>(coupon);
-  const { user }: any = UserAuth();
-
-  const handleShowLoginModal = () => setShowLoginModal(!showLoginModal);
-
-  const handleCouponVote = (vote: boolean) => {
-    if (!user) {
-      handleShowLoginModal();
-    } else {
-      toast.promise(saveUserVote({ ...coupon }, user.uid, vote), {
-        loading: `Voting...`,
-        success: `Thanks for voting!`,
-        error: (err) => `${err}`,
-      }).then(()=>{
-        if(vote === true){
-          currentCoupon.likes = currentCoupon.likes + 1; 
-          setCurrentCoupon({...currentCoupon});
-        }else{
-          currentCoupon.dislikes = currentCoupon.dislikes + 1; 
-          setCurrentCoupon({...currentCoupon});
-        }
-      });
-    }
+  const handleSetCoupon = (coupon: Coupon) => {
+    setCurrentCoupon(coupon);
   };
-
   return (
     <div
       ref={innerRef}
@@ -79,24 +54,13 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
       </div> */}
       <div className="col-span-5 flex flex-col p-1 justify-center">
         <div className="flex justify-evenly mt-auto">
-          <div className="flex flex-col text-red-600 text-lg items-center cursor-pointer mr-1">
-            <span onClick={() => handleCouponVote(false)}>
-              <FaThumbsDown />
-            </span>
-            <span>{currentCoupon.dislikes}</span>
-          </div>
-          <div className="flex flex-col text-green-600 text-lg items-center cursor-pointer">
-            <span onClick={() => handleCouponVote(true)}>
-              <FaThumbsUp />
-            </span>
-            <span>{currentCoupon.likes}</span>
-          </div>
+          <DislikeButton coupon={currentCoupon} setCoupon={handleSetCoupon} />
+          <LikeButton coupon={currentCoupon} setCoupon={handleSetCoupon} />
         </div>
         <div className="text-sm md:text-md flex justify-center mt-auto">
           Expired: {currentCoupon.expiry.toDate().toDateString()}
         </div>
       </div>
-      {showLoginModal && <ModalLogin onClose={handleShowLoginModal} />}
     </div>
   );
 };

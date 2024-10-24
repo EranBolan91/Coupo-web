@@ -21,6 +21,7 @@ import { getStorage, ref, getDownloadURL, uploadBytesResumable } from "firebase/
 import { Coupon, CouponBrand, CurrentUser } from "../types/Types";
 import { orderBy } from "firebase/firestore/lite";
 import app from "../firebaseConfig";
+import { collectionsList } from "../utiles";
 
 // Initialize Firebase
 const db = getFirestore(app);
@@ -38,13 +39,13 @@ export const getPaginatedCoupons = async (queryParam: string, pageParam: any) =>
     if (pageParam === null) {
       if (queryParam === "") {
         fetchQuery = query(
-          collection(db, "Coupons"),
+          collection(db, collectionsList.coupons),
           orderBy("createdAt", "desc"),
           limit(dataLimit)
         );
       } else {
         fetchQuery = query(
-          collection(db, "Coupons"),
+          collection(db, collectionsList.coupons),
           orderBy("createdAt", "desc"),
           where("name", "==", queryParam),
           limit(dataLimit)
@@ -53,14 +54,14 @@ export const getPaginatedCoupons = async (queryParam: string, pageParam: any) =>
     } else {
       if (queryParam === "") {
         fetchQuery = query(
-          collection(db, "Coupons"),
+          collection(db, collectionsList.coupons),
           orderBy("createdAt", "desc"),
           startAfter(documentCoursor),
           limit(dataLimit)
         );
       } else {
         fetchQuery = query(
-          collection(db, "Coupons"),
+          collection(db, collectionsList.coupons),
           orderBy("createdAt", "desc"),
           where("name", "==", queryParam),
           startAfter(documentCoursor),
@@ -95,14 +96,14 @@ export const getPaginatedCouponsByCategory = async (
     if (categoryName !== undefined) {
       if (pageParam === null) {
         fetchQuery = query(
-          collection(db, "Coupons"),
+          collection(db, collectionsList.coupons),
           orderBy("createdAt", "desc"),
           where("category", "==", categoryName),
           limit(dataLimit)
         );
       } else {
         fetchQuery = query(
-          collection(db, "Coupons"),
+          collection(db, collectionsList.coupons),
           orderBy("createdAt", "desc"),
           where("category", "==", categoryName),
           startAfter(documentCoursor),
@@ -126,7 +127,7 @@ export const getPaginatedCouponsByCategory = async (
 
 export const getAllCoupons = async () => {
   const coupons: Coupon[] = [];
-  const getCoupons = await getDocs(collection(db, "Coupons"));
+  const getCoupons = await getDocs(collection(db, collectionsList.coupons));
   getCoupons.forEach((coupon) => {
     coupons.push({
       id: coupon.id,
@@ -138,7 +139,7 @@ export const getAllCoupons = async () => {
 
 export const getCouponsBrands = async () => {
   const couponsBrands: CouponBrand[] = [];
-  const getCoupons = await getDocs(collection(db, "Brands"));
+  const getCoupons = await getDocs(collection(db, collectionsList.brands));
   getCoupons.forEach((coupon) => {
     couponsBrands.push({
       brand: coupon.data().brand,
@@ -150,7 +151,7 @@ export const getCouponsBrands = async () => {
 
 export const getCategories = async () => {
   const categories: string[] = [];
-  const getCategories = await getDocs(collection(db, "Category"));
+  const getCategories = await getDocs(collection(db, collectionsList.category));
   getCategories.forEach((category) => {
     categories.push(category.data().category);
   });
@@ -161,7 +162,7 @@ export const getUserCoupons = async (userID: string) => {
   const coupons: Coupon[] = [];
   const today = new Date();
 
-  const couponsRef = collection(db, "UsersCoupons", userID, "coupons");
+  const couponsRef = collection(db, collectionsList.userCoupons, userID, collectionsList.coupons);
   const q = query(couponsRef, where("expiry", ">=", today));
   const ref = await getDocs(q);
 
@@ -176,7 +177,7 @@ export const getExpiredCoupons = async (userID: string) => {
   const coupons: Coupon[] = [];
   const today = new Date();
 
-  const couponsRef = collection(db, "UsersCoupons", userID, "coupons");
+  const couponsRef = collection(db, collectionsList.userCoupons, userID, collectionsList.coupons);
   const q = query(couponsRef, where("expiry", "<", today));
   const ref = await getDocs(q);
 
@@ -188,7 +189,7 @@ export const getExpiredCoupons = async (userID: string) => {
 };
 
 export const removeUserCoupon = async (userID: string, couponID: string) => {
-  const ref = doc(db, "UsersCoupons", userID, "coupons", couponID);
+  const ref = doc(db, collectionsList.userCoupons, userID, collectionsList.coupons, couponID);
   await deleteDoc(ref);
 };
 
@@ -196,7 +197,7 @@ export const saveNewCoupon = async (coupon: Coupon) => {
   coupon.createdAt = Timestamp.fromDate(new Date());
   coupon.likes = 0;
   coupon.dislikes = 0;
-  await addDoc(collection(db, "Coupons"), {
+  await addDoc(collection(db, collectionsList.coupons), {
     ...coupon,
   });
 };
@@ -209,7 +210,10 @@ export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
     const expiryDate = new Date(coupon.expiry.toString());
     coupon.expiry = Timestamp.fromDate(expiryDate);
 
-    const userCouponsRef = collection(db, `UsersCoupons/${userID}/coupons/`);
+    const userCouponsRef = collection(
+      db,
+      `${collectionsList.userCoupons}/${userID}/${collectionsList.coupons}/`
+    );
     await addDoc(userCouponsRef, coupon);
   } catch (error: any) {
     console.log(error);
@@ -226,7 +230,7 @@ export const saveImageBrand = async (imgFile: any, imageName: string) => {
     (error) => console.log(error),
     async () => {
       const downloadImgURL = await getDownloadURL(uploadTask.snapshot.ref);
-      addDoc(collection(db, "Brands"), {
+      addDoc(collection(db, collectionsList.brands), {
         brand: imageName,
         imgUrl: downloadImgURL,
       }).catch((err) => {
@@ -245,7 +249,7 @@ export const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean
       subCollectionName = "dislikes";
     }
 
-    const docRef = doc(db, "UserVoting", userID, subCollectionName, coupon.id);
+    const docRef = doc(db, collectionsList.userVotes, userID, subCollectionName, coupon.id);
     await setDoc(docRef, coupon);
   } catch (err: any) {
     console.log(err);
@@ -260,7 +264,7 @@ export const updateCoupon = async (
   couponID: string,
   userID: string
 ) => {
-  const docRef = doc(db, "UsersCoupons", userID, "coupons", couponID);
+  const docRef = doc(db, collectionsList.userCoupons, userID, collectionsList.coupons, couponID);
   await updateDoc(docRef, {
     category: category,
     discount: discount,
@@ -269,13 +273,13 @@ export const updateCoupon = async (
 };
 
 export const saveUserToDatabase = async (user: CurrentUser) => {
-  const ref = doc(db, `Users/${user.userUID}`);
+  const ref = doc(db, `${collectionsList.users}/${user.userUID}`);
   await setDoc(ref, user);
 };
 
 export const getUserDetails = async (userUID: string): Promise<CurrentUser | null> => {
   try {
-    const userDocRef = doc(db, "Users", userUID);
+    const userDocRef = doc(db, collectionsList.users, userUID);
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists()) {
@@ -295,7 +299,7 @@ export const updatePersonalUserDetails = async (
   userDetails: { [key: string]: any }
 ) => {
   try {
-    const userDocRef = doc(db, "Users", userUID);
+    const userDocRef = doc(db, collectionsList.users, userUID);
     await updateDoc(userDocRef, {
       ...userDetails,
     });
@@ -304,28 +308,44 @@ export const updatePersonalUserDetails = async (
   }
 };
 
-export const getUserLikesVotes = async (userID: string) => {
-  const coupons: Coupon[] = [];
-  const ref = collection(db, "UserVoting", userID, "likes");
-  const data = await getDocs(ref);
+export const getUserLikesVotes = async (userID: string): Promise<Coupon[] | []> => {
+  try {
+    const coupons: Coupon[] = [];
+    const ref = collection(db, collectionsList.userVotes, userID, "likes");
+    const data = await getDocs(ref);
 
-  data.forEach((doc) => {
-    const coupon = { id: doc.id, ...doc.data() };
-    coupons.push(coupon as Coupon);
-  });
-  console.log("coupons", coupons);
-  return coupons;
+    data.forEach((doc) => {
+      const coupon = { id: doc.id, ...doc.data() };
+      coupons.push(coupon as Coupon);
+    });
+    return coupons;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
 };
 
-export const getUserDislikesVotes = async (userID: string) => {
-  const coupons: Coupon[] = [];
-  const ref = collection(db, "UserVoting", userID, "dislikes");
-  const data = await getDocs(ref);
+export const getUserDislikesVotes = async (userID: string): Promise<Coupon[] | []> => {
+  try {
+    const coupons: Coupon[] = [];
+    const ref = collection(db, collectionsList.userVotes, userID, "dislikes");
+    const data = await getDocs(ref);
 
-  data.forEach((doc) => {
-    const coupon = { id: doc.id, ...doc.data() };
-    coupons.push(coupon as Coupon);
-  });
-  console.log("coupons", coupons);
-  return coupons;
+    data.forEach((doc) => {
+      const coupon = { id: doc.id, ...doc.data() };
+      coupons.push(coupon as Coupon);
+    });
+    return coupons;
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
+};
+
+export const removeUserVote = async (userID: string, couponID: string, voteType: boolean) => {
+  try {
+    const likesOrDislikes = voteType === true ? "likes" : "dislikes";
+    const ref = doc(db, collectionsList.userVotes, userID, likesOrDislikes, couponID);
+    await deleteDoc(ref);
+  } catch (error: any) {
+    throw new Error(error.message);
+  }
 };

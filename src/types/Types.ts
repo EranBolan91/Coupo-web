@@ -32,4 +32,9 @@ type CurrentUser = {
   creationDate: Timestamp;
 };
 
-export type { Coupon, CouponBrand, CurrentUser };
+type VoteObject = {
+  likes: Coupon[];
+  dislikes: Coupon[];
+};
+
+export type { Coupon, CouponBrand, CurrentUser, VoteObject };
