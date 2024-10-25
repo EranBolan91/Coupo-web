@@ -19,9 +19,9 @@ import {
 } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { Coupon, CouponBrand, CurrentUser } from "../types/Types";
+import { collectionsList } from "../../firebaseCollections";
 import { orderBy } from "firebase/firestore/lite";
 import app from "../firebaseConfig";
-import { collectionsList } from "../utiles";
 
 // Initialize Firebase
 const db = getFirestore(app);

@@ -62,7 +62,7 @@ const LikeButton = ({ coupon, setCoupon }: Props) => {
         isButtonAlreadyClicked === true
           ? "text-green-700 hover:text-green-300"
           : "text-green-300 hover:text-green-700"
-      } text-lg items-center cursor-pointer transform transition-transform duration-150 active:scale-110`}
+      } text-lg items-center cursor-pointer select-none transform transition-transform duration-150 active:scale-110`}
     >
       <span>
         <FaThumbsUp />

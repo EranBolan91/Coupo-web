@@ -62,7 +62,7 @@ const DislikeButton = ({ coupon, setCoupon }: Props) => {
         isButtonAlreadyClicked === true
           ? "text-red-700 hover:text-red-300"
           : "text-red-300 hover:text-red-700"
-      } text-lg items-center cursor-pointer mr-1 transform transition-transform duration-150 active:scale-110`}
+      } text-lg items-center cursor-pointer mr-1 select-none transform transition-transform duration-150 active:scale-110`}
     >
       <span>
         <FaThumbsDown />
