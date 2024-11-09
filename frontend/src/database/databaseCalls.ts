@@ -16,6 +16,8 @@ import {
   updateDoc,
   getDoc,
   Timestamp,
+  or,
+  and,
 } from "firebase/firestore";
 import { getStorage, ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { Coupon, CouponBrand, CurrentUser } from "../types/Types";

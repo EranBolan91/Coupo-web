@@ -2,16 +2,22 @@ import { getPaginatedCoupons } from "../../database/databaseCalls";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import SearchBar from "../main/components/Searchbar";
+import { RootState } from "../../redux/store/store";
+import { useSearchParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
 import CouponCard from "./components/CouponCard";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Coupon } from "../../types/Types";
+import { useSelector } from "react-redux";
+import Filter from "../Filter/Filter";
 
 const CouponsPage = () => {
+  const filters = useSelector((state: RootState) => state.filters);
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const debounceSearch = useDebounce(searchQuery, 700);
-  const { ref, inView } = useInView();
   const [sortOption, setSortOption] = useState("date-desc");
+  const debounceSearch = useDebounce(searchQuery, 700);
+  const [searchParams] = useSearchParams();
+  const { ref, inView } = useInView();
 
   const { data, hasNextPage, fetchNextPage } = useInfiniteQuery({
     queryKey: ["coupons", debounceSearch],
@@ -25,20 +31,20 @@ const CouponsPage = () => {
     },
   });
 
-  const coupons: Coupon[] = (data?.pages.flatMap((coupon) => coupon) || []).filter(
-    (coupon): coupon is Coupon => coupon !== undefined
-  );
+  const filteredItems = useMemo(() => {
+    if (!data?.pages) return [];
 
-  useEffect(() => {
-    if (inView && hasNextPage) {
-      fetchNextPage();
-    }
-  }, [inView, hasNextPage, debounceSearch]);
+    const coupons: Coupon[] = data?.pages.flatMap((coupon) => coupon || []);
 
-  const handleCouponsFilter = (text: string) => setSearchQuery(text);
+    const filteredCoupons = coupons.filter((coupon) => {
+      const matchesCategory = filters.length === 0 || filters.includes(coupon.category);
+      const matchesSearch =
+        !searchQuery || coupon.name.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const sortCoupons = (coupons: Coupon[]) => {
-    return [...coupons].sort((a, b) => {
+      return matchesCategory && matchesSearch;
+    });
+
+    return [...filteredCoupons].sort((a, b) => {
       switch (sortOption) {
         case "date-desc":
           return new Date(b.expiry.toDate()).getTime() - new Date(a.expiry.toDate()).getTime();
@@ -56,9 +62,42 @@ const CouponsPage = () => {
           return 0;
       }
     });
-  };
+  }, [data?.pages, filters, debounceSearch, sortOption]);
 
-  const sortedCoupons = sortCoupons(coupons);
+  const coupons: Coupon[] = (data?.pages.flatMap((coupon) => coupon) || []).filter(
+    (coupon): coupon is Coupon => coupon !== undefined
+  );
+
+  useEffect(() => {
+    if (inView && hasNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, debounceSearch, searchParams]);
+
+  const handleCouponsFilter = (text: string) => setSearchQuery(text);
+  console.log("Coupons", data);
+  // const sortCoupons = (coupons: Coupon[]) => {
+  //   return [...coupons].sort((a, b) => {
+  //     switch (sortOption) {
+  //       case "date-desc":
+  //         return new Date(b.expiry.toDate()).getTime() - new Date(a.expiry.toDate()).getTime();
+  //       case "date-asc":
+  //         return new Date(a.expiry.toDate()).getTime() - new Date(b.expiry.toDate()).getTime();
+  //       case "discount-desc":
+  //         return Number(b.discount) - Number(a.discount);
+  //       case "discount-asc":
+  //         return Number(a.discount) - Number(b.discount);
+  //       case "brand-asc":
+  //         return a.name?.localeCompare(b.name ?? "") ?? 0;
+  //       case "brand-desc":
+  //         return b.name.localeCompare(a.name);
+  //       default:
+  //         return 0;
+  //     }
+  //   });
+  // };
+
+  // const sortedCoupons = sortCoupons(coupons);
 
   return (
     <div className="flex flex-col items-center justify-center py-3">
@@ -69,25 +108,29 @@ const CouponsPage = () => {
         <SearchBar filter={handleCouponsFilter} />
       </div>
 
-      <div className="w-3/4 md:w-full max-w-sm md:max-w-md mx-auto mt-6">
-        <select
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
-          className="block w-full bg-white border border-gray-300 rounded-md py-2 px-3 shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-          <option value="date-desc">Date (Newest First)</option>
-          <option value="date-asc">Date (Oldest First)</option>
-          <option value="discount-desc">Discount (Highest First)</option>
-          <option value="discount-asc">Discount (Lowest First)</option>
-          <option value="brand-asc">Brand (A-Z)</option>
-          <option value="brand-desc">Brand (Z-A)</option>
-        </select>
+      <div className="w-3/4 flex-col md:flex-row md:w-full mx-auto mt-6 flex justify-between items-start">
+        <Filter />
+        <div className="flex">
+          <span className="flex items-center w-20">Sort by:</span>
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="select select-bordered w-full max-w-xs"
+          >
+            <option value="date-desc">Date (Newest First)</option>
+            <option value="date-asc">Date (Oldest First)</option>
+            <option value="discount-desc">Discount (Highest First)</option>
+            <option value="discount-asc">Discount (Lowest First)</option>
+            <option value="brand-asc">Brand (A-Z)</option>
+            <option value="brand-desc">Brand (Z-A)</option>
+          </select>
+        </div>
       </div>
 
       <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center">
-        {sortedCoupons &&
-          sortedCoupons.map((coupon: Coupon, index: number) => {
-            if (index === sortedCoupons.length - 1) {
+        {filteredItems &&
+          filteredItems.map((coupon: Coupon, index: number) => {
+            if (index === filteredItems.length - 1) {
               return (
                 <div key={index} className="flex justify-center col-span-12  md:col-span-4 w-full">
                   <CouponCard innerRef={ref} coupon={coupon} key={index} />
