@@ -49,9 +49,6 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
           </div>
         </div>
       </div>
-      {/* <div className="col-span-1">
-        <div className="divide-y divide-solid divide-gray-400"></div>
-      </div> */}
       <div className="col-span-5 flex flex-col p-1 justify-center">
         <div className="flex justify-evenly mt-auto">
           <DislikeButton coupon={currentCoupon} setCoupon={handleSetCoupon} />

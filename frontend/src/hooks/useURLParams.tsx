@@ -1,38 +1,49 @@
 import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 
 const useURLParams = () => {
-  // Function to get a parameter value
-  const getParam = useCallback((key: string): string[] | null => {
-    const params = new URLSearchParams(window.location.search);
-    return params.getAll(key);
-  }, []);
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  // Function to set a parameter
-  const setParam = useCallback((key: string, value: string) => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has(key) === true) {
-      params.append(key, value);
-      params.values();
-    } else {
-      params.set(key, value);
-    }
-    // Update the URL without reloading the page
-    window.history.replaceState({}, "", `${window.location.pathname}?${params.toString()}`);
-  }, []);
+  // Function to get a parameter value
+  const getParam = useCallback(
+    (key: string): string[] | null => {
+      return searchParams.getAll(key);
+    },
+    [searchParams]
+  );
+
+  // Function to set or add a parameter
+  const setParam = useCallback(
+    (key: string, value: string) => {
+      const newParams = new URLSearchParams(searchParams);
+      if (newParams.has(key)) {
+        newParams.append(key, value);
+      } else {
+        newParams.set(key, value);
+      }
+      setSearchParams(newParams);
+    },
+    [searchParams, setSearchParams]
+  );
 
   // Function to remove a parameter
-  const removeParam = useCallback((param: string) => {
-    const params = new URLSearchParams(window.location.search);
-    const url = params
-      .toString()
-      .split("&")
-      .filter((p) => p !== param)
-      .join("&");
-    console.log(url);
+  const removeParam = useCallback(
+    (key: string) => {
+      // const newParams = new URLSearchParams(searchParams);
+      // newParams.delete(key);
+      const categories = searchParams.getAll("category");
+      const categoryValue = key.split("=")[1];
+      // Clear all existing 'category' parameters from the URL
+      searchParams.delete("category");
 
-    // Update the URL without reloading the page
-    window.history.replaceState({}, "", `${window.location.pathname}?${url}`);
-  }, []);
+      // Add back only the 'category' values you want to keep
+      categories
+        .filter((value) => value !== categoryValue) // Remove 'food' specifically
+        .forEach((value) => searchParams.append("category", value));
+      setSearchParams(searchParams);
+    },
+    [searchParams, setSearchParams]
+  );
 
   return { getParam, setParam, removeParam };
 };
