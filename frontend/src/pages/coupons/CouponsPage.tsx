@@ -124,23 +124,24 @@ const CouponsPage = () => {
             filteredItems.map((coupon: Coupon, index: number) => {
               if (index === filteredItems.length - 1) {
                 return (
-                  <div key={index} className="flex justify-center col-span-12 md:col-span-4 w-full">
+                  <div
+                    key={coupon.id}
+                    className="flex justify-center col-span-12 md:col-span-4 w-full"
+                  >
                     <CouponCard innerRef={ref} coupon={coupon} key={index} />
                   </div>
                 );
               } else {
                 return (
-                  <div key={index} className="flex justify-center col-span-12 md:col-span-4 w-full">
+                  <div
+                    key={coupon.id}
+                    className="flex justify-center col-span-12 md:col-span-4 w-full"
+                  >
                     <CouponCard coupon={coupon} key={index} />
                   </div>
                 );
               }
             })}
-          {/* {filteredItems.map((item: Coupon) => (
-            <span>
-              {item.name} : {item.category}
-            </span>
-          ))} */}
         </div>
       )}
     </div>

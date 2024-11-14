@@ -25,6 +25,7 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
   const handleSetCoupon = (coupon: Coupon) => {
     setCurrentCoupon(coupon);
   };
+
   return (
     <div
       ref={innerRef}
