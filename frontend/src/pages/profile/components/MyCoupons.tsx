@@ -5,10 +5,10 @@ import RemoveCouponBtn from "./RemoveCouponBtn";
 import ModalEditCoupon from "./ModalEditCoupon";
 import { Coupon } from "../../../types/Types";
 
-const Table = () => {
+const MyCoupons = () => {
   const { user } = UserAuth();
 
-  const { data, isLoading, refetch } = useQuery<Coupon[]>({
+  const { data, refetch } = useQuery<Coupon[]>({
     queryKey: ["usercoupons"],
     queryFn: () => getUserCoupons(user.uid),
   });
@@ -78,4 +78,4 @@ const Table = () => {
   );
 };
 
-export default Table;
+export default MyCoupons;

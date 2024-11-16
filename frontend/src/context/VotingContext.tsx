@@ -1,11 +1,11 @@
+import { removeUserVote } from "../database/databaseCalls";
 import { ReactNode, useEffect, useState } from "react";
-import { Coupon, VoteObject } from "../types/Types";
 import { useQuery } from "@tanstack/react-query";
 import { UserAuth } from "../auth/AuthProvider";
-import { getUserVotes } from "../logic/Logic";
+import { getUserVotes } from "../logic/logic";
+import { VoteObject } from "../types/Types";
 import { createContext } from "react";
 import { User } from "firebase/auth";
-import { removeUserVote } from "../database/databaseCalls";
 
 type VotingContextType = {
   userVotes: VoteObject;

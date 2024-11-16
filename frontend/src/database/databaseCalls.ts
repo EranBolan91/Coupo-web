@@ -1,5 +1,4 @@
 import {
-  getFirestore,
   collection,
   getDocs,
   addDoc,
@@ -16,18 +15,12 @@ import {
   updateDoc,
   getDoc,
   Timestamp,
-  or,
-  and,
 } from "firebase/firestore";
-import { getStorage, ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
+import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { Coupon, CouponBrand, CurrentUser } from "../types/Types";
 import { collectionsList } from "../../firebaseCollections";
 import { orderBy } from "firebase/firestore/lite";
-import app from "../firebaseConfig";
-
-// Initialize Firebase
-const db = getFirestore(app);
-const storage = getStorage();
+import { db, storage } from "./databaseConfig";
 
 let documentCoursor: any = {};
 

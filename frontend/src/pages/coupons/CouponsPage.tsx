@@ -1,17 +1,17 @@
 import { getPaginatedCoupons } from "../../database/databaseCalls";
 import { initFilters } from "../../redux/reducers/filterReducer";
+import FilterChip from "../../components/filterChip/FilterChip";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "../main/components/Searchbar";
 import { useEffect, useMemo, useState } from "react";
+import Filter from "../../components/filter/Filter";
 import { RootState } from "../../redux/store/store";
 import { useSearchParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
-import FilterChip from "../FilterChip/FilterChip";
 import CouponCard from "./components/CouponCard";
 import { Coupon } from "../../types/Types";
-import Filter from "../Filter/Filter";
 
 const CouponsPage = () => {
   const filters = useSelector((state: RootState) => state.filters);
@@ -97,7 +97,7 @@ const CouponsPage = () => {
         <SearchBar filter={handleCouponsFilter} />
       </div>
 
-      <div className="w-3/4 flex-col md:flex-row md:w-full mx-auto mt-6 flex justify-between items-start">
+      <div className="w-3/4 flex-col md:flex-row md:w-full mx-auto mt-6 flex justify-between items-start px-[3%]">
         <Filter />
         <div className="flex">
           <span className="flex items-center w-20">Sort by:</span>

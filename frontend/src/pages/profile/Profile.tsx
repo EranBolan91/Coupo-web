@@ -1,8 +1,9 @@
 import PersonalInfo from "./components/PersonalInfo/PersonalInfo";
 import ExpireCoupons from "./components/ExpireCoupons";
 import { UserAuth } from "../../auth/AuthProvider";
+import MyCoupons from "./components/MyCoupons";
+import Wishlist from "./components/Wishlist";
 import { Link } from "react-router-dom";
-import Table from "./components/Table";
 import Tabs from "./components/Tabs";
 import { User } from "firebase/auth";
 
@@ -15,11 +16,15 @@ const Profile = () => {
     },
     {
       label: "My Coupons",
-      content: <Table />,
+      content: <MyCoupons />,
     },
     {
       label: "Expire Coupons",
       content: <ExpireCoupons />,
+    },
+    {
+      label: "Wishlist",
+      content: <Wishlist />,
     },
   ];
 

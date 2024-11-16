@@ -37,4 +37,6 @@ type VoteObject = {
   dislikes: Coupon[];
 };
 
-export type { Coupon, CouponBrand, CurrentUser, VoteObject };
+type WishList = string[];
+
+export type { Coupon, CouponBrand, CurrentUser, VoteObject, WishList };
