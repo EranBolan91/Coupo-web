@@ -1,7 +1,7 @@
-import { collection, query, where, getDocs, QueryDocumentSnapshot } from "firebase/firestore";
 import { getUserDislikesVotes, getUserLikesVotes } from "../database/databaseCalls";
-import { db } from "../database/databaseConfig";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { Coupon, VoteObject } from "../types/Types";
+import { db } from "../database/databaseConfig";
 import { getUserWishlist } from "../database/wishlist";
 
 export const getUserVotes = async (userID: string): Promise<VoteObject> => {
@@ -17,16 +17,15 @@ export const getUserVotes = async (userID: string): Promise<VoteObject> => {
   return userVotesObj;
 };
 
-export const getUserWishlistCoupons = async (arrayOfCouponIDs: string[]): Promise<Coupon[]> => {
-  if (arrayOfCouponIDs.length === 0) {
-    return [];
-  }
+export const getUserWishlistCoupons = async (userID: string): Promise<Coupon[]> => {
+  const userWishlistData = await getUserWishlist(userID);
+
   const MAX_BATCH_SIZE = 10;
 
   // Split couponIDs into chunks of 10
   const batches = [];
-  for (let i = 0; i < arrayOfCouponIDs.length; i += MAX_BATCH_SIZE) {
-    const chunk = arrayOfCouponIDs.slice(i, i + MAX_BATCH_SIZE);
+  for (let i = 0; i < userWishlistData.length; i += MAX_BATCH_SIZE) {
+    const chunk = userWishlistData.slice(i, i + MAX_BATCH_SIZE);
     batches.push(chunk);
   }
 

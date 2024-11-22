@@ -6,4 +6,5 @@ export const collectionsList = {
   users: "Users",
   userCoupons: "UserCoupons",
   wishList: "WishList",
+  notifications: "notifications",
 };

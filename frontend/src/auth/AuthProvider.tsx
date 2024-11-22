@@ -1,22 +1,29 @@
 import { useState, createContext, ReactNode, useContext, useEffect } from "react";
 import {
+  User,
   signOut,
-  onAuthStateChanged,
   signInWithPopup,
   GoogleAuthProvider,
-  createUserWithEmailAndPassword,
+  onAuthStateChanged,
   sendEmailVerification,
   signInWithEmailAndPassword,
-  User,
+  fetchSignInMethodsForEmail,
+  createUserWithEmailAndPassword,
 } from "firebase/auth";
 import toast from "react-hot-toast";
 import { auth } from "../firebaseConfig";
 import { redirect } from "react-router-dom";
-import { saveUserToDatabase } from "../database/databaseCalls";
 import { Timestamp } from "firebase/firestore";
+import { saveUserToDatabase } from "../database/databaseCalls";
 
 const AuthContext = createContext<any>(null);
 const provider = new GoogleAuthProvider();
+
+export enum AuthMSG {
+  VerifyEmailError,
+  GlobalError,
+  Good,
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -38,13 +45,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const createUserWithEmailPassword = async (
     email: string,
     password: string,
-    firstName: string,
-    lastName: string,
+    fullName: string,
     birthday: string
   ) => {
     try {
       const newUser = await createUserWithEmailAndPassword(auth, email, password);
-
       if (newUser !== null && auth.currentUser !== null) {
         await sendEmailVerification(newUser.user);
         const userEmail = newUser.user.email ?? "";
@@ -52,8 +57,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         await saveUserToDatabase({
           userUID: userUID,
-          firstName: firstName,
-          lastName: lastName,
+          firstName: fullName.split(" ")[0],
+          lastName: fullName.split(" ")[1],
           email: userEmail,
           isEmailVerified: newUser.user.emailVerified,
           imageURL: "",
@@ -62,7 +67,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           birthday: Timestamp.fromDate(new Date(birthday)),
         });
 
-        toast.success("Email verification sent!");
+        setUser(newUser.user);
       } else {
         return null;
       }
@@ -75,10 +80,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loginUserWithEmailPassword = async (email: string, password: string) => {
     try {
       const loginUser = await signInWithEmailAndPassword(auth, email, password);
+
       if (loginUser !== null) {
-        setUser(loginUser.user);
-        redirect("/profile");
-        return loginUser.user;
+        if (loginUser.user.emailVerified === true) {
+          setUser(loginUser.user);
+          redirect("/profile");
+          return AuthMSG.Good;
+        } else {
+          setUser(loginUser.user);
+          return AuthMSG.VerifyEmailError;
+        }
+      } else {
+        return AuthMSG.GlobalError;
       }
     } catch (error: any) {
       console.log(error.message);
@@ -107,6 +120,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const email = error.customData.email;
         // The AuthCredential type that was used.
         const credential = GoogleAuthProvider.credentialFromError(error);
+        console.log("AuthProvider", credential);
         // ...
         setUser(null);
         return error;
@@ -129,10 +143,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
-        signinWthGoogle,
-        createUserWithEmailPassword,
-        loginUserWithEmailPassword,
         logout,
+        signinWthGoogle,
+        sendEmailVerification,
+        loginUserWithEmailPassword,
+        createUserWithEmailPassword,
       }}
     >
       {!loading && children}

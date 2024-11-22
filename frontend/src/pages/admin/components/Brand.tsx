@@ -1,9 +1,9 @@
-import { DevTool } from "@hookform/devtools";
+import { saveImageBrand } from "../../../database/databaseCalls";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { PhotoIcon } from "@heroicons/react/24/solid";
-import { saveImageBrand } from "../../../database/databaseCalls";
-import { useState } from "react";
+import { DevTool } from "@hookform/devtools";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 type NewBrand = {
   brandName: string;
@@ -96,10 +96,7 @@ export default function Brand() {
                     )}
                     {!displayImage && (
                       <div className="text-center">
-                        <PhotoIcon
-                          className="mx-auto h-12 w-12 text-gray-300"
-                          aria-hidden="true"
-                        />
+                        <PhotoIcon className="mx-auto h-12 w-12 text-gray-300" aria-hidden="true" />
                         <div className="mt-4 flex text-sm leading-6 text-gray-600">
                           <label
                             htmlFor="file-upload"
@@ -120,9 +117,7 @@ export default function Brand() {
                           </label>
                           <p className="pl-1">or drag and drop</p>
                         </div>
-                        <p className="text-xs leading-5 text-gray-600">
-                          PNG, JPG, GIF up to 10MB
-                        </p>
+                        <p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
                       </div>
                     )}
                   </div>

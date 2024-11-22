@@ -1,6 +1,6 @@
-import { Fragment, useState } from "react";
-import { Listbox, Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/20/solid";
+import { Listbox, Transition } from "@headlessui/react";
+import { Fragment, useState } from "react";
 
 type Props = {
   selectTitle: string;
@@ -35,10 +35,7 @@ const Select = (props: Props) => {
                 <span className="ml-3 block truncate">{selected}</span>
               </span>
               <span className="pointer-events-none absolute inset-y-0 right-0 ml-3 flex items-center pr-2">
-                <ChevronUpDownIcon
-                  className="h-5 w-5 text-gray-400"
-                  aria-hidden="true"
-                />
+                <ChevronUpDownIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
               </span>
             </Listbox.Button>
 
@@ -82,10 +79,7 @@ const Select = (props: Props) => {
                                 "absolute inset-y-0 right-0 flex items-center pr-4"
                               )}
                             >
-                              <CheckIcon
-                                className="h-5 w-5"
-                                aria-hidden="true"
-                              />
+                              <CheckIcon className="h-5 w-5" aria-hidden="true" />
                             </span>
                           ) : null}
                         </>

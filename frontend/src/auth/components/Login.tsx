@@ -1,6 +1,7 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
-import { UserAuth } from "../AuthProvider";
+import ResendEmailButton from "./ResendEmailButton";
+import { AuthMSG, UserAuth } from "../AuthProvider";
 import authErrors from "../AuthErrors";
 import toast from "react-hot-toast";
 import { useState } from "react";
@@ -23,7 +24,8 @@ const cleanAuthErrorMessage = (message: string) => {
 };
 
 const Login = () => {
-  const { signinWthGoogle, loginUserWithEmailPassword } = UserAuth();
+  const [displayResendEmail, setDisplayResendEmail] = useState<boolean>(false);
+  const { user, signinWthGoogle, loginUserWithEmailPassword } = UserAuth();
   const [spinner, setSpinner] = useState<boolean>(false);
   const form = useForm<LoginForm>();
   const navigate = useNavigate();
@@ -41,10 +43,20 @@ const Login = () => {
   const handleLoginWithEmailPassword: SubmitHandler<LoginForm> = async (data) => {
     try {
       setSpinner(true);
-      await loginUserWithEmailPassword(data.email, data.password);
-      setSpinner(false);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      navigate("/profile");
+      const res: AuthMSG = await loginUserWithEmailPassword(data.email, data.password);
+
+      switch (res) {
+        case AuthMSG.Good:
+          setSpinner(false);
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          navigate("/profile");
+          break;
+        case AuthMSG.VerifyEmailError:
+          toast.error("Please verify your email, check your email", { position: "top-center" });
+          setSpinner(false);
+          setDisplayResendEmail(true);
+          break;
+      }
     } catch (error: any) {
       const cleanErrorMsg = cleanAuthErrorMessage(error.message);
       toast.error(authErrors[cleanErrorMsg]);
@@ -132,8 +144,13 @@ const Login = () => {
                 className="flex w-full justify-center items-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
                 Login
-                {spinner && <span className="loading loading-spinner loading-xs ml-2"></span>}
+                {spinner && <span className="loading loading-spinner loading-xs ml-3"></span>}
               </button>
+              {displayResendEmail && (
+                <span>
+                  click here to: <ResendEmailButton key={user?.uid} user={user} />
+                </span>
+              )}
             </div>
           </form>
           <div className="flex flex-col justify-center items-center text-black">

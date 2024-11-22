@@ -19,12 +19,12 @@ const Profile = () => {
       content: <MyCoupons />,
     },
     {
-      label: "Expire Coupons",
-      content: <ExpireCoupons />,
-    },
-    {
       label: "Wishlist",
       content: <Wishlist />,
+    },
+    {
+      label: "Expire Coupons",
+      content: <ExpireCoupons />,
     },
   ];
 

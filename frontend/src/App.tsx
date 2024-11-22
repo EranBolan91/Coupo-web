@@ -6,17 +6,17 @@ import Categories from "./pages/categories/Categories";
 import CouponsPage from "./pages/coupons/CouponsPage";
 import Brand from "./pages/admin/components/Brand";
 import Category from "./pages/category/Category";
+import Navbar from "./components/Navbar/Navbar";
 import Profile from "./pages/profile/Profile";
 import SignUp from "./auth/components/SignUp";
 import MainPage from "./pages/main/MainPage";
 import Login from "./auth/components/Login";
 import AdminPage from "./pages/admin/Admin";
 import { Toaster } from "react-hot-toast";
-import Navbar from "./layout/Navbar/Navbar";
 import Footer from "./layout/Footer";
 import "./App.css";
 
-function App() {
+const App = () => {
   const location = useLocation();
   const displayAdminSidebar = location.pathname.includes("/admin");
 
@@ -74,6 +74,6 @@ function App() {
       <Toaster position="top-right" reverseOrder={false} />
     </>
   );
-}
+};
 
 export default App;

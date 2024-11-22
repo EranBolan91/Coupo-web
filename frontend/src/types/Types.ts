@@ -39,4 +39,9 @@ type VoteObject = {
 
 type WishList = string[];
 
-export type { Coupon, CouponBrand, CurrentUser, VoteObject, WishList };
+type Notification = {
+  content: string;
+  isRead: boolean;
+};
+
+export type { Coupon, CouponBrand, CurrentUser, VoteObject, WishList, Notification };

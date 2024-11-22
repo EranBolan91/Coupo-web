@@ -8,7 +8,7 @@ import { CgProfile } from "react-icons/cg";
 import { IoMdHome } from "react-icons/io";
 import { Tooltip } from "react-tooltip";
 import { useState } from "react";
-import Avatar from "./Navbar/components/Avatar";
+import Avatar from "../components/Navbar/components/Avatar";
 import toast from "react-hot-toast";
 
 const Menus = [

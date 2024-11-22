@@ -1,11 +1,12 @@
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/solid";
+import Notifications from "../notifications/Notifications";
 import { UserAuth } from "../../auth/AuthProvider";
 import { useLocation } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
-import { Link } from "react-router-dom";
-import { useState } from "react";
 import Avatar from "./components/Avatar";
+import { Link } from "react-router-dom";
 import { User } from "firebase/auth";
+import { useState } from "react";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -30,6 +31,9 @@ const Navbar = () => {
               alt=""
             />
           </Link>
+          <div className="flex items-center cursor-pointer">
+            <Notifications />
+          </div>
         </div>
         <div className="flex lg:hidden">
           <button
@@ -57,7 +61,7 @@ const Navbar = () => {
           ))}
         </div>
         <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-          {user ? (
+          {user?.emailVerified ? (
             <Avatar imgURL={user.photoURL ?? null} />
           ) : (
             <Link to="/login" className="text-sm font-semibold leading-6 text-primary">

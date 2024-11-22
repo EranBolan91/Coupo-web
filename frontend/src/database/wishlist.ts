@@ -1,5 +1,5 @@
-import { collectionsList } from "../../firebaseCollections";
 import { doc, setDoc, getDoc, updateDoc, deleteField } from "firebase/firestore";
+import { collectionsList } from "../../firebaseCollections";
 import { db } from "./databaseConfig";
 
 export const getUserWishlist = async (userID: string) => {
@@ -9,7 +9,10 @@ export const getUserWishlist = async (userID: string) => {
     const wishlistDoc = await getDoc(docRef);
     const wishlistObj = wishlistDoc.data();
 
-    Object.keys(wishlistObj as object).forEach((wishlist) => wishListArray.push(wishlist));
+    if (wishlistObj !== undefined) {
+      Object.keys(wishlistObj as object).forEach((wishlist) => wishListArray.push(wishlist));
+    }
+
     return wishListArray;
   } catch (error: any) {
     console.error(error);
