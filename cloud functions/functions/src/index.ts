@@ -11,23 +11,25 @@ import * as admin from "firebase-admin";
 
 admin.initializeApp();
 
-export const createNewUserInUsersCollection = functions.auth.user()
-.onCreate((user: UserRecord) => {
-  const newUser: CurrentUser = {
-    userUID: user.uid,
-    email: user.email ?? "",
-    isEmailVerified: user.emailVerified,
-    lastLogin: user.metadata.creationTime,
-    firstName: user?.displayName?.split(" ")[0] ?? "",
-    lastName: user?.displayName?.split(" ")[1] ?? "",
-    creationDate: Timestamp.fromDate(new Date(user.metadata.creationTime)),
-    imageURL: user.photoURL ?? "",
-  };
-  admin
-    .firestore()
-    .collection("Users")
-    .doc(user.uid)
-    .set({ ...newUser });
+export const createNewUserInUsersCollection = functions.auth.user().onCreate((user: UserRecord) => {
+  if (user.providerData[0].providerId !== "password") {
+    const newUser: CurrentUser = {
+      userUID: user.uid,
+      firstName: user?.displayName?.split(" ")[0] ?? "",
+      lastName: user?.displayName?.split(" ")[1] ?? "",
+      email: user.email ?? "",
+      isEmailVerified: user.emailVerified,
+      imageURL: user.photoURL ?? "",
+      lastLogin: user.metadata.creationTime,
+      creationDate: Timestamp.fromDate(new Date(user.metadata.creationTime)),
+      birthday: undefined,
+    };
+    admin
+      .firestore()
+      .collection("Users")
+      .doc(user.uid)
+      .set({ ...newUser });
+  }
 });
 
 export const addUserCouponToCouponsCollection = functions.firestore
