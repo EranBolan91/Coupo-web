@@ -5,10 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 const Notifications = () => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const { data } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: () => {},
-  });
+  // const { data } = useQuery({
+  //   queryKey: ["notifications"],
+  //   queryFn: () => {},
+  // });
 
   const togglePopup = () => setIsOpen(!isOpen);
 

@@ -72,10 +72,7 @@ const SignUp = () => {
             alt="Your Company"
           />
           <div className="flex items-center">
-            <Link
-              to={"/login"}
-              className="text-black opacity-50 hover:opacity-100 text-black duration-200"
-            >
+            <Link to={"/login"} className="text-black opacity-50 hover:opacity-100 duration-200">
               <IoArrowBack />
             </Link>
             <span className="text-2xl font-bold leading-9 tracking-tight text-gray-900 m-auto">
@@ -236,8 +233,8 @@ const SignUp = () => {
                 >
                   {loading ? (
                     <>
-                      <span className="loading loading-spinner loading-xs ml-2"></span>
                       Please wait...
+                      <span className="loading loading-spinner loading-xs ml-3"></span>
                     </>
                   ) : (
                     "Sign up"

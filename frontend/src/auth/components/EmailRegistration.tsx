@@ -30,7 +30,7 @@ const EmailRegistration = () => {
       <input
         disabled
         type="text"
-        placeholder="Type here"
+        placeholder={user.email ?? ""}
         className="input input-bordered input-md w-full"
       />
       <div className="flex justify-center">

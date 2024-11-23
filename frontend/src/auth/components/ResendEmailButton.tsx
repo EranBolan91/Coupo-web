@@ -1,6 +1,8 @@
-import toast from "react-hot-toast";
+import { cleanAuthErrorMessage } from "../../utils/utils";
 import { UserAuth } from "../AuthProvider";
+import authErrors from "../AuthErrors";
 import { User } from "firebase/auth";
+import toast from "react-hot-toast";
 
 type Props = {
   user: User;
@@ -10,14 +12,16 @@ type Props = {
 const ResendEmailButton = ({ user, handleResetTime }: Props) => {
   const { sendEmailVerification } = UserAuth();
 
-  const sendEmailAndRestTime = () => {
+  const sendEmailAndRestTime = async () => {
     try {
-      sendEmailVerification(user);
+      toast.success("Email sent");
+      await sendEmailVerification(user);
       if (handleResetTime) {
         handleResetTime();
       }
     } catch (error: any) {
-      toast.error(error.message, { position: "top-center", duration: 3000 });
+      const cleanErrorMsg = cleanAuthErrorMessage(error.message);
+      toast.error(authErrors[cleanErrorMsg], { position: "top-center", duration: 2000 });
     }
   };
 

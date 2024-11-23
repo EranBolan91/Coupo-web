@@ -7,7 +7,6 @@ import {
   onAuthStateChanged,
   sendEmailVerification,
   signInWithEmailAndPassword,
-  fetchSignInMethodsForEmail,
   createUserWithEmailAndPassword,
 } from "firebase/auth";
 import toast from "react-hot-toast";

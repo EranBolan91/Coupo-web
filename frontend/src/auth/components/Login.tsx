@@ -1,3 +1,4 @@
+import { cleanAuthErrorMessage } from "../../utils/utils";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import ResendEmailButton from "./ResendEmailButton";
@@ -9,18 +10,6 @@ import { useState } from "react";
 type LoginForm = {
   email: string;
   password: string;
-};
-
-const cleanAuthErrorMessage = (message: string) => {
-  const regex = /auth\/(.*?)\./;
-  const text = regex.exec(message);
-  let cleanErrorMsg = "";
-  if (text !== null) {
-    const extractedText = text[1];
-    const withoutClosingParenthesis = extractedText.replace(/\)/g, "");
-    cleanErrorMsg = withoutClosingParenthesis;
-  }
-  return cleanErrorMsg;
 };
 
 const Login = () => {
@@ -48,7 +37,8 @@ const Login = () => {
       switch (res) {
         case AuthMSG.Good:
           setSpinner(false);
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          toast.success("You have successfully logged in", { duration: 1000 });
+          await new Promise((resolve) => setTimeout(resolve, 1500));
           navigate("/profile");
           break;
         case AuthMSG.VerifyEmailError:
@@ -146,13 +136,13 @@ const Login = () => {
                 Login
                 {spinner && <span className="loading loading-spinner loading-xs ml-3"></span>}
               </button>
-              {displayResendEmail && (
-                <span>
-                  click here to: <ResendEmailButton key={user?.uid} user={user} />
-                </span>
-              )}
             </div>
           </form>
+          {displayResendEmail && (
+            <span>
+              click here to: <ResendEmailButton key={user?.uid} user={user} />
+            </span>
+          )}
           <div className="flex flex-col justify-center items-center text-black">
             <div className="inline-flex items-center justify-center w-full">
               <hr className="w-full h-px my-8 bg-gray-200 border-0" />
