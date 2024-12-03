@@ -113,6 +113,7 @@ export default function Brand() {
                               })}
                               onChange={handleImageChange}
                               name="image"
+                              multiple
                             />
                           </label>
                           <p className="pl-1">or drag and drop</p>

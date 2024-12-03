@@ -4,9 +4,11 @@
 
 import { collectionsList } from "./firebaseCollections";
 import { Timestamp } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { UserRecord } from "firebase-admin/auth";
 import * as functions from "firebase-functions";
 import { Coupon, CurrentUser } from "./types";
+
 import * as admin from "firebase-admin";
 
 admin.initializeApp();
@@ -88,3 +90,47 @@ export const addDislikeVoteToCoupon = functions.firestore
       dislikes: admin.firestore.FieldValue.increment(1),
     });
   });
+
+export const updateProfileImage = functions.storage.object().onFinalize(async (object) => {
+  const filePath = object.name; // File path in the storage bucket
+  const contentType = object.contentType; // Mime type of the file
+  const bucketName = object.bucket; // Storage bucket
+
+  if (!filePath || !filePath.startsWith("ProfileImage/")) {
+    console.log("Not a profile image upload.");
+    return null;
+  }
+
+  if (!contentType || !contentType.startsWith("image/")) {
+    console.log("Uploaded file is not an image.");
+    return null;
+  }
+
+  // Extract userID from file path
+  const userID = filePath.split("/")[1]; // Assuming "ProfileImage/${userID}/filename"
+
+  if (!userID) {
+    console.log("No userID found in file path.");
+    return null;
+  }
+
+  // Generate the public URL
+  const bucket = getStorage().bucket(bucketName);
+  const file = bucket.file(filePath);
+  const [url] = await file.getSignedUrl({
+    action: "read",
+    expires: "03-01-2500", // Adjust the expiry date as needed
+  });
+
+  console.log(`Generated signed URL: ${url}`);
+
+  // Update Firestore
+  const userDocRef = admin.firestore().doc(`Users/${userID}`);
+  await userDocRef.set(
+    { imageURL: url },
+    { merge: true } // Merge with existing data
+  );
+
+  console.log(`Updated Firestore for user: ${userID}`);
+  return null;
+});

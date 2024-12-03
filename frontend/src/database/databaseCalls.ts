@@ -217,7 +217,7 @@ export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
 };
 
 export const saveImageBrand = async (imgFile: any, imageName: string) => {
-  const storageRef = ref(storage, imageName + ".svg");
+  const storageRef = ref(storage, `Brands/${imageName}.svg`);
   const uploadTask = uploadBytesResumable(storageRef, imgFile);
   uploadTask.on(
     "state_changed",
@@ -286,20 +286,6 @@ export const getUserDetails = async (userUID: string): Promise<CurrentUser | nul
   } catch (error: any) {
     console.error("Error fetching user data:", error);
     return null;
-  }
-};
-
-export const updatePersonalUserDetails = async (
-  userUID: string,
-  userDetails: { [key: string]: any }
-) => {
-  try {
-    const userDocRef = doc(db, collectionsList.users, userUID);
-    await updateDoc(userDocRef, {
-      ...userDetails,
-    });
-  } catch (error: any) {
-    throw new Error(error.message);
   }
 };
 

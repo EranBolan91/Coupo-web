@@ -142,7 +142,6 @@ const SignUp = () => {
                   <input
                     id="birthday"
                     type="date"
-                    value={"1991-10-02"}
                     {...register("birthday", {
                       required: "Date of birth is required",
                     })}

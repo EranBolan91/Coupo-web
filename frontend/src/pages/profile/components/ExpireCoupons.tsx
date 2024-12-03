@@ -7,7 +7,7 @@ import { Coupon } from "../../../types/Types";
 const ExpireCoupon = () => {
   const { user } = UserAuth();
 
-  const { data, isLoading } = useQuery<Coupon[]>({
+  const { data } = useQuery<Coupon[]>({
     queryKey: ["expireCoupons"],
     queryFn: () => getExpiredCoupons(user.uid),
   });
