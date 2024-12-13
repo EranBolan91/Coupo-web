@@ -216,7 +216,7 @@ export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
   }
 };
 
-export const saveImageBrand = async (imgFile: any, imageName: string) => {
+export const saveImageBrand = async (imgFile: File, imageName: string) => {
   const storageRef = ref(storage, `Brands/${imageName}.svg`);
   const uploadTask = uploadBytesResumable(storageRef, imgFile);
   uploadTask.on(

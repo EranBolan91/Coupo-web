@@ -1,9 +1,9 @@
-import { getUserDislikesVotes, getUserLikesVotes } from "../database/databaseCalls";
+import { PersonalInfoForm } from "../pages/profile/components/PersonalInfo/ModalPersonalInfo";
+import { getUserDislikesVotes, getUserLikesVotes, saveImageBrand } from "../database/databaseCalls";
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { Coupon, CurrentUser, VoteObject } from "../types/Types";
-import { db } from "../database/databaseConfig";
 import { getUserWishlist } from "../database/wishlist";
-import { PersonalInfoForm } from "../pages/profile/components/PersonalInfo/ModalPersonalInfo";
+import { db } from "../database/databaseConfig";
 import {
   saveProfileImage,
   updatePersonalUserDetails as updatePersonalUserDetailsDB,
@@ -74,4 +74,14 @@ export const updateUserProfileDetails = async (user: CurrentUser, data: Personal
   } catch (error: any) {
     throw new Error(error);
   }
+};
+
+export const uploadMultipleImages = async (
+  imagesFiles: FileList,
+  filesNames: Record<string, string>
+) => {
+  debugger;
+  Array.from(imagesFiles).forEach((imageFile) =>
+    saveImageBrand(imageFile, filesNames[imageFile.name])
+  );
 };
