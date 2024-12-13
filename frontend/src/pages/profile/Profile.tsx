@@ -13,7 +13,7 @@ import { User } from "firebase/auth";
 const Profile = () => {
   const { user }: { user: User } = UserAuth();
 
-  const { data: userDetails, isLoading } = useQuery<CurrentUser | null>({
+  const { data: userDetails } = useQuery<CurrentUser | null>({
     queryKey: ["PersonalInfo"],
     queryFn: () => getUserDetails(user.uid),
     staleTime: Infinity,
