@@ -12,6 +12,7 @@ import { useSearchParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
 import CouponCard from "./components/CouponCard";
 import { Coupon } from "../../types/Types";
+import { AnimatePresence, motion } from "motion/react";
 
 const CouponsPage = () => {
   const filters = useSelector((state: RootState) => state.filters);
@@ -120,28 +121,46 @@ const CouponsPage = () => {
         <span className="loading loading-spinner loading-lg ml-2"></span>
       ) : (
         <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center">
-          {filteredItems &&
-            filteredItems.map((coupon: Coupon, index: number) => {
-              if (index === filteredItems.length - 1) {
-                return (
-                  <div
-                    key={coupon.id}
-                    className="flex justify-center col-span-12 md:col-span-4 w-full"
-                  >
-                    <CouponCard innerRef={ref} coupon={coupon} key={index} />
-                  </div>
-                );
-              } else {
-                return (
-                  <div
-                    key={coupon.id}
-                    className="flex justify-center col-span-12 md:col-span-4 w-full"
-                  >
-                    <CouponCard coupon={coupon} key={index} />
-                  </div>
-                );
-              }
-            })}
+          <AnimatePresence>
+            {filteredItems &&
+              filteredItems.map((coupon: Coupon, index: number) => {
+                if (index === filteredItems.length - 1) {
+                  return (
+                    <div
+                      key={coupon.id}
+                      className="flex justify-center col-span-12 md:col-span-4 w-full"
+                    >
+                      <motion.div
+                        key={coupon.id}
+                        initial={{ opacity: 0, y: -100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <CouponCard innerRef={ref} coupon={coupon} key={index} />
+                      </motion.div>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div
+                      key={coupon.id}
+                      className="flex justify-center col-span-12 md:col-span-4 w-full"
+                    >
+                      <motion.div
+                        key={coupon.id}
+                        initial={{ opacity: 0, y: -100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <CouponCard coupon={coupon} key={index} />
+                      </motion.div>
+                    </div>
+                  );
+                }
+              })}
+          </AnimatePresence>
         </div>
       )}
     </div>

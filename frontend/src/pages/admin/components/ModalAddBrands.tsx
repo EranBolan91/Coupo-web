@@ -1,4 +1,5 @@
 import { uploadMultipleImages } from "../../../logic/logic";
+import { AnimatePresence, motion } from "motion/react";
 import { IoCloseSharp } from "react-icons/io5";
 import ModalImage from "./ModalImage";
 import { useState } from "react";
@@ -67,46 +68,59 @@ const ModalAddBrands = ({ openModal, imagesFile, handleOpenModal }: Props) => {
             <h3 className="font-bold text-lg">Upload Image Brands</h3>
             <div className="flex flex-col">
               {images?.length === 0 ? <span>Nothing to upload</span> : null}
-              {images &&
-                Array.from(images).map((file, index) => (
-                  <div key={file.name} className="flex rounded bg-cyan-950 p-2 my-1 items-center">
-                    <button
-                      className="btn btn-circle btn-sm btn-outline"
-                      onClick={() => removeImageFromImages(file)}
+              <AnimatePresence>
+                {images &&
+                  Array.from(images).map((file) => (
+                    <motion.div
+                      key={file.name}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.5 }}
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                      <div
+                        key={file.name}
+                        className="flex rounded bg-cyan-950 p-2 my-1 items-center"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M6 18L18 6M6 6l12 12"
+                        <button
+                          className="btn btn-circle btn-sm btn-outline"
+                          onClick={() => removeImageFromImages(file)}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth="2"
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                        <input
+                          type="text"
+                          value={fileNames[file.name]}
+                          className="input input-ghost input-sm w-full max-w-xs"
+                          name={file.name}
+                          onChange={(e) => handleNameChange(file.name, e.target.value)}
                         />
-                      </svg>
-                    </button>
-                    <input
-                      type="text"
-                      value={fileNames[file.name]}
-                      className="input input-ghost input-sm w-full max-w-xs"
-                      name={file.name}
-                      onChange={(e) => handleNameChange(file.name, e.target.value)}
-                    />
-                    <div className="avatar">
-                      <div className="w-9">
-                        <img
-                          src={URL.createObjectURL(file)}
-                          className="cursor-pointer"
-                          onClick={() => handleExpandImage(file)}
-                        />
+                        <div className="avatar">
+                          <div className="w-9">
+                            <img
+                              src={URL.createObjectURL(file)}
+                              className="cursor-pointer"
+                              onClick={() => handleExpandImage(file)}
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ))}
+                    </motion.div>
+                  ))}
+              </AnimatePresence>
             </div>
           </div>
           <form method="dialog" className="modal-backdrop flex justify-end mt-2">
