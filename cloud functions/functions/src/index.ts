@@ -91,12 +91,14 @@ export const addDislikeVoteToCoupon = functions.firestore
     });
   });
 
-const bucket = admin.storage().bucket();
-
 export const uploadImage = functions.storage.object().onFinalize(async (object) => {
   const filePath = object.name; // Full path of the uploaded file in the bucket
   // const contentType = object.contentType; // Mime type of the uploaded file
-  const bucketName = object.bucket; // The bucket where the file was uploaded
+  const imageURL = object.mediaLink;
+
+  if (imageURL === undefined) {
+    return null;
+  }
 
   if (!filePath) {
     console.log("File path is missing.");
@@ -105,9 +107,9 @@ export const uploadImage = functions.storage.object().onFinalize(async (object) 
 
   // Determine if it's a "ProfileImage" or "Brands" folder
   if (filePath.startsWith("ProfileImage/")) {
-    return handleProfileImage(filePath, bucketName);
+    return handleProfileImage(filePath, imageURL);
   } else if (filePath.startsWith("Brands/")) {
-    return handleBrands(filePath, bucketName);
+    return handleBrands(filePath, imageURL);
   } else {
     console.log("File is not in the ProfileImage or Brands folders.");
     return null;
@@ -115,7 +117,7 @@ export const uploadImage = functions.storage.object().onFinalize(async (object) 
 });
 
 // Handle ProfileImage uploads
-async function handleProfileImage(filePath: string, bucketName: string) {
+async function handleProfileImage(filePath: string, imageURL: string) {
   console.log(`Processing ProfileImage: ${filePath}`);
 
   // Extract userID from file path (assuming "ProfileImage/${userID}/filename")
@@ -127,19 +129,12 @@ async function handleProfileImage(filePath: string, bucketName: string) {
     return null;
   }
 
-  // Generate a signed URL for the file
-  const file = bucket.file(filePath);
-  const [url] = await file.getSignedUrl({
-    action: "read",
-    expires: "03-01-2500", // Adjust expiry as needed
-  });
-
-  console.log(`Generated signed URL for ProfileImage: ${url}`);
+  console.log(`Generated signed URL for ProfileImage: ${filePath}`);
 
   // Update Firestore for the user
   const userDocRef = admin.firestore().doc(`Users/${userID}`);
   await userDocRef.set(
-    { profileImageURL: url },
+    { imageURL: imageURL },
     { merge: true } // Merge with existing data
   );
 
@@ -148,25 +143,22 @@ async function handleProfileImage(filePath: string, bucketName: string) {
 }
 
 // Handle Brands uploads
-async function handleBrands(filePath: string, bucketName: string) {
-  console.log(`Processing Brands folder: ${filePath}`);
+async function handleBrands(filePath: string, imageURL: string) {
+  try {
+    console.log(`Processing Brands folder: ${filePath}`);
 
-  // Generate a signed URL for the file
-  const file = bucket.file(bucketName);
-  const [url] = await file.getSignedUrl({
-    action: "read",
-    expires: "03-01-2500", // Adjust expiry as needed
-  });
+    // This return is for when creating Folders
+    if (filePath.split("/").length === 1) {
+      return null;
+    }
 
-  console.log(`Generated signed URL for Brand: ${url}`);
+    const brandDocRef = admin.firestore().collection(`Brands/`);
+    await brandDocRef.add({ brand: filePath.split("/").pop(), imgUrl: imageURL });
 
-  // Update Firestore for the brand
-  const brandDocRef = admin.firestore().doc(`Brands/`);
-  await brandDocRef.set(
-    { brandImageURL: url },
-    { merge: true } // Merge with existing data
-  );
-
-  console.log(`Updated Firestore for brand ${filePath} with image URL.`);
-  return null;
+    console.log(`Updated Firestore for brand ${filePath} with image URL.`);
+    return null;
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
 }
