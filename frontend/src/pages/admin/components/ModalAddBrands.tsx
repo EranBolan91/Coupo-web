@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { IoCloseSharp } from "react-icons/io5";
 import ModalImage from "./ModalImage";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 interface Props {
   openModal: boolean;
@@ -41,10 +42,14 @@ const ModalAddBrands = ({ openModal, imagesFile, handleOpenModal }: Props) => {
   };
 
   const uploadImages = async () => {
-    console.log(fileNames);
     if (imagesFile !== undefined) {
-      uploadMultipleImages(imagesFile, fileNames);
+      toast.promise(uploadMultipleImages(imagesFile, fileNames), {
+        loading: "Uploading images",
+        error: "Error in uploading images",
+        success: "Images successfully uploaded",
+      });
     }
+    handleOpenModal();
   };
 
   const handleNameChange = (fileName: string, newName: string) => {
@@ -108,14 +113,12 @@ const ModalAddBrands = ({ openModal, imagesFile, handleOpenModal }: Props) => {
                           name={file.name}
                           onChange={(e) => handleNameChange(file.name, e.target.value)}
                         />
-                        <div className="avatar">
-                          <div className="w-9">
-                            <img
-                              src={URL.createObjectURL(file)}
-                              className="cursor-pointer"
-                              onClick={() => handleExpandImage(file)}
-                            />
-                          </div>
+                        <div className="w-20">
+                          <img
+                            src={URL.createObjectURL(file)}
+                            className="cursor-pointer object-contain"
+                            onClick={() => handleExpandImage(file)}
+                          />
                         </div>
                       </div>
                     </motion.div>

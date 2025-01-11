@@ -5,4 +5,7 @@ export const collectionsList = {
   userVotes: "UserVotes",
   users: "Users",
   userCoupons: "UserCoupons",
+  socialCoupons: "SocialCoupons",
+  wishList: "WishList",
+  notifications: "notifications",
 };

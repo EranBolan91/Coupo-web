@@ -3,6 +3,7 @@ import { initFilters } from "../../redux/reducers/filterReducer";
 import FilterChip from "../../components/filterChip/FilterChip";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
+import { AnimatePresence, motion } from "motion/react";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "../main/components/Searchbar";
 import { useEffect, useMemo, useState } from "react";
@@ -12,7 +13,6 @@ import { useSearchParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
 import CouponCard from "./components/CouponCard";
 import { Coupon } from "../../types/Types";
-import { AnimatePresence, motion } from "motion/react";
 
 const CouponsPage = () => {
   const filters = useSelector((state: RootState) => state.filters);

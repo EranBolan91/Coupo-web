@@ -217,7 +217,7 @@ export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
 };
 
 export const saveImageBrand = async (imgFile: File, imageName: string) => {
-  const storageRef = ref(storage, `Brands/${imageName}.svg`);
+  const storageRef = ref(storage, `Brands/${imageName}`);
   const uploadTask = uploadBytesResumable(storageRef, imgFile);
   uploadTask.on(
     "state_changed",
@@ -226,7 +226,7 @@ export const saveImageBrand = async (imgFile: File, imageName: string) => {
     async () => {
       const downloadImgURL = await getDownloadURL(uploadTask.snapshot.ref);
       addDoc(collection(db, collectionsList.brands), {
-        brand: imageName,
+        brand: imageName.split(".")[0],
         imgUrl: downloadImgURL,
       }).catch((err) => {
         throw new Error(err);

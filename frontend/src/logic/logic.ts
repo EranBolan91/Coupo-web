@@ -80,7 +80,6 @@ export const uploadMultipleImages = async (
   imagesFiles: FileList,
   filesNames: Record<string, string>
 ) => {
-  debugger;
   Array.from(imagesFiles).forEach((imageFile) =>
     saveImageBrand(imageFile, filesNames[imageFile.name])
   );

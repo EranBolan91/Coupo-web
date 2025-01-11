@@ -1,3 +1,4 @@
+import SocialCoupons from "./pages/socialCoupons/SocialCoupons";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
 import AddUserCoupon from "./pages/addCoupon/AddUserCoupon";
@@ -15,6 +16,8 @@ import AdminPage from "./pages/admin/Admin";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
 import "./App.css";
+import AddUserSocialCoupon from "./pages/addCoupon/AddUserSocialCoupon";
+import AddCouponPage from "./pages/addCoupon/AddCouponPage";
 
 const App = () => {
   const location = useLocation();
@@ -29,6 +32,7 @@ const App = () => {
             <Route path="/" element={<MainPage />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/categories/:categoryName" element={<Category />} />
+            <Route path="/social" element={<SocialCoupons />} />
             <Route path="/coupons" element={<CouponsPage />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
@@ -37,7 +41,7 @@ const App = () => {
               path="/addcoupon"
               element={
                 <ProtectedRoute>
-                  <AddUserCoupon />
+                  <AddCouponPage />
                 </ProtectedRoute>
               }
             />

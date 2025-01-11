@@ -4,14 +4,15 @@
 
 import { collectionsList } from "./firebaseCollections";
 import { Timestamp } from "firebase-admin/firestore";
-// import { getStorage } from "firebase-admin/storage";
 import { UserRecord } from "firebase-admin/auth";
+import { Storage } from "@google-cloud/storage";
 import * as functions from "firebase-functions";
 import { Coupon, CurrentUser } from "./types";
 
 import * as admin from "firebase-admin";
 
 admin.initializeApp();
+const storage = new Storage();
 
 export const createNewUserInUsersCollection = functions.auth.user().onCreate((user: UserRecord) => {
   if (user.providerData[0].providerId !== "password") {
@@ -43,11 +44,29 @@ export const addUserCouponToCouponsCollection = functions.firestore
     await admin.firestore().collection(collectionsList.coupons).doc(docID).set(newCoupon);
   });
 
+export const addUserSocialCouponToSocialCouponsCollection = functions.firestore
+  .document(`${collectionsList.userCoupons}/{userID}/${collectionsList.socialCoupons}/{docID}`)
+  .onCreate(async (snap, context) => {
+    const newCoupon = snap.data() as Coupon;
+    const docID = context.params.docID;
+
+    await admin.firestore().collection(collectionsList.socialCoupons).doc(docID).set(newCoupon);
+  });
+
 export const removeCouponFromCouponsCollection = functions.firestore
   .document(`${collectionsList.userCoupons}/{userID}/${collectionsList.coupons}/{docID}`)
   .onDelete(async (snap, context) => {
     const docID = context.params.docID;
     const couponRef = admin.firestore().collection(collectionsList.coupons).doc(docID);
+
+    await couponRef.delete();
+  });
+
+export const removeSocialCouponFromSocialCouponsCollection = functions.firestore
+  .document(`${collectionsList.userCoupons}/{userID}/${collectionsList.socialCoupons}/{docID}`)
+  .onDelete(async (snap, context) => {
+    const docID = context.params.docID;
+    const couponRef = admin.firestore().collection(collectionsList.socialCoupons).doc(docID);
 
     await couponRef.delete();
   });
@@ -95,6 +114,7 @@ export const uploadImage = functions.storage.object().onFinalize(async (object) 
   const filePath = object.name; // Full path of the uploaded file in the bucket
   // const contentType = object.contentType; // Mime type of the uploaded file
   const imageURL = object.mediaLink;
+  const bucketName = object.bucket;
 
   if (imageURL === undefined) {
     return null;
@@ -109,7 +129,7 @@ export const uploadImage = functions.storage.object().onFinalize(async (object) 
   if (filePath.startsWith("ProfileImage/")) {
     return handleProfileImage(filePath, imageURL);
   } else if (filePath.startsWith("Brands/")) {
-    return handleBrands(filePath, imageURL);
+    return handleBrands(filePath, imageURL, bucketName);
   } else {
     console.log("File is not in the ProfileImage or Brands folders.");
     return null;
@@ -143,7 +163,7 @@ async function handleProfileImage(filePath: string, imageURL: string) {
 }
 
 // Handle Brands uploads
-async function handleBrands(filePath: string, imageURL: string) {
+async function handleBrands(filePath: string, imageURL: string, bucketName: string) {
   try {
     console.log(`Processing Brands folder: ${filePath}`);
 
@@ -151,9 +171,19 @@ async function handleBrands(filePath: string, imageURL: string) {
     if (filePath.split("/").length === 1) {
       return null;
     }
+    const brandName = filePath.split("/").pop()?.split(".")[0];
+
+    const bucket = storage.bucket(bucketName);
+    const file = bucket.file(filePath);
+    await file.makePublic();
+
+    // Public URL
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${encodeURIComponent(
+      filePath
+    )}`;
 
     const brandDocRef = admin.firestore().collection(`Brands/`);
-    await brandDocRef.add({ brand: filePath.split("/").pop(), imgUrl: imageURL });
+    await brandDocRef.add({ brand: brandName, imgUrl: publicUrl });
 
     console.log(`Updated Firestore for brand ${filePath} with image URL.`);
     return null;

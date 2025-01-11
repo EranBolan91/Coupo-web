@@ -12,6 +12,7 @@ const navigation = [
   { name: "Home", href: "/" },
   { name: "Coupons", href: "/coupons" },
   { name: "Categories", href: "/categories" },
+  { name: "Social Coupons", href: "/social" },
 ];
 
 const Navbar = () => {
