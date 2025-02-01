@@ -90,7 +90,7 @@ const CouponsPage = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center py-3">
+    <div className="flex flex-col items-center justify-center">
       <div className="flex flex-col items-center justify-center bg-slate-800 w-full p-4 md:p-28">
         <h2 className="text-2xl md:text-7xl text-primary mb-6 md:mb-20">
           Save upto 50% online now

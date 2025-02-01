@@ -1,7 +1,7 @@
 import SocialCoupons from "./pages/socialCoupons/SocialCoupons";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
-import AddUserCoupon from "./pages/addCoupon/AddUserCoupon";
+import AddCouponPage from "./pages/addCoupon/AddCouponPage";
 import AdminSidebar from "./pages/admin/components/Sidebar";
 import Categories from "./pages/categories/Categories";
 import CouponsPage from "./pages/coupons/CouponsPage";
@@ -16,8 +16,6 @@ import AdminPage from "./pages/admin/Admin";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
 import "./App.css";
-import AddUserSocialCoupon from "./pages/addCoupon/AddUserSocialCoupon";
-import AddCouponPage from "./pages/addCoupon/AddCouponPage";
 
 const App = () => {
   const location = useLocation();
@@ -26,7 +24,7 @@ const App = () => {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="h-20 z-50">{displayAdminSidebar ? <AdminSidebar /> : <Navbar />}</div>
+        <div className="z-50">{displayAdminSidebar ? <AdminSidebar /> : <Navbar />}</div>
         <div className="grow">
           <Routes>
             <Route path="/" element={<MainPage />} />
