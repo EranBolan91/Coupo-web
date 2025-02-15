@@ -2,7 +2,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteField } from "firebase/firestore"
 import { collectionsList } from "../../firebaseCollections";
 import { db } from "./databaseConfig";
 
-export const getUserWishlist = async (userID: string) => {
+export const getUserWishlist = async (userID: string): Promise<string[]> => {
   try {
     const wishListArray: string[] = [];
     const docRef = doc(db, collectionsList.wishList, userID);

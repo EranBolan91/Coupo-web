@@ -7,17 +7,27 @@ import {
   startAfter,
   limit,
   getDocs,
+  where,
 } from "firebase/firestore";
 import { collectionsList } from "../../firebaseCollections";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { db } from "../database/databaseConfig";
 import { Coupon } from "../types/Types";
+import { useState } from "react";
+import useDebounce from "./useDebounce";
 
 type Props = {
   collection: string;
 };
 
-const getSocialCoupons = async ({ pageParam = null }: { pageParam?: QueryDocumentSnapshot<DocumentData> | null }) => {
+const getSocialCoupons = async ({
+  pageParam = null,
+  searchText = "",
+}: {
+  pageParam?: QueryDocumentSnapshot<DocumentData> | null | unknown;
+  searchText: string;
+}): Promise<{ data: Coupon[]; nextPageParam: QueryDocumentSnapshot<DocumentData> | null }> => {
+  console.log("pageParam", pageParam);
   const coupons: Coupon[] = [];
   const pageSize = 10;
   let fetchQuery;
@@ -27,7 +37,7 @@ const getSocialCoupons = async ({ pageParam = null }: { pageParam?: QueryDocumen
       collection(db, collectionsList.coupons),
       orderBy("createdAt", "desc"),
       ...(pageParam ? [startAfter(pageParam)] : []),
-      limit(3)
+      limit(pageSize)
     );
   } else {
     fetchQuery = query(
@@ -36,6 +46,10 @@ const getSocialCoupons = async ({ pageParam = null }: { pageParam?: QueryDocumen
       startAfter(pageParam),
       limit(pageSize)
     );
+  }
+
+  if (searchText !== "") {
+    fetchQuery = query(fetchQuery, where("name", "==", searchText));
   }
 
   const documentSnapshots = await getDocs(fetchQuery);
@@ -52,14 +66,22 @@ const getSocialCoupons = async ({ pageParam = null }: { pageParam?: QueryDocumen
 };
 
 const useFetchCoupons = ({ collection }: Props) => {
-  const { data, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, status } = useInfiniteQuery({
-    queryKey: ["projects"],
-    queryFn: getSocialCoupons,
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  console.log("searchQuery", searchQuery);
+  const { data, error, hasNextPage, isFetching, isFetchingNextPage, status, fetchNextPage } = useInfiniteQuery<{
+    data: Coupon[];
+    nextPageParam: QueryDocumentSnapshot<DocumentData> | null | unknown;
+  }>({
+    queryKey: ["coupons", collection, searchQuery],
+    queryFn: ({ pageParam = null }: { pageParam: QueryDocumentSnapshot<DocumentData> | null | unknown }) =>
+      getSocialCoupons({ pageParam, searchText: searchQuery }),
     initialPageParam: null,
     getNextPageParam: (lastPage) => lastPage.nextPageParam,
   });
 
-  return { data, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, status };
+  const coupons: Coupon[] = data?.pages.flatMap((page) => page.data) || [];
+
+  return { coupons, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, status, setSearchQuery };
 };
 
 export default useFetchCoupons;

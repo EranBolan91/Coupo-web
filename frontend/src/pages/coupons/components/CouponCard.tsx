@@ -26,10 +26,7 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
   const handleSetCoupon = (coupon: Coupon) => setCurrentCoupon(coupon);
 
   return (
-    <div
-      ref={innerRef}
-      className="card bg-base-100 w-80 md:w-[35rem] h-44 shadow-xl p-3 rounded-md"
-    >
+    <div ref={innerRef} className="card bg-base-100 w-80 md:w-[35rem] h-44 shadow-xl p-3 rounded-md">
       <div className="w-full flex justify-end items-center px-[5%]">
         <WishlistButton key={coupon.id} couponID={coupon.id} />
       </div>
@@ -59,7 +56,7 @@ const CouponCard = ({ coupon, innerRef }: Props) => {
             <LikeButton coupon={currentCoupon} setCoupon={handleSetCoupon} />
           </div>
           <div className="text-sm md:text-md flex justify-center mt-auto">
-            Expired: {currentCoupon.expiry.toDate().toDateString()}
+            Expired: {currentCoupon?.expiry?.toDate().toDateString()}
           </div>
         </div>
       </div>

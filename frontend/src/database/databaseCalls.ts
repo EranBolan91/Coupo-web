@@ -33,11 +33,7 @@ export const getPaginatedCoupons = async (queryParam: string, pageParam: any) =>
 
     if (pageParam === null) {
       if (queryParam === "") {
-        fetchQuery = query(
-          collection(db, collectionsList.coupons),
-          orderBy("createdAt", "desc"),
-          limit(dataLimit)
-        );
+        fetchQuery = query(collection(db, collectionsList.coupons), orderBy("createdAt", "desc"), limit(dataLimit));
       } else {
         fetchQuery = query(
           collection(db, collectionsList.coupons),
@@ -78,10 +74,7 @@ export const getPaginatedCoupons = async (queryParam: string, pageParam: any) =>
   }
 };
 
-export const getPaginatedCouponsByCategory = async (
-  pageParam: any,
-  categoryName: string | undefined
-) => {
+export const getPaginatedCouponsByCategory = async (pageParam: any, categoryName: string | undefined) => {
   const dataLimit = 10;
   try {
     const coupons: Coupon[] = [];
@@ -205,10 +198,7 @@ export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
     const expiryDate = new Date(coupon.expiry.toString());
     coupon.expiry = Timestamp.fromDate(expiryDate);
 
-    const userCouponsRef = collection(
-      db,
-      `${collectionsList.userCoupons}/${userID}/${collectionsList.coupons}/`
-    );
+    const userCouponsRef = collection(db, `${collectionsList.userCoupons}/${userID}/${collectionsList.coupons}/`);
     await addDoc(userCouponsRef, coupon);
   } catch (error: any) {
     console.log(error);

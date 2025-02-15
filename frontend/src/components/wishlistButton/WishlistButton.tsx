@@ -9,7 +9,7 @@ import toast from "react-hot-toast";
 const WishlistButton = ({ couponID }: { couponID: string }) => {
   const [isWishList, setIsWishList] = useState<boolean>(false);
   const { user }: { user: User } = UserAuth();
-  const { data, isLoading } = useWishlist(user.uid);
+  const { wishlists, isLoading } = useWishlist(user.uid);
 
   const addToWishlist = () => {
     toast.promise(saveCouponInWishList(user.uid, couponID), {
@@ -26,24 +26,18 @@ const WishlistButton = ({ couponID }: { couponID: string }) => {
   };
 
   useEffect(() => {
-    if (data?.includes(couponID)) {
+    if (wishlists?.includes(couponID)) {
       setIsWishList(true);
     }
-  }, [data]);
+  }, [wishlists]);
 
   return (
     <>
       {isLoading === false ? (
         isWishList === true ? (
-          <FaStar
-            style={{ color: "gold", cursor: "pointer", fontSize: "1.3rem" }}
-            onClick={removeFromWishList}
-          />
+          <FaStar style={{ color: "gold", cursor: "pointer", fontSize: "1.3rem" }} onClick={removeFromWishList} />
         ) : (
-          <FaRegStar
-            style={{ color: "gold", cursor: "pointer", fontSize: "1.3rem" }}
-            onClick={addToWishlist}
-          />
+          <FaRegStar style={{ color: "gold", cursor: "pointer", fontSize: "1.3rem" }} onClick={addToWishlist} />
         )
       ) : null}
     </>
