@@ -1,5 +1,5 @@
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
-import { Coupon } from "../../../types/Types";
+import { Coupon } from "../../../types/CouponType";
 import DislikeButton from "./DislikeButton";
 import LikeButton from "./LikeButton";
 import toast from "react-hot-toast";

@@ -8,7 +8,7 @@ import { CgProfile } from "react-icons/cg";
 import { IoMdHome } from "react-icons/io";
 import { Tooltip } from "react-tooltip";
 import { useState } from "react";
-import Avatar from "../components/Navbar/components/Avatar";
+import Avatar from "../components/navbar/components/Avatar";
 import toast from "react-hot-toast";
 
 const Menus = [
@@ -65,9 +65,7 @@ const Sidebar = () => {
         <Link to="/">
           <div className={`flex ${open && "gap-x-4"} items-center`}>
             <img src={""} alt="" className="pl-2" />
-            {open && (
-              <span className="text-xl font-medium whitespace-nowrap dark:text-white">Coupo</span>
-            )}
+            {open && <span className="text-xl font-medium whitespace-nowrap dark:text-white">Coupo</span>}
           </div>
         </Link>
 
@@ -81,14 +79,8 @@ const Sidebar = () => {
                   location.pathname === menu.path && "bg-gray-200 dark:bg-gray-700"
                 }`}
               >
-                {user ? (
-                  <Avatar imgURL={user.photoURL} />
-                ) : (
-                  <span className="text-2xl">{menu.src}</span>
-                )}
-                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>
-                  {menu.title}
-                </span>
+                {user ? <Avatar imgURL={user.photoURL} /> : <span className="text-2xl">{menu.src}</span>}
+                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>{menu.title}</span>
               </li>
               {!open && (
                 <Tooltip anchorSelect={`#${menu.id}`} place="right">
@@ -110,9 +102,7 @@ const Sidebar = () => {
                 <span className="text-2xl">
                   <RiLogoutBoxLine />
                 </span>
-                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>
-                  Logout
-                </span>
+                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>Logout</span>
               </li>
               {!open && (
                 <Tooltip anchorSelect="#logout" place="right">
@@ -130,9 +120,7 @@ const Sidebar = () => {
                 <span className="text-2xl">
                   <SiGnuprivacyguard />
                 </span>
-                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>
-                  Login
-                </span>
+                <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>Login</span>
               </li>
               {!open && (
                 <Tooltip anchorSelect="#login" place="right">

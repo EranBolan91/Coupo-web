@@ -56,18 +56,16 @@ const DislikeButton = ({ coupon, setCoupon }: Props) => {
   }, []);
 
   return (
-    <div
-      onClick={handleCouponVote}
-      className={`flex flex-col  ${
-        isButtonAlreadyClicked === true
-          ? "text-red-700 hover:text-red-300"
-          : "text-red-300 hover:text-red-700"
-      } text-lg items-center cursor-pointer mr-1 select-none transform transition-transform duration-150 active:scale-110`}
-    >
-      <span>
+    <div className="flex flex-col justify-center items-center">
+      <button
+        className={`p-1 rounded hover:text-red-500 ${
+          isButtonAlreadyClicked === true ? " text-red-600" : "text-gray-500 dark:text-gray-400"
+        }`}
+        onClick={handleCouponVote}
+      >
         <FaThumbsDown />
-      </span>
-      <span>{coupon.dislikes}</span>
+      </button>
+      <span className="font-bold text-red-700">{coupon.likes}</span>
       {showLoginModal && <ModalLogin onClose={handleShowLoginModal} />}
     </div>
   );

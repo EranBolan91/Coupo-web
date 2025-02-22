@@ -71,15 +71,7 @@ const Wishlist = () => {
                   <td>
                     <div className="text-sm">{coupon.expiry.toDate().toDateString()}</div>
                   </td>
-                  <th>
-                    {/* <RemoveCouponBtn {...coupon} />
-                  <ModalEditCoupon
-                    key={index}
-                    coupon={coupon}
-                    index={index}
-                    refetchData={refetch}
-                  /> */}
-                  </th>
+                  <th></th>
                 </tr>
               ))}
           </tbody>

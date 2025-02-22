@@ -1,13 +1,13 @@
+import AddCouponPage from "./components/addCoupon/AddCouponPage";
 import SocialCoupons from "./pages/socialCoupons/SocialCoupons";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
-import AddCouponPage from "./pages/addCoupon/AddCouponPage";
 import AdminSidebar from "./pages/admin/components/Sidebar";
 import Categories from "./pages/categories/Categories";
 import CouponsPage from "./pages/coupons/CouponsPage";
 import Brand from "./pages/admin/components/Brand";
 import Category from "./pages/category/Category";
-import Navbar from "./components/Navbar/Navbar";
+import Navbar from "./components/navbar/Navbar";
 import Profile from "./pages/profile/Profile";
 import SignUp from "./auth/components/SignUp";
 import MainPage from "./pages/main/MainPage";

@@ -1,8 +1,8 @@
 import { getCategories, getCouponsBrands, saveUserNewCoupon } from "../../database/databaseCalls";
 import { SubmitHandler, useForm } from "react-hook-form";
+import Select from "../../pages/admin/components/Select";
 import { Coupon, CouponBrand } from "../../types/Types";
 import { UserAuth } from "../../auth/AuthProvider";
-import Select from "../admin/components/Select";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -63,11 +63,7 @@ const AddUserCoupon = () => {
   return (
     <div className="grid grid-cols-12">
       <div className="col-span-12">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col justify-center items-center h-full"
-          noValidate
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col justify-center items-center h-full" noValidate>
           <div className="space-y-12 w-1/2 p-3">
             <div className="border-b border-gray-900/10">
               <h2 className="text-base font-semibold leading-7">Add New Coupon</h2>
@@ -104,9 +100,7 @@ const AddUserCoupon = () => {
                       className="block w-full rounded-md textarea textarea-bordered border-0 py-1.5 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                     />
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-gray-600">
-                    Write some info about the coupon
-                  </p>
+                  <p className="mt-3 text-sm leading-6 text-gray-600">Write some info about the coupon</p>
                 </div>
               </div>
             </div>
@@ -141,10 +135,7 @@ const AddUserCoupon = () => {
                       {...register("discount", {
                         required: "Discount is required",
                         validate: (value) => {
-                          return (
-                            (parseInt(value) > 1 && parseInt(value) < 100) ||
-                            "Discount must be between 1 and 100"
-                          );
+                          return (parseInt(value) > 1 && parseInt(value) < 100) || "Discount must be between 1 and 100";
                         },
                       })}
                       placeholder="15%"

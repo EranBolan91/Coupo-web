@@ -12,7 +12,8 @@ import { RootState } from "../../redux/store/store";
 import { useSearchParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
 import CouponCard from "./components/CouponCard";
-import { Coupon } from "../../types/Types";
+import { Coupon } from "../../types/CouponType";
+import CouponCardNew from "./components/CouponCardNew";
 
 const CouponsPage = () => {
   const filters = useSelector((state: RootState) => state.filters);
@@ -27,8 +28,7 @@ const CouponsPage = () => {
 
   const { data, hasNextPage, fetchNextPage, isLoading } = useInfiniteQuery({
     queryKey: ["coupons", debounceSearch],
-    queryFn: ({ pageParam = null }: { pageParam?: number[] | null }) =>
-      getPaginatedCoupons(debounceSearch, pageParam),
+    queryFn: ({ pageParam = null }: { pageParam?: number[] | null }) => getPaginatedCoupons(debounceSearch, pageParam),
     initialPageParam: null,
     staleTime: 2000,
     getNextPageParam: (lastPage) => {
@@ -45,8 +45,7 @@ const CouponsPage = () => {
       const matchesCategory = Object.values(filters).every(
         (filterArray) => filterArray.length === 0 || filterArray.includes(coupon.category)
       );
-      const matchesSearch =
-        !searchQuery || coupon.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = !searchQuery || coupon.name.toLowerCase().includes(searchQuery.toLowerCase());
 
       return matchesCategory && matchesSearch;
     });
@@ -92,13 +91,11 @@ const CouponsPage = () => {
   return (
     <div className="flex flex-col items-center justify-center">
       <div className="flex flex-col items-center justify-center bg-slate-800 w-full p-4 md:p-28">
-        <h2 className="text-2xl md:text-7xl text-primary mb-6 md:mb-20">
-          Save upto 50% online now
-        </h2>
+        <h2 className="text-2xl md:text-7xl text-primary mb-6 md:mb-20">Save upto 50% online now</h2>
         <SearchBar filter={handleCouponsFilter} />
       </div>
 
-      <div className="w-3/4 flex-col md:flex-row md:w-full mx-auto mt-6 flex justify-between items-start px-[3%]">
+      <div className="w-3/4 flex-col md:flex-row md:w-full mx-auto mt-6 flex justify-between items-start md:px-[2%]">
         <Filter />
         <div className="flex">
           <span className="flex items-center w-20">Sort by:</span>
@@ -120,22 +117,20 @@ const CouponsPage = () => {
       {isLoading === true ? (
         <span className="loading loading-spinner loading-lg ml-2"></span>
       ) : (
-        <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center">
+        <div className="w-full grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center">
           <AnimatePresence>
             {filteredItems &&
               filteredItems.map((coupon: Coupon, index: number) => {
                 if (index === filteredItems.length - 1) {
                   return (
-                    <div
-                      key={coupon.id}
-                      className="flex justify-center col-span-12 md:col-span-4 w-full"
-                    >
+                    <div key={coupon.id} className="flex justify-center col-span-12 md:col-span-4 w-full">
                       <motion.div
                         key={coupon.id}
                         initial={{ opacity: 0, y: -100 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.5 }}
+                        className="w-full"
                       >
                         <CouponCard innerRef={ref} coupon={coupon} key={index} />
                       </motion.div>
@@ -143,16 +138,14 @@ const CouponsPage = () => {
                   );
                 } else {
                   return (
-                    <div
-                      key={coupon.id}
-                      className="flex justify-center col-span-12 md:col-span-4 w-full"
-                    >
+                    <div key={coupon.id} className="flex justify-center col-span-12 md:col-span-4 w-full">
                       <motion.div
                         key={coupon.id}
                         initial={{ opacity: 0, y: -100 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.5 }}
+                        className="w-full"
                       >
                         <CouponCard coupon={coupon} key={index} />
                       </motion.div>

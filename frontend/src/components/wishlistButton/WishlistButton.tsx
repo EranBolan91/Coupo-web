@@ -6,7 +6,18 @@ import { useEffect, useState } from "react";
 import { User } from "firebase/auth";
 import toast from "react-hot-toast";
 
-const WishlistButton = ({ couponID }: { couponID: string }) => {
+interface Props {
+  couponID: string;
+  labelToAdd?: string;
+  labelToRemove?: string;
+}
+
+const starStyle = {
+  color: "gold",
+  fontSize: "1.3rem",
+};
+
+const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
   const [isWishList, setIsWishList] = useState<boolean>(false);
   const { user }: { user: User } = UserAuth();
   const { wishlists, isLoading } = useWishlist(user.uid);
@@ -35,9 +46,15 @@ const WishlistButton = ({ couponID }: { couponID: string }) => {
     <>
       {isLoading === false ? (
         isWishList === true ? (
-          <FaStar style={{ color: "gold", cursor: "pointer", fontSize: "1.3rem" }} onClick={removeFromWishList} />
+          <div className="flex gap-2 cursor-pointer" onClick={removeFromWishList}>
+            <FaStar style={starStyle} />
+            {labelToRemove && <span>{labelToRemove}</span>}
+          </div>
         ) : (
-          <FaRegStar style={{ color: "gold", cursor: "pointer", fontSize: "1.3rem" }} onClick={addToWishlist} />
+          <div className="flex gap-2 cursor-pointer" onClick={addToWishlist}>
+            <FaRegStar style={starStyle} />
+            {labelToAdd && <span>{labelToAdd}</span>}
+          </div>
         )
       ) : null}
     </>

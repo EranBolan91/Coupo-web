@@ -1,3 +1,4 @@
+// import { getVertexAI, getGenerativeModel } from "@firebase/vertexai";
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 
@@ -12,6 +13,13 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
+// // Initialize the Vertex AI service
+// const vertexAI = getVertexAI(app);
+
+// // Initialize the generative model with a model that supports your use case
+// export const modelAI = getGenerativeModel(vertexAI, { model: "gemini-2.0-flash" });
+
 export const auth = getAuth(app);
 
 export default app;

@@ -19,7 +19,7 @@ const SocialCoupons = () => {
     fetchNextPage,
     setSearchQuery: useSetSearchQuery,
   } = useFetchCoupons({
-    collection: collectionsList.coupons,
+    collection: collectionsList.socialCoupons,
   });
 
   const handleCouponsFilter = (text: string) => {
@@ -49,7 +49,7 @@ const SocialCoupons = () => {
           </form>
         </div>
       </div>
-      <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center">
+      <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center p-4">
         <AnimatePresence>
           {coupons &&
             coupons.map((coupon: Coupon, index: number) => {

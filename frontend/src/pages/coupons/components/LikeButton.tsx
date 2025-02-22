@@ -56,18 +56,16 @@ const LikeButton = ({ coupon, setCoupon }: Props) => {
   }, []);
 
   return (
-    <div
-      onClick={handleCouponVote}
-      className={`flex flex-col  ${
-        isButtonAlreadyClicked === true
-          ? "text-green-700 hover:text-green-300"
-          : "text-green-300 hover:text-green-700"
-      } text-lg items-center cursor-pointer select-none transform transition-transform duration-150 active:scale-110`}
-    >
-      <span>
+    <div className="flex flex-col justify-center items-center">
+      <button
+        className={`p-1 rounded hover:text-green-500 ${
+          isButtonAlreadyClicked === true ? " text-green-600" : "text-gray-500 dark:text-gray-400"
+        }`}
+        onClick={handleCouponVote}
+      >
         <FaThumbsUp />
-      </span>
-      <span>{coupon.likes}</span>
+      </button>
+      <span className="font-bold text-green-700">{coupon.likes}</span>
       {showLoginModal && <ModalLogin onClose={handleShowLoginModal} />}
     </div>
   );
