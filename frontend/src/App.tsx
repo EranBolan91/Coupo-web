@@ -1,8 +1,8 @@
 import AddCouponPage from "./components/addCoupon/AddCouponPage";
+import AdminSidebar from "./pages/admin/components/AdminSidebar";
 import SocialCoupons from "./pages/socialCoupons/SocialCoupons";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
-import AdminSidebar from "./pages/admin/components/Sidebar";
 import Categories from "./pages/categories/Categories";
 import CouponsPage from "./pages/coupons/CouponsPage";
 import Brand from "./pages/admin/components/Brand";
