@@ -22,15 +22,11 @@ const Navbar = () => {
 
   return (
     <header>
-      <nav className="flex items-center justify-between lg:px-8" aria-label="Global">
+      <nav className="flex items-center justify-between md:p-3 lg:px-8" aria-label="Global">
         <div className="flex lg:flex-1">
           <Link to="#" className="-m-1.5 p-1.5">
             <span className="sr-only">Your Company</span>
-            <img
-              className="h-8 w-auto"
-              src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
-              alt=""
-            />
+            <img className="h-8 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="" />
           </Link>
           <div className="flex items-center cursor-pointer">
             <Notifications />
@@ -52,9 +48,7 @@ const Navbar = () => {
               to={item.href}
               key={item.name}
               className={`text-sm font-semibold leading-6 ${
-                location.pathname === item.href
-                  ? "text-indigo-600"
-                  : "text-primary hover:text-indigo-600"
+                location.pathname === item.href ? "text-indigo-600" : "text-primary hover:text-indigo-600"
               }`}
             >
               {item.name}
@@ -103,9 +97,7 @@ const Navbar = () => {
                     to={item.href}
                     key={item.name}
                     className={`-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 ${
-                      location.pathname === item.href
-                        ? "bg-gray-50 text-indigo-600"
-                        : "text-gray-900 hover:bg-gray-50"
+                      location.pathname === item.href ? "bg-gray-50 text-indigo-600" : "text-gray-900 hover:bg-gray-50"
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >

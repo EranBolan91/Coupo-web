@@ -25,15 +25,11 @@ const MainPage = () => {
             </div>
           </div>
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-6xl">
-              Find your Coupon
-            </h1>
+            <h1 className="text-4xl font-bold tracking-tight text-primary sm:text-6xl">Find your Coupon</h1>
             <p className="mt-6 text-lg leading-8 text-secondary">
-              Coupo is a sharing community! As a registered user, you can
-              contribute to the savings spree by uploading and sharing your
-              favorite discounts. Join our network of savvy shoppers, making
-              every deal a collective win. Sign in, share your coupons, and
-              let's embark on a frugal journey together!
+              Coupo is a sharing community! As a registered user, you can contribute to the savings spree by uploading
+              and sharing your favorite discounts. Join our network of savvy shoppers, making every deal a collective
+              win. Sign in, share your coupons, and let's embark on a frugal journey together!
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
               <a
@@ -42,10 +38,7 @@ const MainPage = () => {
               >
                 Get started
               </a>
-              <a
-                href="#"
-                className="text-sm font-semibold leading-6 text-gray-900"
-              >
+              <a href="#" className="text-sm font-semibold leading-6 text-gray-900">
                 Learn more <span aria-hidden="true">→</span>
               </a>
             </div>

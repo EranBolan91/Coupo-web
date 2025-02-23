@@ -2,8 +2,9 @@ import { getUserWishlist } from "../database/wishlist";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-const useWishlist = (userId: string) => {
-  const [wishlists, setWishlists] = useState<string[]>([]);
+const useWishlist = (userId: string | undefined) => {
+  if (userId === undefined) return { wishlists: undefined, isLoading: false, isError: false, error: null };
+  const [wishlists, setWishlists] = useState<string[] | undefined>(undefined);
 
   const { data, isLoading, isError, error, isFetched } = useQuery({
     queryKey: ["wishlist", userId],

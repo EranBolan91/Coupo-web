@@ -1,7 +1,7 @@
 import { updateUserProfileDetails } from "../../../../logic/logic";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { MdOutlineCloudUpload } from "react-icons/md";
-import { CurrentUser } from "../../../../types/Types";
+import { User } from "../../../../types/UserType";
 import { Timestamp } from "firebase/firestore";
 import { GrPowerCycle } from "react-icons/gr";
 import toast from "react-hot-toast";
@@ -14,7 +14,7 @@ export type PersonalInfoForm = {
   birthday: Timestamp;
 };
 
-export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser }) => {
+export const ModalPersonalInfo = ({ currentUser }: { currentUser: User }) => {
   const [displayImage, setDisplayImage] = useState<string | null>(currentUser.imageURL);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [imagePath, setImagePath] = useState<string>("");
@@ -89,9 +89,7 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser })
                 })}
               />
             </label>
-            {errors.firstName && (
-              <p className="text-red-500 italic font-normal">This field cannot be empty</p>
-            )}
+            {errors.firstName && <p className="text-red-500 italic font-normal">This field cannot be empty</p>}
           </div>
           <div className="my-4">
             <label className="form-control w-full">
@@ -107,9 +105,7 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser })
                 })}
               />
             </label>
-            {errors.lastName && (
-              <p className="text-red-500 italic font-normal">This field cannot be empty</p>
-            )}
+            {errors.lastName && <p className="text-red-500 italic font-normal">This field cannot be empty</p>}
           </div>
           <div className="my-4">
             <label className="form-control w-full">
@@ -125,9 +121,7 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser })
                 })}
               />
             </label>
-            {errors.birthday && (
-              <p className="text-red-500 italic font-normal">This field cannot be empty</p>
-            )}
+            {errors.birthday && <p className="text-red-500 italic font-normal">This field cannot be empty</p>}
           </div>
           <div className="my-4">
             <div className="label">
@@ -148,9 +142,7 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: CurrentUser })
                     <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
                       <span className="font-semibold">Click to upload</span> or drag and drop
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      SVG, PNG, JPG, or GIF (MAX. 800x400px)
-                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG, or GIF (MAX. 800x400px)</p>
                   </div>
                   <input
                     id="file-upload"

@@ -2,9 +2,9 @@ import { VotingCouponsContext } from "../../../context/VotingContext";
 import { saveUserVote } from "../../../database/databaseCalls";
 import { useContext, useEffect, useState } from "react";
 import { UserAuth } from "../../../auth/AuthProvider";
-import { Coupon } from "../../../types/Types";
+import { Coupon } from "../../../types/CouponType";
 import { FaThumbsUp } from "react-icons/fa";
-import ModalLogin from "./ModalLogin";
+import LoginModal from "./LoginModal";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -15,11 +15,11 @@ interface Props {
 const LikeButton = ({ coupon, setCoupon }: Props) => {
   const [isButtonAlreadyClicked, setButtonAlreadyClicked] = useState<boolean>(false);
   const { userVotes, removeVoteFromCoupon } = useContext<any>(VotingCouponsContext);
-  const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [openLoginModal, setOpenLoginModal] = useState<boolean>(false);
   const { user }: any = UserAuth();
 
-  const handleShowLoginModal = () => setShowLoginModal(!showLoginModal);
   const handleButtonAlreadyClicked = () => setButtonAlreadyClicked(!isButtonAlreadyClicked);
+  const handleShowLoginModal = () => setOpenLoginModal(!openLoginModal);
 
   const handleCouponVote = () => {
     if (!user) {
@@ -66,7 +66,7 @@ const LikeButton = ({ coupon, setCoupon }: Props) => {
         <FaThumbsUp />
       </button>
       <span className="font-bold text-green-700">{coupon.likes}</span>
-      {showLoginModal && <ModalLogin onClose={handleShowLoginModal} />}
+      <LoginModal open={openLoginModal} onClose={handleShowLoginModal} />
     </div>
   );
 };

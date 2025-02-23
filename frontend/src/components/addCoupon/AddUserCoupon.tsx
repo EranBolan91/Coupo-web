@@ -1,8 +1,9 @@
 import { getCategories, getCouponsBrands, saveUserNewCoupon } from "../../database/databaseCalls";
+import { CouponBrand } from "../../types/CouponBrandType";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Select from "../../pages/admin/components/Select";
-import { Coupon, CouponBrand } from "../../types/Types";
 import { UserAuth } from "../../auth/AuthProvider";
+import { Coupon } from "../../types/CouponType";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -26,14 +27,14 @@ const AddUserCoupon = () => {
     setBrand({ brand: value, imgURL: imgUrl ? imgUrl : "" });
   };
 
-  const handleCategoryChange = (value: string) => {
-    setCategory(value);
-  };
+  const handleCategoryChange = (value: string) => setCategory(value);
 
   const onSubmit: SubmitHandler<Coupon> = (data) => {
     data.category = category;
     data.name = brand.brand;
     data.imgUrl = brand.imgURL;
+    data.userID = user.uid;
+    // data.username = user.displayName;
 
     toast
       .promise(saveUserNewCoupon(data, user.uid), {
@@ -135,7 +136,7 @@ const AddUserCoupon = () => {
                       {...register("discount", {
                         required: "Discount is required",
                         validate: (value) => {
-                          return (parseInt(value) > 1 && parseInt(value) < 100) || "Discount must be between 1 and 100";
+                          return (value > 1 && value < 100) || "Discount must be between 1 and 100";
                         },
                       })}
                       placeholder="15%"

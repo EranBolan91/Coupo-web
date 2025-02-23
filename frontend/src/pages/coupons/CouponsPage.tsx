@@ -132,7 +132,7 @@ const CouponsPage = () => {
                         transition={{ duration: 0.5 }}
                         className="w-full"
                       >
-                        <CouponCard innerRef={ref} coupon={coupon} key={index} />
+                        <CouponCardNew innerRef={ref} coupon={coupon} key={index} />
                       </motion.div>
                     </div>
                   );
@@ -147,7 +147,7 @@ const CouponsPage = () => {
                         transition={{ duration: 0.5 }}
                         className="w-full"
                       >
-                        <CouponCard coupon={coupon} key={index} />
+                        <CouponCardNew coupon={coupon} key={index} />
                       </motion.div>
                     </div>
                   );

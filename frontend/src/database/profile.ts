@@ -3,12 +3,9 @@ import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { collectionsList } from "../../firebaseCollections";
 import { doc, updateDoc } from "firebase/firestore";
 import { db, storage } from "./databaseConfig";
-import { CurrentUser } from "../types/Types";
+import { User } from "../types/UserType";
 
-export const updatePersonalUserDetails = async (
-  userUID: string,
-  userDetails: Omit<PersonalInfoForm, "imageURL">
-) => {
+export const updatePersonalUserDetails = async (userUID: string, userDetails: Omit<PersonalInfoForm, "imageURL">) => {
   try {
     const userDocRef = doc(db, collectionsList.users, userUID);
     await updateDoc(userDocRef, {
@@ -19,7 +16,7 @@ export const updatePersonalUserDetails = async (
   }
 };
 
-export const saveProfileImage = async (imgFile: any, imageName: string, user: CurrentUser) => {
+export const saveProfileImage = async (imgFile: any, imageName: string, user: User) => {
   try {
     const storageRef = ref(storage, `ProfileImage/${user.userUID}/${imageName}.svg`);
     const uploadTask = uploadBytesResumable(storageRef, imgFile);

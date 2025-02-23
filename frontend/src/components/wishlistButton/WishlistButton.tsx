@@ -1,4 +1,5 @@
 import { removeCouponFromWishList, saveCouponInWishList } from "../../database/wishlist";
+import LoginModal from "../../pages/coupons/components/LoginModal";
 import { FaRegStar, FaStar } from "react-icons/fa";
 import { UserAuth } from "../../auth/AuthProvider";
 import useWishlist from "../../hooks/useWishlist";
@@ -18,11 +19,18 @@ const starStyle = {
 };
 
 const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
+  const [openLoginModal, setOpenLoginModal] = useState<boolean>(false);
   const [isWishList, setIsWishList] = useState<boolean>(false);
   const { user }: { user: User } = UserAuth();
-  const { wishlists, isLoading } = useWishlist(user.uid);
+  const { wishlists, isLoading } = useWishlist(user?.uid);
+
+  const handleShowLoginModal = () => setOpenLoginModal(!openLoginModal);
 
   const addToWishlist = () => {
+    if (user === null) {
+      handleShowLoginModal();
+      return;
+    }
     toast.promise(saveCouponInWishList(user.uid, couponID), {
       success: `Added to wishlist`,
       loading: "",
@@ -42,6 +50,7 @@ const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
     }
   }, [wishlists]);
 
+  //TODO: need to write a wrapper component for auth, if not user is not logged in, show a modal to login
   return (
     <>
       {isLoading === false ? (
@@ -57,6 +66,7 @@ const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
           </div>
         )
       ) : null}
+      <LoginModal open={openLoginModal} onClose={handleShowLoginModal} />
     </>
   );
 };

@@ -192,7 +192,7 @@ export const removeUserCoupon = async (userID: string, couponID: string) => {
   await deleteDoc(ref);
 };
 
-export const saveNewCoupon = async (coupon: Coupon) => {
+export const saveNewCoupon = async (coupon: Omit<Coupon, "id">) => {
   coupon.createdAt = Timestamp.fromDate(new Date());
   coupon.likes = 0;
   coupon.dislikes = 0;
@@ -201,7 +201,7 @@ export const saveNewCoupon = async (coupon: Coupon) => {
   });
 };
 
-export const saveUserNewCoupon = async (coupon: Coupon, userID: string) => {
+export const saveUserNewCoupon = async (coupon: Omit<Coupon, "id">, userID: string) => {
   try {
     coupon.createdAt = Timestamp.fromDate(new Date());
     coupon.likes = 0;
