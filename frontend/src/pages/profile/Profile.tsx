@@ -1,9 +1,9 @@
 import PersonalInfo from "./components/PersonalInfo/PersonalInfo";
 import { getUserDetails } from "../../database/databaseCalls";
+import { User as CurrentUser } from "../../types/UserType";
 import ExpireCoupons from "./components/ExpireCoupons";
 import { UserAuth } from "../../auth/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
-import { CurrentUser } from "../../types/Types";
 import MyCoupons from "./components/MyCoupons";
 import Wishlist from "./components/Wishlist";
 import { Link } from "react-router-dom";

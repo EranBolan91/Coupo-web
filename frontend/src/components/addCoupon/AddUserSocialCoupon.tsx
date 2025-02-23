@@ -1,7 +1,7 @@
 import { saveUserSocialCoupon } from "../../database/social";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { UserAuth } from "../../auth/AuthProvider";
-import { Coupon } from "../../types/Types";
+import { Coupon } from "../../types/CouponType";
 import toast from "react-hot-toast";
 
 const AddUserSocialCoupon = () => {
@@ -30,11 +30,7 @@ const AddUserSocialCoupon = () => {
   return (
     <div className="grid grid-cols-12 bg-base-200 py-3">
       <div className="col-span-12">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="flex flex-col justify-center items-center h-full"
-          noValidate
-        >
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col justify-center items-center h-full" noValidate>
           <div className="space-y-12 w-1/2">
             <div className="border-b border-gray-900/10">
               <h2 className="text-base font-semibold leading-7">Add New Social Coupon</h2>
@@ -58,8 +54,7 @@ const AddUserSocialCoupon = () => {
                     />
                   </div>
                   <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                    {" "}
-                    {errors?.name?.message}{" "}
+                    {errors?.name?.message}
                   </p>
                 </div>
               </div>
@@ -97,8 +92,7 @@ const AddUserSocialCoupon = () => {
                     />
                   </div>
                   <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                    {" "}
-                    {errors?.code?.message}{" "}
+                    {errors?.code?.message}
                   </p>
                 </div>
 
@@ -111,10 +105,7 @@ const AddUserSocialCoupon = () => {
                       {...register("discount", {
                         required: "Discount is required",
                         validate: (value) => {
-                          return (
-                            (parseInt(value) > 1 && parseInt(value) < 100) ||
-                            "Discount must be between 1 and 100"
-                          );
+                          return (value > 1 && value < 100) || "Discount must be between 1 and 100";
                         },
                       })}
                       placeholder="15%"
@@ -124,8 +115,7 @@ const AddUserSocialCoupon = () => {
                     />
                   </div>
                   <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                    {" "}
-                    {errors?.discount?.message}{" "}
+                    {errors?.discount?.message}
                   </p>
                 </div>
 
@@ -141,8 +131,7 @@ const AddUserSocialCoupon = () => {
                     />
                   </div>
                   <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                    {" "}
-                    {errors?.expiry?.message}{" "}
+                    {errors?.expiry?.message}
                   </p>
                 </div>
               </div>

@@ -1,8 +1,8 @@
 import { getExpiredCoupons } from "../../../database/databaseCalls";
 import { UserAuth } from "../../../auth/AuthProvider";
+import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 import RemoveCouponBtn from "./RemoveCouponBtn";
-import { Coupon } from "../../../types/Types";
 
 const ExpireCoupon = () => {
   const { user } = UserAuth();
@@ -68,9 +68,7 @@ const ExpireCoupon = () => {
                   <div className="text-sm">{coupon.dislikes}</div>
                 </td>
                 <td>
-                  <div className="text-sm text-red-600 font-bold">
-                    {coupon.expiry.toDate().toDateString()}
-                  </div>
+                  <div className="text-sm text-red-600 font-bold">{coupon.expiry.toDate().toDateString()}</div>
                 </td>
                 <th>
                   <RemoveCouponBtn {...coupon} />

@@ -2,8 +2,8 @@ import { getPaginatedCouponsByCategory } from "../../database/databaseCalls";
 import CouponCard from "../coupons/components/CouponCard";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
+import { Coupon } from "../../types/CouponType";
 import { useParams } from "react-router-dom";
-import { Coupon } from "../../types/Types";
 import { useEffect } from "react";
 
 const Category = () => {

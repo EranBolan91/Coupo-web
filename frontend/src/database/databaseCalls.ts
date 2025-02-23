@@ -255,7 +255,7 @@ export const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean
 
 export const updateCoupon = async (
   category: string,
-  discount: string,
+  discount: number,
   description: string,
   couponID: string,
   userID: string

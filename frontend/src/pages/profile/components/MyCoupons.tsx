@@ -1,9 +1,9 @@
 import { getUserCoupons } from "../../../database/databaseCalls";
 import { UserAuth } from "../../../auth/AuthProvider";
+import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 import RemoveCouponBtn from "./RemoveCouponBtn";
 import ModalEditCoupon from "./ModalEditCoupon";
-import { Coupon } from "../../../types/Types";
 
 const MyCoupons = () => {
   const { user } = UserAuth();
@@ -73,12 +73,7 @@ const MyCoupons = () => {
                 </td>
                 <th>
                   <RemoveCouponBtn {...coupon} />
-                  <ModalEditCoupon
-                    key={index}
-                    coupon={coupon}
-                    index={index}
-                    refetchData={refetch}
-                  />
+                  <ModalEditCoupon key={index} coupon={coupon} index={index} refetchData={refetch} />
                 </th>
               </tr>
             ))}

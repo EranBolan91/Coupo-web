@@ -1,6 +1,7 @@
 import { getCouponsBrands, saveNewCoupon, getCategories } from "../../database/databaseCalls";
+import { CouponBrand } from "../../types/CouponBrandType";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { Coupon, CouponBrand } from "../../types/Types";
+import { Coupon } from "../../types/CouponType";
 import { DevTool } from "@hookform/devtools";
 import { useEffect, useState } from "react";
 import Select from "./components/Select";
@@ -88,10 +89,7 @@ const AdminPage = () => {
                   )}
                 </div>
                 <div className="col-span-full">
-                  <label
-                    htmlFor="about"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
+                  <label htmlFor="about" className="block text-sm font-medium leading-6 text-gray-900">
                     Description
                   </label>
                   <div className="mt-2">
@@ -102,9 +100,7 @@ const AdminPage = () => {
                       defaultValue={""}
                     />
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-gray-600">
-                    Write some info about the coupon
-                  </p>
+                  <p className="mt-3 text-sm leading-6 text-gray-600">Write some info about the coupon</p>
                 </div>
               </div>
             </div>
@@ -112,10 +108,7 @@ const AdminPage = () => {
             <div className="border-b border-gray-900/10 pb-12">
               <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                 <div className="sm:col-span-3">
-                  <label
-                    htmlFor="first-name"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
+                  <label htmlFor="first-name" className="block text-sm font-medium leading-6 text-gray-900">
                     Coupon Code
                   </label>
                   <div className="mt-2">
@@ -128,16 +121,11 @@ const AdminPage = () => {
                     />
                   </div>
                   <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                    {" "}
-                    {errors?.code?.message}{" "}
+                    {errors?.code?.message}
                   </p>
                 </div>
-
                 <div className="sm:col-span-3">
-                  <label
-                    htmlFor="last-name"
-                    className="block text-sm font-medium leading-6 text-gray-900"
-                  >
+                  <label htmlFor="last-name" className="block text-sm font-medium leading-6 text-gray-900">
                     Discount
                   </label>
                   <div className="mt-2">
@@ -145,10 +133,7 @@ const AdminPage = () => {
                       {...register("discount", {
                         required: "Discount is required",
                         validate: (value) => {
-                          return (
-                            (parseInt(value) > 1 && parseInt(value) < 100) ||
-                            "Discount must be between 1 and 100"
-                          );
+                          return (value > 1 && value < 100) || "Discount must be between 1 and 100";
                         },
                       })}
                       placeholder="15%"
@@ -158,15 +143,12 @@ const AdminPage = () => {
                     />
                   </div>
                   <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                    {" "}
-                    {errors?.discount?.message}{" "}
+                    {errors?.discount?.message}
                   </p>
                 </div>
 
                 <div className="sm:col-span-4">
-                  <label className="block text-sm font-medium leading-6 text-gray-900">
-                    Expiry Date
-                  </label>
+                  <label className="block text-sm font-medium leading-6 text-gray-900">Expiry Date</label>
                   <div className="mt-2">
                     <input
                       {...register("expiry", {
@@ -177,8 +159,7 @@ const AdminPage = () => {
                     />
                   </div>
                   <p style={{ fontStyle: "oblique" }} className="text-red-600">
-                    {" "}
-                    {errors?.expiry?.message}{" "}
+                    {errors?.expiry?.message}
                   </p>
                 </div>
               </div>

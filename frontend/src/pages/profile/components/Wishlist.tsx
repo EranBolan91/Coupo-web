@@ -1,7 +1,7 @@
 import { getUserWishlistCoupons } from "../../../logic/logic";
 import { UserAuth } from "../../../auth/AuthProvider";
+import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
-import { Coupon } from "../../../types/Types";
 import { User } from "firebase/auth";
 
 const Wishlist = () => {

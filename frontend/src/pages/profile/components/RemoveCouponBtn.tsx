@@ -1,4 +1,4 @@
-import { Coupon } from "../../../types/Types";
+import { Coupon } from "../../../types/CouponType";
 import Modal from "../../../layout/Modal";
 import { useState } from "react";
 

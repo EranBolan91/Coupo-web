@@ -1,17 +1,16 @@
-import { PersonalInfoForm } from "../pages/profile/components/PersonalInfo/ModalPersonalInfo";
+import { saveProfileImage, updatePersonalUserDetails as updatePersonalUserDetailsDB } from "../database/profile";
 import { getUserDislikesVotes, getUserLikesVotes, saveImageBrand } from "../database/databaseCalls";
+import { PersonalInfoForm } from "../pages/profile/components/PersonalInfo/ModalPersonalInfo";
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
-import { Coupon, CurrentUser, VoteObject } from "../types/Types";
 import { getUserWishlist } from "../database/wishlist";
 import { db } from "../database/databaseConfig";
-import {
-  saveProfileImage,
-  updatePersonalUserDetails as updatePersonalUserDetailsDB,
-} from "../database/profile";
+import { Coupon } from "../types/CouponType";
+import { User } from "../types/UserType";
+import { Vote } from "../types/VoteType";
 
-export const getUserVotes = async (userID: string): Promise<VoteObject> => {
+export const getUserVotes = async (userID: string): Promise<Vote> => {
   try {
-    const userVotesObj: VoteObject = {
+    const userVotesObj: Vote = {
       likes: [],
       dislikes: [],
     };
@@ -61,13 +60,10 @@ export const getUserWishlistCoupons = async (userID: string): Promise<Coupon[]> 
   }
 };
 
-export const updateUserProfileDetails = async (user: CurrentUser, data: PersonalInfoForm) => {
+export const updateUserProfileDetails = async (user: User, data: PersonalInfoForm) => {
   data.birthday = Timestamp.fromDate(new Date(data.birthday.toString()));
   try {
-    await updatePersonalUserDetailsDB(
-      user.userUID,
-      (({ imageURL, ...rest }: PersonalInfoForm) => rest)(data)
-    );
+    await updatePersonalUserDetailsDB(user.userUID, (({ imageURL, ...rest }: PersonalInfoForm) => rest)(data));
     if (user.imageURL !== data.imageURL) {
       await saveProfileImage(data.imageURL, "profile", user);
     }
@@ -76,11 +72,6 @@ export const updateUserProfileDetails = async (user: CurrentUser, data: Personal
   }
 };
 
-export const uploadMultipleImages = async (
-  imagesFiles: FileList,
-  filesNames: Record<string, string>
-) => {
-  Array.from(imagesFiles).forEach((imageFile) =>
-    saveImageBrand(imageFile, filesNames[imageFile.name])
-  );
+export const uploadMultipleImages = async (imagesFiles: FileList, filesNames: Record<string, string>) => {
+  Array.from(imagesFiles).forEach((imageFile) => saveImageBrand(imageFile, filesNames[imageFile.name]));
 };

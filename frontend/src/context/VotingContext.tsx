@@ -3,22 +3,22 @@ import { ReactNode, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { UserAuth } from "../auth/AuthProvider";
 import { getUserVotes } from "../logic/logic";
-import { VoteObject } from "../types/Types";
+import { Vote } from "../types/VoteType";
 import { createContext } from "react";
 import { User } from "firebase/auth";
 
 type VotingContextType = {
-  userVotes: VoteObject;
+  userVotes: Vote;
   removeVoteFromCoupon: (couponID: string, voteType: boolean) => void;
 };
 
 export const VotingCouponsContext = createContext<VotingContextType | null>(null);
 
 export const VotingContextProvider = ({ children }: { children: ReactNode }) => {
-  const [userVotes, setUserVotes] = useState<VoteObject>({ dislikes: [], likes: [] });
+  const [userVotes, setUserVotes] = useState<Vote>({ dislikes: [], likes: [] });
   const { user }: { user: User } = UserAuth();
 
-  const { data, isSuccess, isFetching } = useQuery<VoteObject>({
+  const { data, isSuccess, isFetching } = useQuery<Vote>({
     queryKey: ["userVotes"],
     queryFn: () => getUserVotes(user.uid),
   });

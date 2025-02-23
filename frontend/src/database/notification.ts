@@ -1,5 +1,5 @@
-import { doc, setDoc, getDoc, updateDoc, deleteField } from "firebase/firestore";
 import { collectionsList } from "../../firebaseCollections";
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "./databaseConfig";
 
 export const getNotifications = async (userID: string) => {
@@ -7,6 +7,7 @@ export const getNotifications = async (userID: string) => {
     const docRef = doc(db, collectionsList.notifications, userID);
     const notificationsDoc = await getDoc(docRef);
     const notificationObj = notificationsDoc.data();
+    console.log(notificationObj);
 
     return "";
   } catch (error: any) {

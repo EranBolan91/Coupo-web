@@ -5,8 +5,8 @@ import { useInView } from "react-intersection-observer";
 import { AnimatePresence, motion } from "motion/react";
 import SearchBar from "../main/components/Searchbar";
 import useDebounce from "../../hooks/useDebounce";
+import { Coupon } from "../../types/CouponType";
 import { useEffect, useState } from "react";
-import { Coupon } from "../../types/Types";
 
 const SocialCoupons = () => {
   const [searchQuery, setSearchQuery] = useState<string>("");

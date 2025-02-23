@@ -41,12 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [user]);
 
-  const createUserWithEmailPassword = async (
-    email: string,
-    password: string,
-    fullName: string,
-    birthday: string
-  ) => {
+  const createUserWithEmailPassword = async (email: string, password: string, fullName: string, birthday: string) => {
     try {
       const newUser = await createUserWithEmailAndPassword(auth, email, password);
       if (newUser !== null && auth.currentUser !== null) {
@@ -102,8 +97,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const res = await signInWithPopup(auth, provider)
       .then((result) => {
         // This gives you a Google Access Token. You can use it to access the Google API.
-        const credential = GoogleAuthProvider.credentialFromResult(result);
-        const token = credential?.accessToken;
+        // const credential = GoogleAuthProvider.credentialFromResult(result);
+        // const token = credential?.accessToken;
         // The signed-in user info.
         const user = result.user;
         // IdP data available using getAdditionalUserInfo(result)
@@ -113,10 +108,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       })
       .catch((error) => {
         // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.customData.email;
+        // const errorCode = error.code;
+        // const errorMessage = error.message;
+        // // The email of the user's account used.
+        // const email = error.customData.email;
         // The AuthCredential type that was used.
         const credential = GoogleAuthProvider.credentialFromError(error);
         console.log("AuthProvider", credential);

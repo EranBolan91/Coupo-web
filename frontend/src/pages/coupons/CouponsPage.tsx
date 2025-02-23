@@ -11,7 +11,6 @@ import Filter from "../../components/filter/Filter";
 import { RootState } from "../../redux/store/store";
 import { useSearchParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
-import CouponCard from "./components/CouponCard";
 import { Coupon } from "../../types/CouponType";
 import CouponCardNew from "./components/CouponCardNew";
 

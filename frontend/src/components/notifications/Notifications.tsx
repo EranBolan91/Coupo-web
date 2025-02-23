@@ -1,6 +1,5 @@
 import { MdOutlineNotificationsNone } from "react-icons/md";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 
 const Notifications = () => {
   const [isOpen, setIsOpen] = useState(false);

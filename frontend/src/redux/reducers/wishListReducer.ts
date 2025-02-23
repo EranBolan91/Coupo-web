@@ -9,7 +9,6 @@ const wishlistSlice = createSlice({
     initWishlist: (state, action: PayloadAction<string[]>) => {
       state = action.payload;
     },
-    addFilter: (state, action: PayloadAction<{ [key: string]: string }>) => {},
   },
 });
 

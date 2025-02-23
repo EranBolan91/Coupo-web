@@ -1,7 +1,7 @@
 import { getCategories, updateCoupon } from "../../../database/databaseCalls";
 import { UserAuth } from "../../../auth/AuthProvider";
+import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
-import { Coupon } from "../../../types/Types";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
@@ -12,8 +12,8 @@ interface Props {
 }
 
 const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
-  const [discountPercentage, setDiscountPercentage] = useState<string>(coupon.discount);
-  const [description, setDescription] = useState<string>(coupon.description);
+  const [discountPercentage, setDiscountPercentage] = useState<number>(coupon.discount);
+  const [description, setDescription] = useState<string>(coupon.description ?? "");
   const [openEditModal, setOpenEditModal] = useState<boolean>(false);
   const [category, setCategory] = useState<string>(coupon.category);
   const [error, setError] = useState<boolean>(false);
@@ -40,7 +40,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
     if (discountNumber < 0 || discountNumber > 100) {
       setError(true);
     } else {
-      setDiscountPercentage(event);
+      setDiscountPercentage(parseInt(event));
       setError(false);
     }
   };
@@ -90,11 +90,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
                 onChange={(e) => handleDiscount(e.target.value)}
               />
             </label>
-            {error && (
-              <p className="text-red-500 italic font-normal">
-                Value cannot be less 0 or more then 100
-              </p>
-            )}
+            {error && <p className="text-red-500 italic font-normal">Value cannot be less 0 or more then 100</p>}
           </div>
           <div className="w-full my-4">
             <label className="form-control w-full">
