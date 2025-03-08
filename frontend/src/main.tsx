@@ -13,7 +13,10 @@ import "./index.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
+      staleTime: Infinity, // Prevent refetching by making data never stale
+      refetchOnWindowFocus: false, // Disable refetching on focus
+      refetchOnReconnect: false, // Disable refetching on network reconnect
+      refetchOnMount: false, // Disab
     },
   },
 });
@@ -23,13 +26,13 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     <ErrorBoundary fallback={"There was an error"}>
       <Provider store={store}>
         <BrowserRouter>
-          <AuthProvider>
-            <QueryClientProvider client={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
               <VotingContextProvider>
                 <App />
               </VotingContextProvider>
-            </QueryClientProvider>
-          </AuthProvider>
+            </AuthProvider>
+          </QueryClientProvider>
         </BrowserRouter>
       </Provider>
     </ErrorBoundary>

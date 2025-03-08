@@ -9,10 +9,10 @@ type Props = {
 };
 
 const Avatar = (props: Props) => {
-  const { user, logout } = UserAuth();
+  const { userDocument, logout } = UserAuth();
 
   const handleLogout = async () => {
-    if (user) {
+    if (userDocument) {
       await logout();
       toast("You have logged out. Byebye", { icon: "👏" });
     }
@@ -41,10 +41,7 @@ const Avatar = (props: Props) => {
           )}
         </div>
       </div>
-      <ul
-        tabIndex={0}
-        className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"
-      >
+      <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
         <li>
           <Link to="/profile">Profile</Link>
         </li>

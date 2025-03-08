@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 const AddUserSocialCoupon = () => {
   const form = useForm<Coupon>();
-  const { user } = UserAuth();
+  const { userDocument } = UserAuth();
   const {
     handleSubmit,
     register,
@@ -16,7 +16,7 @@ const AddUserSocialCoupon = () => {
 
   const onSubmit: SubmitHandler<Coupon> = (data) => {
     toast
-      .promise(saveUserSocialCoupon(data, user.uid), {
+      .promise(saveUserSocialCoupon(data, userDocument?.userUID!), {
         loading: "Saving coupon...",
         success: `${data.name} coupon saved!`,
         error: "Error saving coupon",

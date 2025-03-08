@@ -4,7 +4,6 @@ import { FaRegStar, FaStar } from "react-icons/fa";
 import { UserAuth } from "../../auth/AuthProvider";
 import useWishlist from "../../hooks/useWishlist";
 import { useEffect, useState } from "react";
-import { User } from "firebase/auth";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -21,17 +20,17 @@ const starStyle = {
 const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false);
   const [isWishList, setIsWishList] = useState<boolean>(false);
-  const { user }: { user: User } = UserAuth();
-  const { wishlists, isLoading } = useWishlist(user?.uid);
+  const { userDocument } = UserAuth();
+  const { wishlists, isLoading } = useWishlist(userDocument?.userUID!);
 
   const handleShowLoginModal = () => setOpenLoginModal(!openLoginModal);
 
   const addToWishlist = () => {
-    if (user === null) {
+    if (userDocument === null) {
       handleShowLoginModal();
       return;
     }
-    toast.promise(saveCouponInWishList(user.uid, couponID), {
+    toast.promise(saveCouponInWishList(userDocument.userUID, couponID), {
       success: `Added to wishlist`,
       loading: "",
       error: "Some probles has accured",
@@ -40,7 +39,7 @@ const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
   };
 
   const removeFromWishList = () => {
-    removeCouponFromWishList(user.uid, couponID);
+    removeCouponFromWishList(userDocument?.userUID!, couponID);
     setIsWishList(false);
   };
 

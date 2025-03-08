@@ -3,6 +3,7 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import ResendEmailButton from "./ResendEmailButton";
 import { AuthMSG, UserAuth } from "../AuthProvider";
+import { getAuth } from "firebase/auth";
 import authErrors from "../AuthErrors";
 import toast from "react-hot-toast";
 import { useState } from "react";
@@ -14,10 +15,11 @@ type LoginForm = {
 
 const Login = () => {
   const [displayResendEmail, setDisplayResendEmail] = useState<boolean>(false);
-  const { user, signinWthGoogle, loginUserWithEmailPassword } = UserAuth();
+  const { signinWthGoogle, loginUserWithEmailPassword } = UserAuth();
   const [spinner, setSpinner] = useState<boolean>(false);
   const form = useForm<LoginForm>();
   const navigate = useNavigate();
+  const auth = getAuth();
   const {
     handleSubmit,
     register,
@@ -91,10 +93,7 @@ const Login = () => {
 
             <div>
               <div className="flex items-center justify-between">
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium leading-6 text-gray-900"
-                >
+                <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
                   Password
                 </label>
                 <div className="text-sm">
@@ -140,7 +139,7 @@ const Login = () => {
           </form>
           {displayResendEmail && (
             <span>
-              click here to: <ResendEmailButton key={user?.uid} user={user} />
+              click here to: <ResendEmailButton key={auth.currentUser?.uid} />
             </span>
           )}
           <div className="flex flex-col justify-center items-center text-black">

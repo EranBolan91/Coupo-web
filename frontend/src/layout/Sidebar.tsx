@@ -1,15 +1,15 @@
-import { SiGnuprivacyguard } from "react-icons/si";
+import Avatar from "../components/navbar/components/Avatar";
 import { Link, useLocation } from "react-router-dom";
 import { MdAddCircleOutline } from "react-icons/md";
+import { SiGnuprivacyguard } from "react-icons/si";
 import { BsArrowLeftCircle } from "react-icons/bs";
 import { RiLogoutBoxLine } from "react-icons/ri";
 import { UserAuth } from "../auth/AuthProvider";
 import { CgProfile } from "react-icons/cg";
 import { IoMdHome } from "react-icons/io";
 import { Tooltip } from "react-tooltip";
-import { useState } from "react";
-import Avatar from "../components/navbar/components/Avatar";
 import toast from "react-hot-toast";
+import { useState } from "react";
 
 const Menus = [
   {
@@ -39,10 +39,10 @@ const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation();
-  const { user, logout } = UserAuth();
+  const { userDocument, logout } = UserAuth();
 
   const handleLogout = async () => {
-    if (user) {
+    if (userDocument) {
       await logout();
       toast("You have logged out. Byebye", { icon: "👏" });
     }
@@ -79,7 +79,11 @@ const Sidebar = () => {
                   location.pathname === menu.path && "bg-gray-200 dark:bg-gray-700"
                 }`}
               >
-                {user ? <Avatar imgURL={user.photoURL} /> : <span className="text-2xl">{menu.src}</span>}
+                {userDocument ? (
+                  <Avatar imgURL={userDocument.imageURL} />
+                ) : (
+                  <span className="text-2xl">{menu.src}</span>
+                )}
                 <span className={`${!open && "hidden"} origin-left duration-300 hover:block`}>{menu.title}</span>
               </li>
               {!open && (
@@ -90,7 +94,7 @@ const Sidebar = () => {
               )}
             </Link>
           ))}
-          {user ? (
+          {userDocument ? (
             <Link to={""}>
               <li
                 id="logout"

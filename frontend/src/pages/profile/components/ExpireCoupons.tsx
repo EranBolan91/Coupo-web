@@ -5,11 +5,11 @@ import { useQuery } from "@tanstack/react-query";
 import RemoveCouponBtn from "./RemoveCouponBtn";
 
 const ExpireCoupon = () => {
-  const { user } = UserAuth();
+  const { userDocument } = UserAuth();
 
   const { data } = useQuery<Coupon[]>({
     queryKey: ["expireCoupons"],
-    queryFn: () => getExpiredCoupons(user.uid),
+    queryFn: () => getExpiredCoupons(userDocument?.userUID!),
   });
 
   return (

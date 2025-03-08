@@ -1,24 +1,24 @@
 import { cleanAuthErrorMessage } from "../../utils/utils";
 import { UserAuth } from "../AuthProvider";
+import { getAuth } from "firebase/auth";
 import authErrors from "../AuthErrors";
-import { User } from "firebase/auth";
 import toast from "react-hot-toast";
 
 type Props = {
-  user: User;
   handleResetTime?: () => void;
 };
 
-const ResendEmailButton = ({ user, handleResetTime }: Props) => {
+const ResendEmailButton = ({ handleResetTime }: Props) => {
   const { sendEmailVerification } = UserAuth();
+  const auth = getAuth();
 
   const sendEmailAndRestTime = async () => {
     try {
-      toast.success("Email sent");
-      await sendEmailVerification(user);
+      await sendEmailVerification(auth.currentUser!);
       if (handleResetTime) {
         handleResetTime();
       }
+      toast.success("Email sent");
     } catch (error: any) {
       const cleanErrorMsg = cleanAuthErrorMessage(error.message);
       toast.error(authErrors[cleanErrorMsg], { position: "top-center", duration: 2000 });
@@ -26,9 +26,9 @@ const ResendEmailButton = ({ user, handleResetTime }: Props) => {
   };
 
   return (
-    <button className="btn btn-active btn-link" onClick={sendEmailAndRestTime}>
+    <span className="btn-link cursor-pointer hover:text-primary" onClick={sendEmailAndRestTime}>
       resend
-    </button>
+    </span>
   );
 };
 

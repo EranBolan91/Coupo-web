@@ -2,14 +2,13 @@ import { getUserWishlistCoupons } from "../../../logic/logic";
 import { UserAuth } from "../../../auth/AuthProvider";
 import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
-import { User } from "firebase/auth";
 
 const Wishlist = () => {
-  const { user }: { user: User } = UserAuth();
+  const { userDocument } = UserAuth();
 
   const { data: wishListData, isLoading } = useQuery<Coupon[] | undefined>({
     queryKey: ["userWishlist"],
-    queryFn: () => getUserWishlistCoupons(user.uid),
+    queryFn: () => getUserWishlistCoupons(userDocument?.userUID!),
   });
 
   return (

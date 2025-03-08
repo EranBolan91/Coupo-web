@@ -22,7 +22,7 @@ import { CouponBrand } from "../types/CouponBrandType";
 import { orderBy } from "firebase/firestore/lite";
 import { db, storage } from "./databaseConfig";
 import { Coupon } from "../types/CouponType";
-import { User } from "../types/UserType";
+import { UserDocument } from "../types/UserType";
 
 let documentCoursor: any = {};
 
@@ -268,18 +268,18 @@ export const updateCoupon = async (
   });
 };
 
-export const saveUserToDatabase = async (user: User) => {
+export const saveUserToDatabase = async (user: UserDocument) => {
   const ref = doc(db, `${collectionsList.users}/${user.userUID}`);
   await setDoc(ref, user);
 };
 
-export const getUserDetails = async (userUID: string): Promise<User | null> => {
+export const getUserDetails = async (userUID: string): Promise<UserDocument | null> => {
   try {
     const userDocRef = doc(db, collectionsList.users, userUID);
     const userDocSnap = await getDoc(userDocRef);
 
     if (userDocSnap.exists()) {
-      return userDocSnap.data() as User; // Fetch the document data
+      return userDocSnap.data() as UserDocument; // Fetch the document data
     } else {
       console.log("No such document!");
       return null;

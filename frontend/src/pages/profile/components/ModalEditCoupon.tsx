@@ -17,7 +17,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
   const [openEditModal, setOpenEditModal] = useState<boolean>(false);
   const [category, setCategory] = useState<string>(coupon.category);
   const [error, setError] = useState<boolean>(false);
-  const { user } = UserAuth();
+  const { userDocument } = UserAuth();
 
   const { data, isLoading } = useQuery({
     queryKey: ["categories"],
@@ -27,7 +27,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
 
   const updateCouponData = async () => {
     toast
-      .promise(updateCoupon(category, discountPercentage, description, coupon.id, user.uid), {
+      .promise(updateCoupon(category, discountPercentage, description, coupon.id, userDocument?.userUID!), {
         success: "successfully updated",
         loading: "updating",
         error: "error in updaing",

@@ -1,25 +1,19 @@
 import { updateUserProfileDetails } from "../../../../logic/logic";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { MdOutlineCloudUpload } from "react-icons/md";
-import { User } from "../../../../types/UserType";
-import { Timestamp } from "firebase/firestore";
+import { UserDocument } from "../../../../types/UserType";
 import { GrPowerCycle } from "react-icons/gr";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import { Timestamp } from "firebase/firestore";
 
-export type PersonalInfoForm = {
-  firstName: string;
-  lastName: string;
-  imageURL: string;
-  birthday: Timestamp;
-};
-
-export const ModalPersonalInfo = ({ currentUser }: { currentUser: User }) => {
+export const ModalPersonalInfo = ({ currentUser }: { currentUser: UserDocument }) => {
   const [displayImage, setDisplayImage] = useState<string | null>(currentUser.imageURL);
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [imagePath, setImagePath] = useState<string>("");
-  const form = useForm<PersonalInfoForm>({
+  const form = useForm<UserDocument>({
     defaultValues: {
+      userUID: currentUser.userUID,
       firstName: currentUser.firstName,
       lastName: currentUser.lastName,
       birthday: currentUser.birthday?.toDate().toISOString().split("T")[0],
@@ -32,10 +26,11 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: User }) => {
     formState: { errors },
   } = form;
 
-  const handleSubmitForm: SubmitHandler<PersonalInfoForm> = async (data) => {
+  const handleSubmitForm: SubmitHandler<UserDocument> = async (data) => {
     data.imageURL = imagePath;
+    data.birthday = data?.birthday ? Timestamp.fromDate(new Date(data?.birthday?.toString())) : undefined;
     toast
-      .promise(updateUserProfileDetails(currentUser, data), {
+      .promise(updateUserProfileDetails(data), {
         success: "User details updated successfully",
         loading: "Updating user details...",
         error: "Error, something went wrong...",
@@ -128,7 +123,7 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: User }) => {
               <span className="label-text">Profile image</span>
             </div>
             <div className="flex items-center justify-center w-full">
-              {displayImage !== null ? (
+              {displayImage && displayImage !== "" ? (
                 <div>
                   <img src={displayImage} />
                   <span className="flex items-center cursor-pointer" onClick={clearSelectedImage}>

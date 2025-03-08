@@ -10,9 +10,9 @@ import toast from "react-hot-toast";
 const AddUserCoupon = () => {
   const [brand, setBrand] = useState<CouponBrand>({ brand: "", imgURL: "" });
   const [couponBrands, setCouponBrands] = useState<CouponBrand[]>([]);
+  const { userDocument } = UserAuth();
   const [categories, setCategories] = useState<string[]>([]);
   const [category, setCategory] = useState<string>("");
-  const { user } = UserAuth();
   const form = useForm<Coupon>();
   const {
     handleSubmit,
@@ -30,14 +30,16 @@ const AddUserCoupon = () => {
   const handleCategoryChange = (value: string) => setCategory(value);
 
   const onSubmit: SubmitHandler<Coupon> = (data) => {
+    if (!userDocument) return;
+
     data.category = category;
     data.name = brand.brand;
     data.imgUrl = brand.imgURL;
-    data.userID = user.uid;
-    // data.username = user.displayName;
+    data.userID = userDocument.userUID;
+    data.username = userDocument.firstName + " " + userDocument.lastName;
 
     toast
-      .promise(saveUserNewCoupon(data, user.uid), {
+      .promise(saveUserNewCoupon(data, userDocument.userUID), {
         loading: "Saving coupon...",
         success: `${brand.brand} coupon saved!`,
         error: "Error saving coupon",

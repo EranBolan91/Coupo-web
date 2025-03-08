@@ -15,10 +15,10 @@ type Props = {
 
 const Modal = (props: Props) => {
   const cancelButtonRef = useRef(null);
-  const { user } = UserAuth();
+  const { userDocument } = UserAuth();
 
   const handleRemoveCoupon = () => {
-    toast.promise(removeUserCoupon(user.uid, props.coupon.id), {
+    toast.promise(removeUserCoupon(userDocument?.userUID!, props.coupon.id), {
       loading: `Removing ${props.coupon.code}, please wait...`,
       success: `${props.coupon.code} is removed!`,
       error: "Error removing copuon",

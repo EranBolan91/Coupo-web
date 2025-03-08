@@ -1,7 +1,12 @@
 import { ModalPersonalInfo } from "./ModalPersonalInfo";
-import { User } from "../../../../types/UserType";
+import { UserDocument } from "../../../../types/UserType";
+import { getAuth } from "firebase/auth";
 
-const PersonalInfo = ({ currentUser }: { currentUser: User | null }) => {
+const PersonalInfo = ({ currentUser }: { currentUser: UserDocument | null }) => {
+  if (currentUser === null) return;
+
+  const auth = getAuth();
+  console.log(auth.currentUser);
   return (
     <div className="h-full">
       <div className="flex justify-end">
@@ -38,7 +43,7 @@ const PersonalInfo = ({ currentUser }: { currentUser: User | null }) => {
           <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
             <dt className="text-sm font-medium leading-6 text-primary">Birth of date</dt>
             <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">
-              {currentUser?.birthday?.toDate().toDateString()}
+              {currentUser?.birthday?.toDate()?.toDateString()}
             </dd>
           </div>
           <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">

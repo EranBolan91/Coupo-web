@@ -6,11 +6,11 @@ import RemoveCouponBtn from "./RemoveCouponBtn";
 import ModalEditCoupon from "./ModalEditCoupon";
 
 const MyCoupons = () => {
-  const { user } = UserAuth();
+  const { userDocument } = UserAuth();
 
   const { data, refetch } = useQuery<Coupon[]>({
     queryKey: ["usercoupons"],
-    queryFn: () => getUserCoupons(user.uid),
+    queryFn: () => getUserCoupons(userDocument?.userUID!),
   });
 
   return (

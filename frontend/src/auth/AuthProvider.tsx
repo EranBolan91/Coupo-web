@@ -1,4 +1,3 @@
-import { useState, createContext, ReactNode, useContext, useEffect } from "react";
 import {
   User,
   signOut,
@@ -8,14 +7,35 @@ import {
   sendEmailVerification,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  ActionCodeSettings,
+  getAuth,
 } from "firebase/auth";
 import toast from "react-hot-toast";
-import { auth } from "../firebaseConfig";
-import { redirect } from "react-router-dom";
 import { Timestamp } from "firebase/firestore";
+import { UserDocument } from "../types/UserType";
+import { getUserDocument } from "../database/users";
+import { updatePersonalDocument } from "../database/profile";
 import { saveUserToDatabase } from "../database/databaseCalls";
+import { useState, createContext, ReactNode, useContext, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import Loader from "../components/loader/Loader";
 
-const AuthContext = createContext<any>(null);
+interface AuthProviderProps {
+  userDocument: UserDocument | null;
+  logout: () => Promise<void>;
+  signinWthGoogle: () => Promise<void>;
+  sendEmailVerification: (user: User, actionCodeSettings?: ActionCodeSettings | null) => Promise<void>;
+  handleUpdateUserDocument: (userDocument: UserDocument) => void;
+  loginUserWithEmailPassword: (email: string, password: string) => Promise<AuthMSG>;
+  createUserWithEmailPassword: (
+    email: string,
+    password: string,
+    fullName: string,
+    birthday: Date
+  ) => Promise<null | undefined>;
+}
+
+const AuthContext = createContext<AuthProviderProps | undefined>(undefined);
 const provider = new GoogleAuthProvider();
 
 export enum AuthMSG {
@@ -25,23 +45,47 @@ export enum AuthMSG {
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [userDocument, setUserDocument] = useState<UserDocument | null>(null);
+  const auth = getAuth();
+
+  const { data, isLoading, isSuccess } = useQuery<UserDocument>({
+    queryKey: ["UserDocument"],
+    queryFn: () => getUserDocument(auth.currentUser?.uid),
+    staleTime: Infinity,
+  });
+
+  const handleUpdateUserDocument = (userDocument: Partial<UserDocument>) => {
+    setUserDocument((prev) => {
+      if (prev === null) return null;
+      return { ...prev, ...userDocument };
+    });
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setLoading(false);
-      if (currentUser?.emailVerified === true) {
-        setUser(currentUser);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log("user", user);
+      if (user) {
+        if (user.emailVerified === true) {
+          // const resUserDocument: UserDocument = await getUserDocument(user.uid);
+          if (data !== undefined) {
+            if (data.isEmailVerified === false) {
+              updatePersonalDocument({ isEmailVerified: true, userUID: user.uid });
+              data.isEmailVerified = true;
+            }
+            setUserDocument(data);
+          }
+        }
+      } else {
+        setUserDocument(null);
       }
     });
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [user]);
+  }, [isSuccess, data]);
 
-  const createUserWithEmailPassword = async (email: string, password: string, fullName: string, birthday: string) => {
+  const createUserWithEmailPassword = async (email: string, password: string, fullName: string, birthday: Date) => {
     try {
       const newUser = await createUserWithEmailAndPassword(auth, email, password);
       if (newUser !== null && auth.currentUser !== null) {
@@ -60,8 +104,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           creationDate: Timestamp.fromDate(new Date()),
           birthday: Timestamp.fromDate(new Date(birthday)),
         });
-
-        setUser(newUser.user);
       } else {
         return null;
       }
@@ -77,11 +119,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (loginUser !== null) {
         if (loginUser.user.emailVerified === true) {
-          setUser(loginUser.user);
-          redirect("/profile");
           return AuthMSG.Good;
         } else {
-          setUser(loginUser.user);
           return AuthMSG.VerifyEmailError;
         }
       } else {
@@ -103,7 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const user = result.user;
         // IdP data available using getAdditionalUserInfo(result)
         // ...
-        setUser(user);
+        // setUser(user);
         return user;
       })
       .catch((error) => {
@@ -116,7 +155,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const credential = GoogleAuthProvider.credentialFromError(error);
         console.log("AuthProvider", credential);
         // ...
-        setUser(null);
+        setUserDocument(null);
         return error;
       });
     return res;
@@ -125,7 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     signOut(auth)
       .then(() => {
-        setUser(null);
+        setUserDocument(null);
       })
       .catch((error) => {
         toast.error(error.message);
@@ -136,19 +175,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider
       value={{
-        user,
+        userDocument,
         logout,
         signinWthGoogle,
         sendEmailVerification,
+        handleUpdateUserDocument,
         loginUserWithEmailPassword,
         createUserWithEmailPassword,
       }}
     >
-      {!loading && children}
+      {/* {!loading && children} */}
+      {isLoading === true ? <Loader /> : children}
     </AuthContext.Provider>
   );
 };
 
 export const UserAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("UserAuth must be used within an AuthProvider");
+  }
+  return context;
 };

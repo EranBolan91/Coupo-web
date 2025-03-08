@@ -13,4 +13,4 @@ const userSchema = z.object({
   creationDate: z.instanceof(Timestamp),
 });
 
-export type User = z.infer<typeof userSchema>;
+export type UserDocument = z.infer<typeof userSchema>;

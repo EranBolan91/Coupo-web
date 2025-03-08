@@ -5,7 +5,6 @@ import { UserAuth } from "../auth/AuthProvider";
 import { getUserVotes } from "../logic/logic";
 import { Vote } from "../types/VoteType";
 import { createContext } from "react";
-import { User } from "firebase/auth";
 
 type VotingContextType = {
   userVotes: Vote;
@@ -16,11 +15,11 @@ export const VotingCouponsContext = createContext<VotingContextType | null>(null
 
 export const VotingContextProvider = ({ children }: { children: ReactNode }) => {
   const [userVotes, setUserVotes] = useState<Vote>({ dislikes: [], likes: [] });
-  const { user }: { user: User } = UserAuth();
+  const { userDocument } = UserAuth();
 
   const { data, isSuccess, isFetching } = useQuery<Vote>({
     queryKey: ["userVotes"],
-    queryFn: () => getUserVotes(user.uid),
+    queryFn: () => getUserVotes(userDocument?.userUID!),
   });
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export const VotingContextProvider = ({ children }: { children: ReactNode }) => 
   const removeVoteFromCoupon = async (couponID: string, voteType: boolean) => {
     if (voteType === true) {
       if (userVotes?.likes !== undefined) {
-        removeUserVote(user.uid, couponID, voteType)
+        removeUserVote(userDocument?.userUID!, couponID, voteType)
           .then(() => {
             setUserVotes((prevVotes) => ({
               ...prevVotes,

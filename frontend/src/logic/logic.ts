@@ -1,11 +1,10 @@
-import { saveProfileImage, updatePersonalUserDetails as updatePersonalUserDetailsDB } from "../database/profile";
 import { getUserDislikesVotes, getUserLikesVotes, saveImageBrand } from "../database/databaseCalls";
-import { PersonalInfoForm } from "../pages/profile/components/PersonalInfo/ModalPersonalInfo";
 import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { saveProfileImage, updatePersonalDocument } from "../database/profile";
 import { getUserWishlist } from "../database/wishlist";
+import { UserDocument } from "../types/UserType";
 import { db } from "../database/databaseConfig";
 import { Coupon } from "../types/CouponType";
-import { User } from "../types/UserType";
 import { Vote } from "../types/VoteType";
 
 export const getUserVotes = async (userID: string): Promise<Vote> => {
@@ -60,14 +59,17 @@ export const getUserWishlistCoupons = async (userID: string): Promise<Coupon[]> 
   }
 };
 
-export const updateUserProfileDetails = async (user: User, data: PersonalInfoForm) => {
-  data.birthday = Timestamp.fromDate(new Date(data.birthday.toString()));
+// await updatePersonalUserDetailsDB(user.userUID, (({ imageURL, ...rest }: UserDocument) => rest)(user));
+export const updateUserProfileDetails = async (userDocument: UserDocument) => {
   try {
-    await updatePersonalUserDetailsDB(user.userUID, (({ imageURL, ...rest }: PersonalInfoForm) => rest)(data));
-    if (user.imageURL !== data.imageURL) {
-      await saveProfileImage(data.imageURL, "profile", user);
+    const { imageURL, ...rest } = userDocument;
+    debugger;
+    updatePersonalDocument(rest);
+    if (userDocument.imageURL !== undefined && userDocument.imageURL !== "") {
+      await saveProfileImage(userDocument.imageURL, "profile", userDocument);
     }
   } catch (error: any) {
+    console.log(error);
     throw new Error(error);
   }
 };
