@@ -11,8 +11,8 @@ import Filter from "../../components/filter/Filter";
 import { RootState } from "../../redux/store/store";
 import { useSearchParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
+import CouponCard from "./components/CouponCard";
 import { Coupon } from "../../types/CouponType";
-import CouponCardNew from "./components/CouponCardNew";
 
 const CouponsPage = () => {
   const filters = useSelector((state: RootState) => state.filters);
@@ -131,7 +131,7 @@ const CouponsPage = () => {
                         transition={{ duration: 0.5 }}
                         className="w-full"
                       >
-                        <CouponCardNew innerRef={ref} coupon={coupon} key={index} />
+                        <CouponCard innerRef={ref} coupon={coupon} key={index} />
                       </motion.div>
                     </div>
                   );
@@ -146,7 +146,7 @@ const CouponsPage = () => {
                         transition={{ duration: 0.5 }}
                         className="w-full"
                       >
-                        <CouponCardNew coupon={coupon} key={index} />
+                        <CouponCard coupon={coupon} key={index} />
                       </motion.div>
                     </div>
                   );
