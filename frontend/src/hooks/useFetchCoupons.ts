@@ -9,7 +9,6 @@ import {
   getDocs,
   where,
 } from "firebase/firestore";
-import { collectionsList } from "../../firebaseCollections";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { db } from "../database/databaseConfig";
 import { Coupon } from "../types/CouponType";
@@ -41,7 +40,7 @@ const getSocialCoupons = async ({
     );
   } else {
     fetchQuery = query(
-      collection(db, collectionsList.coupons),
+      collection(db, collectionName),
       orderBy("createdAt", "desc"),
       startAfter(pageParam),
       limit(pageSize)

@@ -1,8 +1,9 @@
 import { getUserDislikesVotes, getUserLikesVotes, saveImageBrand } from "../database/databaseCalls";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { collection, query, where, getDocs } from "firebase/firestore";
 import { saveProfileImage, updatePersonalDocument } from "../database/profile";
 import { getUserWishlist } from "../database/wishlist";
 import { UserDocument } from "../types/UserType";
+import { collectionsList } from "../../firebaseCollections";
 import { db } from "../database/databaseConfig";
 import { Coupon } from "../types/CouponType";
 import { Vote } from "../types/VoteType";
@@ -37,19 +38,17 @@ export const getUserWishlistCoupons = async (userID: string): Promise<Coupon[]> 
       batches.push(chunk);
     }
 
-    // Fetch each batch
-    const couponPromises = batches.map(async (batch) => {
-      const couponsRef = collection(db, "Coupons");
-      const q = query(couponsRef, where("__name__", "in", batch));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(
-        (doc) =>
-          ({
-            id: doc.id,
-            ...doc.data(),
-          } as Coupon)
-      );
-    });
+    // Fetch each batch from both public collections (a wishlist can hold regular and social coupons)
+    const couponPromises = batches.flatMap((batch) =>
+      [
+        { name: collectionsList.coupons, type: "coupon" },
+        { name: collectionsList.socialCoupons, type: "socialCoupon" },
+      ].map(async ({ name, type }) => {
+        const q = query(collection(db, name), where("__name__", "in", batch));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.docs.map((doc) => ({ id: doc.id, type, ...doc.data() } as Coupon));
+      })
+    );
 
     // Wait for all batches to resolve
     const results: Coupon[] = (await Promise.all(couponPromises)).flat();
@@ -62,8 +61,8 @@ export const getUserWishlistCoupons = async (userID: string): Promise<Coupon[]> 
 // await updatePersonalUserDetailsDB(user.userUID, (({ imageURL, ...rest }: UserDocument) => rest)(user));
 export const updateUserProfileDetails = async (userDocument: UserDocument) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { imageURL, ...rest } = userDocument;
-    debugger;
     updatePersonalDocument(rest);
     if (userDocument.imageURL !== undefined && userDocument.imageURL !== "") {
       await saveProfileImage(userDocument.imageURL, "profile", userDocument);

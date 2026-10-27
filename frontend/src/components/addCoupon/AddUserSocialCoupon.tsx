@@ -1,12 +1,12 @@
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { saveUserSocialCoupon } from "../../database/social";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { UserAuth } from "../../auth/AuthProvider";
 import { Coupon } from "../../types/CouponType";
 import toast from "react-hot-toast";
 
 const AddUserSocialCoupon = () => {
   const form = useForm<Coupon>();
-  const { userDocument } = UserAuth();
+  const userDocument = useCurrentUser();
   const {
     handleSubmit,
     register,
@@ -15,8 +15,13 @@ const AddUserSocialCoupon = () => {
   } = form;
 
   const onSubmit: SubmitHandler<Coupon> = (data) => {
+    if (!userDocument) return;
+
+    data.userID = userDocument.userUID;
+    data.username = userDocument.firstName + " " + userDocument.lastName;
+
     toast
-      .promise(saveUserSocialCoupon(data, userDocument?.userUID!), {
+      .promise(saveUserSocialCoupon(data, userDocument.userUID), {
         loading: "Saving coupon...",
         success: `${data.name} coupon saved!`,
         error: "Error saving coupon",

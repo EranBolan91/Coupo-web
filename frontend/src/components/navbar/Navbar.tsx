@@ -1,7 +1,6 @@
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { XMarkIcon, Bars3Icon } from "@heroicons/react/24/solid";
 import Notifications from "../notifications/Notifications";
-import { UserDocument } from "../../types/UserType";
-import { UserAuth } from "../../auth/AuthProvider";
 import { useLocation } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
 import Avatar from "./components/Avatar";
@@ -16,7 +15,7 @@ const navigation = [
 ];
 
 const Navbar = () => {
-  const { userDocument }: { userDocument: UserDocument | null } = UserAuth();
+  const userDocument = useCurrentUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
 

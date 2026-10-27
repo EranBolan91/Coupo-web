@@ -1,16 +1,16 @@
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { getUserCoupons } from "../../../database/databaseCalls";
-import { UserAuth } from "../../../auth/AuthProvider";
 import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 import RemoveCouponBtn from "./RemoveCouponBtn";
 import ModalEditCoupon from "./ModalEditCoupon";
 
 const MyCoupons = () => {
-  const { userDocument } = UserAuth();
+  const userDocument = useCurrentUser();
 
   const { data, refetch } = useQuery<Coupon[]>({
     queryKey: ["usercoupons"],
-    queryFn: () => getUserCoupons(userDocument?.userUID!),
+    queryFn: () => getUserCoupons(userDocument?.userUID ?? ""),
   });
 
   return (

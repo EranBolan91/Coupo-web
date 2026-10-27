@@ -1,7 +1,7 @@
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { VotingCouponsContext } from "../../../context/VotingContext";
 import { saveUserVote } from "../../../database/databaseCalls";
 import { useContext, useEffect, useState } from "react";
-import { UserAuth } from "../../../auth/AuthProvider";
 import { Coupon } from "../../../types/CouponType";
 import { FaThumbsUp } from "react-icons/fa";
 import LoginModal from "./LoginModal";
@@ -16,18 +16,18 @@ const LikeButton = ({ coupon, setCoupon }: Props) => {
   const [isButtonAlreadyClicked, setButtonAlreadyClicked] = useState<boolean>(false);
   const { userVotes, removeVoteFromCoupon } = useContext<any>(VotingCouponsContext);
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false);
-  const { user }: any = UserAuth();
+  const userDocument = useCurrentUser();
 
   const handleButtonAlreadyClicked = () => setButtonAlreadyClicked(!isButtonAlreadyClicked);
   const handleShowLoginModal = () => setOpenLoginModal(!openLoginModal);
 
   const handleCouponVote = () => {
-    if (!user) {
+    if (!userDocument) {
       handleShowLoginModal();
     } else {
       if (isButtonAlreadyClicked === false) {
         toast
-          .promise(saveUserVote({ ...coupon }, user.uid, true), {
+          .promise(saveUserVote({ ...coupon }, userDocument.userUID, true), {
             loading: `Voting...`,
             success: `Thanks for voting!`,
             error: (err: any) => `${err}`,
@@ -47,13 +47,10 @@ const LikeButton = ({ coupon, setCoupon }: Props) => {
     }
   };
 
+  // Votes load after the button mounts (and change on login/logout), so sync on every change.
   useEffect(() => {
-    userVotes?.likes.map((couponVote: Coupon) => {
-      if (couponVote.id === coupon.id) {
-        setButtonAlreadyClicked(true);
-      }
-    });
-  }, []);
+    setButtonAlreadyClicked(userVotes?.likes.some((couponVote: Coupon) => couponVote.id === coupon.id) ?? false);
+  }, [userVotes, coupon.id]);
 
   return (
     <div className="flex flex-col justify-center items-center">

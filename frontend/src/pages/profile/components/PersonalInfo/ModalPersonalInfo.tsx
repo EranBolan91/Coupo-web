@@ -1,3 +1,4 @@
+import { UserAuth } from "../../../../auth/AuthProvider";
 import { updateUserProfileDetails } from "../../../../logic/logic";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { MdOutlineCloudUpload } from "react-icons/md";
@@ -10,6 +11,7 @@ import { Timestamp } from "firebase/firestore";
 export const ModalPersonalInfo = ({ currentUser }: { currentUser: UserDocument }) => {
   const [displayImage, setDisplayImage] = useState<string | null>(currentUser.imageURL);
   const [openModal, setOpenModal] = useState<boolean>(false);
+  const { refreshUserDocument } = UserAuth();
   const [imagePath, setImagePath] = useState<string>("");
   const form = useForm<UserDocument>({
     defaultValues: {
@@ -38,6 +40,7 @@ export const ModalPersonalInfo = ({ currentUser }: { currentUser: UserDocument }
       .then(() => {
         setDisplayImage(null);
         setOpenModal(false);
+        refreshUserDocument();
       });
   };
 

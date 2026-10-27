@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { UserDocument } from "../../types/UserType";
 import { Timestamp } from "firebase/firestore";
 
+// An empty userUID means "no signed-in user". Read it through hooks/useCurrentUser.
 const initState: UserDocument = {
   userUID: "",
   email: "",
@@ -9,19 +10,18 @@ const initState: UserDocument = {
   lastName: "",
   imageURL: "",
   isEmailVerified: false,
-  lastLogin: new Timestamp(22222, 2233),
-  creationDate: new Timestamp(2222, 11),
+  lastLogin: new Timestamp(0, 0),
+  creationDate: new Timestamp(0, 0),
 };
 
 const userProfileSlice = createSlice({
   name: "userProfile",
   initialState: initState,
   reducers: {
-    setUserDocument: (state, action: PayloadAction<UserDocument>) => {
-      Object.assign(state, action.payload);
-    },
+    setUserDocument: (_state, action: PayloadAction<UserDocument>) => action.payload,
+    clearUserDocument: () => initState,
   },
 });
 
-export const { setUserDocument } = userProfileSlice.actions;
+export const { setUserDocument, clearUserDocument } = userProfileSlice.actions;
 export default userProfileSlice.reducer;
