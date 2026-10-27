@@ -3,7 +3,7 @@
  */
 
 import { collectionsList } from "./firebaseCollections";
-import { Timestamp } from "firebase-admin/firestore";
+import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { UserRecord } from "firebase-admin/auth";
 import { Storage } from "@google-cloud/storage";
 import * as functions from "firebase-functions";
@@ -14,8 +14,11 @@ import * as admin from "firebase-admin";
 admin.initializeApp();
 const storage = new Storage();
 
+// Coupon types: the owner's subcollection under UserCoupons/{uid} has the same name as the public collection.
+const couponCollections = [collectionsList.coupons, collectionsList.socialCoupons];
+
 export const createNewUserInUsersCollection = functions.auth.user().onCreate((user: UserRecord) => {
-  if (user.providerData[0].providerId !== "password") {
+  if (user.providerData[0]?.providerId !== "password") {
     const newUser: CurrentUser = {
       userUID: user.uid,
       firstName: user?.displayName?.split(" ")[0] ?? "",
@@ -27,12 +30,13 @@ export const createNewUserInUsersCollection = functions.auth.user().onCreate((us
       creationDate: Timestamp.fromDate(new Date(user.metadata.creationTime)),
       birthday: undefined,
     };
-    admin
+    return admin
       .firestore()
-      .collection("Users")
+      .collection(collectionsList.users)
       .doc(user.uid)
-      .set({ ...newUser });
+      .set({ ...newUser }, { ignoreUndefinedProperties: true } as admin.firestore.SetOptions);
   }
+  return null;
 });
 
 export const addUserCouponToCouponsCollection = functions.firestore
@@ -53,6 +57,31 @@ export const addUserSocialCouponToSocialCouponsCollection = functions.firestore
     await admin.firestore().collection(collectionsList.socialCoupons).doc(docID).set(newCoupon);
   });
 
+// Copies the owner's edits (category, discount, description, ...) to the public copy.
+// likes/dislikes are left alone: the vote triggers keep both copies' counters in sync.
+const mirrorCouponUpdate = (collectionName: string) =>
+  functions.firestore
+    .document(`${collectionsList.userCoupons}/{userID}/${collectionName}/{docID}`)
+    .onUpdate(async (change, context) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { likes: _l1, dislikes: _d1, ...before } = change.before.data();
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { likes: _l2, dislikes: _d2, ...after } = change.after.data();
+
+      // Only the counters changed (a vote) - nothing to mirror.
+      if (JSON.stringify(before) === JSON.stringify(after)) return null;
+
+      const publicRef = admin.firestore().collection(collectionName).doc(context.params.docID);
+      const publicSnap = await publicRef.get();
+      if (!publicSnap.exists) return null;
+
+      await publicRef.update(after);
+      return null;
+    });
+
+export const updateCouponInCouponsCollection = mirrorCouponUpdate(collectionsList.coupons);
+export const updateSocialCouponInSocialCouponsCollection = mirrorCouponUpdate(collectionsList.socialCoupons);
+
 export const removeCouponFromCouponsCollection = functions.firestore
   .document(`${collectionsList.userCoupons}/{userID}/${collectionsList.coupons}/{docID}`)
   .onDelete(async (snap, context) => {
@@ -71,102 +100,68 @@ export const removeSocialCouponFromSocialCouponsCollection = functions.firestore
     await couponRef.delete();
   });
 
-export const addLikeVoteToCoupon = functions.firestore
-  .document(`${collectionsList.userVotes}/{userID}/likes/{couponID}`)
-  .onWrite(async (change, context) => {
-    const couponID = context.params.couponID;
-    const userID = context.params.userID;
+// UserVotes/{voterID}/likes|dislikes/{couponID}: a new vote doc adds 1, a deleted one subtracts 1.
+// The counter is updated on the public coupon and on the coupon owner's copy
+// (the owner comes from the coupon's userID field, not from the voter's ID in the path).
+const countVote = (field: "likes" | "dislikes") =>
+  functions.firestore
+    .document(`${collectionsList.userVotes}/{userID}/${field}/{couponID}`)
+    .onWrite(async (change, context) => {
+      let delta = 0;
+      if (!change.before.exists && change.after.exists) delta = 1;
+      if (change.before.exists && !change.after.exists) delta = -1;
+      if (delta === 0) return null;
 
-    const couponsRef = admin.firestore().doc(`${collectionsList.coupons}/${couponID}`);
-    const usersCouponsRef = admin
-      .firestore()
-      .doc(`${collectionsList.userCoupons}/${userID}/${collectionsList.coupons}/${couponID}`);
+      const db = admin.firestore();
+      const couponID = context.params.couponID;
+      const increment = FieldValue.increment(delta);
 
-    await couponsRef.update({
-      likes: admin.firestore.FieldValue.increment(1),
+      for (const collectionName of couponCollections) {
+        const publicRef = db.collection(collectionName).doc(couponID);
+        const publicSnap = await publicRef.get();
+        if (!publicSnap.exists) continue;
+
+        const batch = db.batch();
+        batch.update(publicRef, { [field]: increment });
+
+        const ownerID = publicSnap.get("userID");
+        if (typeof ownerID === "string" && ownerID !== "") {
+          const ownerRef = db.doc(`${collectionsList.userCoupons}/${ownerID}/${collectionName}/${couponID}`);
+          const ownerSnap = await ownerRef.get();
+          if (ownerSnap.exists) batch.update(ownerRef, { [field]: increment });
+        }
+
+        await batch.commit();
+        return null;
+      }
+
+      console.log(`Vote on unknown coupon ${couponID}`);
+      return null;
     });
 
-    await usersCouponsRef.update({
-      likes: admin.firestore.FieldValue.increment(1),
-    });
-  });
+export const addLikeVoteToCoupon = countVote("likes");
+export const addDislikeVoteToCoupon = countVote("dislikes");
 
-export const addDislikeVoteToCoupon = functions.firestore
-  .document(`${collectionsList.userVotes}/{userID}/dislikes/{couponID}`)
-  .onWrite(async (change, context) => {
-    const couponID = context.params.couponID;
-    const userID = context.params.userID;
-
-    const couponsRef = admin.firestore().doc(`${collectionsList.coupons}/${couponID}`);
-    const usersCouponsRef = admin
-      .firestore()
-      .doc(`${collectionsList.userCoupons}/${userID}/${collectionsList.coupons}/${couponID}`);
-
-    await couponsRef.update({
-      dislikes: admin.firestore.FieldValue.increment(1),
-    });
-    await usersCouponsRef.update({
-      dislikes: admin.firestore.FieldValue.increment(1),
-    });
-  });
-
+// Only Brands/ uploads are handled here. Profile images (ProfileImage/{uid}/...) are handled by
+// the client, which saves a working download URL on Users/{uid}.imageURL itself.
 export const uploadImage = functions.storage.object().onFinalize(async (object) => {
   const filePath = object.name; // Full path of the uploaded file in the bucket
-  // const contentType = object.contentType; // Mime type of the uploaded file
-  const imageURL = object.mediaLink;
   const bucketName = object.bucket;
-
-  if (imageURL === undefined) {
-    return null;
-  }
 
   if (!filePath) {
     console.log("File path is missing.");
     return null;
   }
 
-  // Determine if it's a "ProfileImage" or "Brands" folder
-  if (filePath.startsWith("ProfileImage/")) {
-    return handleProfileImage(filePath, imageURL);
-  } else if (filePath.startsWith("Brands/")) {
-    return handleBrands(filePath, imageURL, bucketName);
-  } else {
-    console.log("File is not in the ProfileImage or Brands folders.");
-    return null;
+  if (filePath.startsWith("Brands/")) {
+    return handleBrands(filePath, bucketName);
   }
+  return null;
 });
 
-// Handle ProfileImage uploads
-async function handleProfileImage(filePath: string, imageURL: string) {
-  console.log(`Processing ProfileImage: ${filePath}`);
-
-  // Extract userID from file path (assuming "ProfileImage/${userID}/filename")
-  const pathSegments = filePath.split("/");
-  const userID = pathSegments[1];
-
-  if (!userID) {
-    console.log("No userID found in file path.");
-    return null;
-  }
-
-  console.log(`Generated signed URL for ProfileImage: ${filePath}`);
-
-  // Update Firestore for the user
-  const userDocRef = admin.firestore().doc(`Users/${userID}`);
-  await userDocRef.set(
-    { imageURL: imageURL },
-    { merge: true } // Merge with existing data
-  );
-
-  console.log(`Updated Firestore for user ${userID} with profile image URL.`);
-  return null;
-}
-
-// Handle Brands uploads
-async function handleBrands(filePath: string, imageURL: string, bucketName: string) {
+// Handle Brands uploads: Brands/{brandName}.{ext} -> public file + Brands doc { brand, imgUrl }
+async function handleBrands(filePath: string, bucketName: string) {
   try {
-    console.log(`Processing Brands folder: ${filePath}`);
-
     // This return is for when creating Folders
     if (filePath.split("/").length === 1) {
       return null;
@@ -178,12 +173,9 @@ async function handleBrands(filePath: string, imageURL: string, bucketName: stri
     await file.makePublic();
 
     // Public URL
-    const publicUrl = `https://storage.googleapis.com/${bucketName}/${encodeURIComponent(
-      filePath
-    )}`;
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${encodeURIComponent(filePath)}`;
 
-    const brandDocRef = admin.firestore().collection(`Brands/`);
-    await brandDocRef.add({ brand: brandName, imgUrl: publicUrl });
+    await admin.firestore().collection(collectionsList.brands).add({ brand: brandName, imgUrl: publicUrl });
 
     console.log(`Updated Firestore for brand ${filePath} with image URL.`);
     return null;
