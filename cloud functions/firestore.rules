@@ -1,11 +1,74 @@
 rules_version = '2';
 
+// Pattern: each user writes only under their own uid. Public collections
+// (Coupons, SocialCoupons) and the like/dislike counters are written by
+// Cloud Functions (Admin SDK, which bypasses these rules) or by admins.
+// Admin = Firebase Auth custom claim `admin: true`
+// (see "cloud functions/functions/scripts/setAdmin.js").
 service cloud.firestore {
   match /databases/{database}/documents {
-		allow read, write: if true
-    
-		match /{document=**} {
-      allow read, write: if true
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
+
+    match /Users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid) && request.resource.data.userUID == uid;
+      allow delete: if false;
+    }
+
+    // The owner's copy of each coupon. Cloud Functions mirror these to Coupons / SocialCoupons.
+    match /UserCoupons/{uid}/{couponType}/{couponId} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && couponType in ['Coupons', 'SocialCoupons']
+        && request.resource.data.userID == uid
+        && request.resource.data.likes == 0
+        && request.resource.data.dislikes == 0;
+      // Owners can edit their coupon but not its counters or owner.
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['likes', 'dislikes', 'userID']);
+      allow delete: if isOwner(uid);
+    }
+
+    match /Coupons/{couponId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /SocialCoupons/{couponId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /UserVotes/{uid}/{voteType}/{couponId} {
+      allow read: if isOwner(uid);
+      allow write: if isOwner(uid) && voteType in ['likes', 'dislikes'];
+    }
+
+    match /WishList/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    match /Brands/{brandId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /Category/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /notifications/{uid} {
+      allow read: if isOwner(uid);
+      allow write: if false;
     }
   }
 }
