@@ -1,7 +1,8 @@
+import { useQueryClient } from "@tanstack/react-query";
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { removeCouponFromWishList, saveCouponInWishList } from "../../database/wishlist";
 import LoginModal from "../../pages/coupons/components/LoginModal";
 import { FaRegStar, FaStar } from "react-icons/fa";
-import { UserAuth } from "../../auth/AuthProvider";
 import useWishlist from "../../hooks/useWishlist";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -20,8 +21,15 @@ const starStyle = {
 const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false);
   const [isWishList, setIsWishList] = useState<boolean>(false);
-  const { userDocument } = UserAuth();
-  const { wishlists, isLoading } = useWishlist(userDocument?.userUID!);
+  const userDocument = useCurrentUser();
+  const { wishlists, isLoading } = useWishlist(userDocument?.userUID);
+  const queryClient = useQueryClient();
+
+  // Cached queries never go stale on their own (see main.tsx), so refresh them after a change.
+  const refreshWishlistQueries = () => {
+    queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+    queryClient.invalidateQueries({ queryKey: ["userWishlist"] });
+  };
 
   const handleShowLoginModal = () => setOpenLoginModal(!openLoginModal);
 
@@ -30,16 +38,18 @@ const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
       handleShowLoginModal();
       return;
     }
-    toast.promise(saveCouponInWishList(userDocument.userUID, couponID), {
-      success: `Added to wishlist`,
-      loading: "",
-      error: "Some probles has accured",
-    });
+    toast
+      .promise(saveCouponInWishList(userDocument.userUID, couponID), {
+        success: `Added to wishlist`,
+        loading: "",
+        error: "Some probles has accured",
+      })
+      .then(refreshWishlistQueries);
     setIsWishList(true);
   };
 
   const removeFromWishList = () => {
-    removeCouponFromWishList(userDocument?.userUID!, couponID);
+    removeCouponFromWishList(userDocument?.userUID ?? "", couponID).then(refreshWishlistQueries);
     setIsWishList(false);
   };
 

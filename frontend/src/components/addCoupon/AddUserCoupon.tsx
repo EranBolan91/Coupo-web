@@ -1,8 +1,8 @@
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { getCategories, getCouponsBrands, saveUserNewCoupon } from "../../database/databaseCalls";
 import { CouponBrand } from "../../types/CouponBrandType";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Select from "../../pages/admin/components/Select";
-import { UserAuth } from "../../auth/AuthProvider";
 import { Coupon } from "../../types/CouponType";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 const AddUserCoupon = () => {
   const [brand, setBrand] = useState<CouponBrand>({ brand: "", imgURL: "" });
   const [couponBrands, setCouponBrands] = useState<CouponBrand[]>([]);
-  const { userDocument } = UserAuth();
+  const userDocument = useCurrentUser();
   const [categories, setCategories] = useState<string[]>([]);
   const [category, setCategory] = useState<string>("");
   const form = useForm<Coupon>();

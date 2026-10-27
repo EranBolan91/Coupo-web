@@ -16,7 +16,7 @@ import {
   getDoc,
   Timestamp,
 } from "firebase/firestore";
-import { ref, getDownloadURL, uploadBytesResumable } from "firebase/storage";
+import { ref, uploadBytesResumable } from "firebase/storage";
 import { collectionsList } from "../../firebaseCollections";
 import { CouponBrand } from "../types/CouponBrandType";
 import { orderBy } from "firebase/firestore/lite";
@@ -30,7 +30,6 @@ export const getPaginatedCoupons = async (queryParam: string, pageParam: any) =>
   const dataLimit = 10;
   try {
     const coupons: Coupon[] = [];
-    let documentSnapshots: QuerySnapshot<DocumentData>;
     let fetchQuery: Query;
 
     if (pageParam === null) {
@@ -63,7 +62,7 @@ export const getPaginatedCoupons = async (queryParam: string, pageParam: any) =>
       }
     }
 
-    documentSnapshots = await getDocs(fetchQuery);
+    const documentSnapshots = await getDocs(fetchQuery);
     documentCoursor = documentSnapshots.docs[documentSnapshots.docs.length - 1];
     documentSnapshots.docs.forEach((doc) => {
       const coupon = { id: doc.id, ...doc.data() };
@@ -187,8 +186,12 @@ export const getExpiredCoupons = async (userID: string) => {
   return coupons;
 };
 
-export const removeUserCoupon = async (userID: string, couponID: string) => {
-  const ref = doc(db, collectionsList.userCoupons, userID, collectionsList.coupons, couponID);
+// The owner's copy lives in a different subcollection for each coupon type.
+const userCouponsSubcollection = (type: Coupon["type"] | undefined) =>
+  type === "socialCoupon" ? collectionsList.socialCoupons : collectionsList.coupons;
+
+export const removeUserCoupon = async (userID: string, couponID: string, type?: Coupon["type"]) => {
+  const ref = doc(db, collectionsList.userCoupons, userID, userCouponsSubcollection(type), couponID);
   await deleteDoc(ref);
 };
 
@@ -224,15 +227,8 @@ export const saveImageBrand = async (imgFile: File, imageName: string) => {
     "state_changed",
     () => {},
     (error) => console.log(error),
-    async () => {
-      const downloadImgURL = await getDownloadURL(uploadTask.snapshot.ref);
-      addDoc(collection(db, collectionsList.brands), {
-        brand: imageName.split(".")[0],
-        imgUrl: downloadImgURL,
-      }).catch((err) => {
-        throw new Error(err);
-      });
-    }
+    // The uploadImage Cloud Function creates the Brands doc { brand, imgUrl } once the upload finishes.
+    () => {}
   );
 };
 
@@ -258,9 +254,10 @@ export const updateCoupon = async (
   discount: number,
   description: string,
   couponID: string,
-  userID: string
+  userID: string,
+  type?: Coupon["type"]
 ) => {
-  const docRef = doc(db, collectionsList.userCoupons, userID, collectionsList.coupons, couponID);
+  const docRef = doc(db, collectionsList.userCoupons, userID, userCouponsSubcollection(type), couponID);
   await updateDoc(docRef, {
     category: category,
     discount: discount,

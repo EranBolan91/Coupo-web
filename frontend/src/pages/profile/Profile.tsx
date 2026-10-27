@@ -1,16 +1,13 @@
+import { useCurrentUser } from "../../hooks/useCurrentUser";
 import PersonalInfo from "./components/PersonalInfo/PersonalInfo";
-import { getUserDetails } from "../../database/databaseCalls";
 import ExpireCoupons from "./components/ExpireCoupons";
-import { UserDocument } from "../../types/UserType";
-import { UserAuth } from "../../auth/AuthProvider";
-import { useQuery } from "@tanstack/react-query";
 import MyCoupons from "./components/MyCoupons";
 import Wishlist from "./components/Wishlist";
 import { Link } from "react-router-dom";
 import Tabs from "./components/Tabs";
 
 const Profile = () => {
-  const { userDocument } = UserAuth();
+  const userDocument = useCurrentUser();
 
   // const { data: userDetails, isLoading } = useQuery<UserDocument | null>({
   //   queryKey: ["PersonalInfo"],

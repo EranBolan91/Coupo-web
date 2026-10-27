@@ -1,3 +1,4 @@
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { Link } from "react-router-dom";
 import { UserAuth } from "../../../auth/AuthProvider";
 import toast from "react-hot-toast";
@@ -9,7 +10,8 @@ type Props = {
 };
 
 const Avatar = (props: Props) => {
-  const { userDocument, logout } = UserAuth();
+  const { logout } = UserAuth();
+  const userDocument = useCurrentUser();
 
   const handleLogout = async () => {
     if (userDocument) {

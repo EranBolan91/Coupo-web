@@ -1,11 +1,16 @@
 import { collectionsList } from "../../firebaseCollections";
 import { doc, getDoc } from "firebase/firestore";
 import { UserDocument } from "../types/UserType";
+import { getAuth } from "firebase/auth";
 import { db } from "./databaseConfig";
 
-export const getUserDocument = async (userUID: string | undefined): Promise<UserDocument> => {
+// Returns undefined when there is no uid or the Users doc doesn't exist yet.
+export const getUserDocument = async (
+  userUID: string | undefined = getAuth().currentUser?.uid
+): Promise<UserDocument | undefined> => {
   if (!userUID) {
-    throw new Error("User UID is not provided");
+    return undefined;
+    // throw new Error("User UID is not provided");
   }
   try {
     const ref = doc(db, collectionsList.users, userUID);

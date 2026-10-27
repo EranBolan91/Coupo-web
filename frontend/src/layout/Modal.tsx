@@ -1,7 +1,7 @@
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { removeUserCoupon } from "../database/databaseCalls";
 import { Dialog, Transition } from "@headlessui/react";
-import { UserAuth } from "../auth/AuthProvider";
 import { Coupon } from "../types/CouponType";
 import { Fragment, useRef } from "react";
 import toast from "react-hot-toast";
@@ -15,10 +15,10 @@ type Props = {
 
 const Modal = (props: Props) => {
   const cancelButtonRef = useRef(null);
-  const { userDocument } = UserAuth();
+  const userDocument = useCurrentUser();
 
   const handleRemoveCoupon = () => {
-    toast.promise(removeUserCoupon(userDocument?.userUID!, props.coupon.id), {
+    toast.promise(removeUserCoupon(userDocument?.userUID ?? "", props.coupon.id, props.coupon.type), {
       loading: `Removing ${props.coupon.code}, please wait...`,
       success: `${props.coupon.code} is removed!`,
       error: "Error removing copuon",

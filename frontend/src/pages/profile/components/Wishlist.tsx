@@ -1,14 +1,14 @@
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { getUserWishlistCoupons } from "../../../logic/logic";
-import { UserAuth } from "../../../auth/AuthProvider";
 import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 
 const Wishlist = () => {
-  const { userDocument } = UserAuth();
+  const userDocument = useCurrentUser();
 
   const { data: wishListData, isLoading } = useQuery<Coupon[] | undefined>({
     queryKey: ["userWishlist"],
-    queryFn: () => getUserWishlistCoupons(userDocument?.userUID!),
+    queryFn: () => getUserWishlistCoupons(userDocument?.userUID ?? ""),
   });
 
   return (

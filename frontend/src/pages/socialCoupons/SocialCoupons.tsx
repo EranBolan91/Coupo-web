@@ -17,7 +17,7 @@ const SocialCoupons = () => {
     coupons,
     hasNextPage,
     fetchNextPage,
-    setSearchQuery: useSetSearchQuery,
+    setSearchQuery: setCouponsSearchQuery,
   } = useFetchCoupons({
     collection: collectionsList.socialCoupons,
   });
@@ -30,7 +30,7 @@ const SocialCoupons = () => {
     if (inView && hasNextPage) {
       fetchNextPage();
     }
-    useSetSearchQuery(debounceSearch);
+    setCouponsSearchQuery(debounceSearch);
   }, [inView, hasNextPage, debounceSearch]);
 
   return (

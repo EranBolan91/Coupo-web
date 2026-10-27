@@ -1,3 +1,4 @@
+import { useCurrentUser } from "../hooks/useCurrentUser";
 import Avatar from "../components/navbar/components/Avatar";
 import { Link, useLocation } from "react-router-dom";
 import { MdAddCircleOutline } from "react-icons/md";
@@ -39,7 +40,8 @@ const Sidebar = () => {
   const [open, setOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const location = useLocation();
-  const { userDocument, logout } = UserAuth();
+  const { logout } = UserAuth();
+  const userDocument = useCurrentUser();
 
   const handleLogout = async () => {
     if (userDocument) {

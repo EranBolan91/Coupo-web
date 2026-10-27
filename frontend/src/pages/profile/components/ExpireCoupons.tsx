@@ -1,15 +1,15 @@
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { getExpiredCoupons } from "../../../database/databaseCalls";
-import { UserAuth } from "../../../auth/AuthProvider";
 import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 import RemoveCouponBtn from "./RemoveCouponBtn";
 
 const ExpireCoupon = () => {
-  const { userDocument } = UserAuth();
+  const userDocument = useCurrentUser();
 
   const { data } = useQuery<Coupon[]>({
     queryKey: ["expireCoupons"],
-    queryFn: () => getExpiredCoupons(userDocument?.userUID!),
+    queryFn: () => getExpiredCoupons(userDocument?.userUID ?? ""),
   });
 
   return (

@@ -1,24 +1,15 @@
 import { getUserWishlist } from "../database/wishlist";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 
+// Hooks must run on every render, so a missing userId disables the query instead of returning early.
 const useWishlist = (userId: string | undefined) => {
-  if (userId === undefined) return { wishlists: undefined, isLoading: false, isError: false, error: null };
-  const [wishlists, setWishlists] = useState<string[] | undefined>(undefined);
-
-  const { data, isLoading, isError, error, isFetched } = useQuery({
+  const { data, isLoading, isError, error } = useQuery({
     queryKey: ["wishlist", userId],
-    queryFn: () => getUserWishlist(userId),
-    enabled: false,
+    queryFn: () => getUserWishlist(userId as string),
+    enabled: userId !== undefined && userId !== "",
   });
 
-  useEffect(() => {
-    if (isFetched && data) {
-      setWishlists(data);
-    }
-  }, [isFetched]);
-
-  return { wishlists, isLoading, isError, error };
+  return { wishlists: data, isLoading: userId ? isLoading : false, isError, error };
 };
 
 export default useWishlist;

@@ -11,21 +11,23 @@ import {
   getAuth,
 } from "firebase/auth";
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
 import { Timestamp } from "firebase/firestore";
 import { UserDocument } from "../types/UserType";
+import { useQueryClient } from "@tanstack/react-query";
+import Loader from "../components/loader/Loader";
 import { getUserDocument } from "../database/users";
 import { updatePersonalDocument } from "../database/profile";
 import { saveUserToDatabase } from "../database/databaseCalls";
-import { useState, createContext, ReactNode, useContext, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import Loader from "../components/loader/Loader";
+import { clearUserDocument, setUserDocument } from "../redux/reducers/profileReducer";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 interface AuthProviderProps {
-  userDocument: UserDocument | null;
   logout: () => Promise<void>;
   signinWthGoogle: () => Promise<void>;
   sendEmailVerification: (user: User, actionCodeSettings?: ActionCodeSettings | null) => Promise<void>;
-  handleUpdateUserDocument: (userDocument: UserDocument) => void;
+  // Re-reads Users/{uid} from Firestore into Redux (call after editing the profile).
+  refreshUserDocument: () => Promise<void>;
   loginUserWithEmailPassword: (email: string, password: string) => Promise<AuthMSG>;
   createUserWithEmailPassword: (
     email: string,
@@ -44,46 +46,76 @@ export enum AuthMSG {
   Good,
 }
 
+// Used when the Users doc doesn't exist yet. For Google sign-ups the doc is
+// created by the createNewUserInUsersCollection Cloud Function, which can
+// finish after the client is already signed in.
+const userDocumentFromAuthUser = (user: User): UserDocument => ({
+  userUID: user.uid,
+  email: user.email ?? "",
+  firstName: user.displayName?.split(" ")[0] ?? "",
+  lastName: user.displayName?.split(" ")[1] ?? "",
+  imageURL: user.photoURL ?? "",
+  isEmailVerified: user.emailVerified,
+  lastLogin: Timestamp.now(),
+  creationDate: Timestamp.fromDate(new Date(user.metadata.creationTime ?? Date.now())),
+});
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [userDocument, setUserDocument] = useState<UserDocument | null>(null);
+  const [authReady, setAuthReady] = useState<boolean>(false);
+  const signedInUID = useRef<string | null>(null);
+  const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   const auth = getAuth();
 
-  const { data, isLoading, isSuccess } = useQuery<UserDocument>({
-    queryKey: ["UserDocument"],
-    queryFn: () => getUserDocument(auth.currentUser?.uid),
-    staleTime: Infinity,
-  });
+  // Loads Users/{uid} into Redux. Users with an unverified email are treated as signed out.
+  const loadUserDocument = useCallback(
+    async (user: User | null) => {
+      if (!user || !user.emailVerified) {
+        if (signedInUID.current !== null) {
+          // Signed out (or switched account): drop the previous user's cached data.
+          queryClient.clear();
+        }
+        signedInUID.current = null;
+        dispatch(clearUserDocument());
+        return;
+      }
 
-  const handleUpdateUserDocument = (userDocument: Partial<UserDocument>) => {
-    setUserDocument((prev) => {
-      if (prev === null) return null;
-      return { ...prev, ...userDocument };
-    });
-  };
+      if (signedInUID.current !== null && signedInUID.current !== user.uid) {
+        queryClient.clear();
+      }
+      signedInUID.current = user.uid;
+
+      try {
+        const userDocument = await getUserDocument(user.uid);
+        if (userDocument === undefined) {
+          dispatch(setUserDocument(userDocumentFromAuthUser(user)));
+          return;
+        }
+        if (userDocument.isEmailVerified === false) {
+          updatePersonalDocument({ isEmailVerified: true, userUID: user.uid });
+          userDocument.isEmailVerified = true;
+        }
+        dispatch(setUserDocument(userDocument));
+      } catch (error: any) {
+        console.log(error.message);
+        dispatch(setUserDocument(userDocumentFromAuthUser(user)));
+      }
+    },
+    [dispatch, queryClient]
+  );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("user", user);
-      if (user) {
-        if (user.emailVerified === true) {
-          // const resUserDocument: UserDocument = await getUserDocument(user.uid);
-          if (data !== undefined) {
-            if (data.isEmailVerified === false) {
-              updatePersonalDocument({ isEmailVerified: true, userUID: user.uid });
-              data.isEmailVerified = true;
-            }
-            setUserDocument(data);
-          }
-        }
-      } else {
-        setUserDocument(null);
-      }
+      await loadUserDocument(user);
+      setAuthReady(true);
     });
 
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
-  }, [isSuccess, data]);
+    return () => unsubscribe();
+  }, [auth, loadUserDocument]);
+
+  const refreshUserDocument = async () => {
+    await loadUserDocument(auth.currentUser);
+  };
 
   const createUserWithEmailPassword = async (email: string, password: string, fullName: string, birthday: Date) => {
     try {
@@ -119,6 +151,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (loginUser !== null) {
         if (loginUser.user.emailVerified === true) {
+          // Load the profile before returning so the caller can navigate to a protected route.
+          await loadUserDocument(loginUser.user);
           return AuthMSG.Good;
         } else {
           return AuthMSG.VerifyEmailError;
@@ -134,58 +168,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signinWthGoogle = async () => {
     const res = await signInWithPopup(auth, provider)
-      .then((result) => {
-        // This gives you a Google Access Token. You can use it to access the Google API.
-        // const credential = GoogleAuthProvider.credentialFromResult(result);
-        // const token = credential?.accessToken;
-        // The signed-in user info.
+      .then(async (result) => {
         const user = result.user;
-        // IdP data available using getAdditionalUserInfo(result)
-        // ...
-        // setUser(user);
+        await loadUserDocument(user);
         return user;
       })
       .catch((error) => {
-        // Handle Errors here.
-        // const errorCode = error.code;
-        // const errorMessage = error.message;
-        // // The email of the user's account used.
-        // const email = error.customData.email;
-        // The AuthCredential type that was used.
         const credential = GoogleAuthProvider.credentialFromError(error);
         console.log("AuthProvider", credential);
-        // ...
-        setUserDocument(null);
         return error;
       });
     return res;
   };
 
   const logout = async () => {
-    signOut(auth)
-      .then(() => {
-        setUserDocument(null);
-      })
-      .catch((error) => {
-        toast.error(error.message);
-        throw new Error(error.message);
-      });
+    signOut(auth).catch((error) => {
+      toast.error(error.message);
+      throw new Error(error.message);
+    });
   };
 
   return (
     <AuthContext.Provider
       value={{
-        userDocument,
         logout,
         signinWthGoogle,
         sendEmailVerification,
-        handleUpdateUserDocument,
+        refreshUserDocument,
         loginUserWithEmailPassword,
         createUserWithEmailPassword,
       }}
     >
-      {/* {!loading && children} */}
-      {isLoading === true ? <Loader /> : children}
+      {authReady ? children : <Loader />}
     </AuthContext.Provider>
   );
 };

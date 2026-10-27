@@ -1,5 +1,5 @@
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { getCategories, updateCoupon } from "../../../database/databaseCalls";
-import { UserAuth } from "../../../auth/AuthProvider";
 import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 import toast from "react-hot-toast";
@@ -17,7 +17,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
   const [openEditModal, setOpenEditModal] = useState<boolean>(false);
   const [category, setCategory] = useState<string>(coupon.category);
   const [error, setError] = useState<boolean>(false);
-  const { userDocument } = UserAuth();
+  const userDocument = useCurrentUser();
 
   const { data, isLoading } = useQuery({
     queryKey: ["categories"],
@@ -27,7 +27,7 @@ const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
 
   const updateCouponData = async () => {
     toast
-      .promise(updateCoupon(category, discountPercentage, description, coupon.id, userDocument?.userUID!), {
+      .promise(updateCoupon(category, discountPercentage, description, coupon.id, userDocument?.userUID ?? "", coupon.type), {
         success: "successfully updated",
         loading: "updating",
         error: "error in updaing",
