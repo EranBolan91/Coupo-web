@@ -51,7 +51,6 @@ Deploy (from `"cloud functions"`): `firebase deploy --only functions`, `--only f
 
 - Frontend: there are no unit tests (Jest is installed but has no config or `test` script). Check with `npm run build` and `npm run lint`. Lint has 0 errors, but it still exits non-zero because of 9 old `react-hooks/exhaustive-deps` warnings (`--max-warnings 0`). Don't add new warnings. Don't "fix" the existing ones by adding dependencies blindly: several effects drive `fetchNextPage`/URL params and would loop or refetch.
 - Anything touching `firestore.rules`, `storage.rules`, Cloud Functions, or the shape of documents the client writes: run the emulator tests and add a case to `emulator-tests/test.mjs` for the new behavior.
-- `src/hooks/useAuth.ts` is an unfinished draft with `// @ts-nocheck` and `/* eslint-disable */` at the top so it doesn't block the build. It is not imported anywhere.
 
 ## Firestore database structure
 
