@@ -116,6 +116,13 @@ const countVote = (field: "likes" | "dislikes") =>
       const couponID = context.params.couponID;
       const increment = FieldValue.increment(delta);
 
+      // One vote per user per coupon: a new like removes the user's dislike and vice versa.
+      // Deleting it fires this trigger for the other field, which subtracts 1 there.
+      if (delta === 1) {
+        const otherField = field === "likes" ? "dislikes" : "likes";
+        await db.doc(`${collectionsList.userVotes}/${context.params.userID}/${otherField}/${couponID}`).delete();
+      }
+
       for (const collectionName of couponCollections) {
         const publicRef = db.collection(collectionName).doc(couponID);
         const publicSnap = await publicRef.get();
