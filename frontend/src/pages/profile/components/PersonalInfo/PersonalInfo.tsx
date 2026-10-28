@@ -1,12 +1,8 @@
 import { ModalPersonalInfo } from "./ModalPersonalInfo";
 import { UserDocument } from "../../../../types/UserType";
-import { getAuth } from "firebase/auth";
 
 const PersonalInfo = ({ currentUser }: { currentUser: UserDocument | null }) => {
   if (currentUser === null) return;
-
-  const auth = getAuth();
-  console.log(auth.currentUser);
   return (
     <div className="h-full">
       <div className="flex justify-end">

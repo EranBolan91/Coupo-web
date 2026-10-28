@@ -4,7 +4,6 @@ interface Props {
 }
 
 const ModalImage = ({ file, handleExpandImage }: Props) => {
-  console.log("insideeee");
   return (
     <>
       <dialog id="my_modal_2" className="modal z-auto" onClose={() => handleExpandImage(null)}>
