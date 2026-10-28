@@ -1,8 +1,7 @@
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
 import { Coupon } from "../../../types/CouponType";
-import DislikeButton from "./DislikeButton";
+import VoteButton from "./VoteButton";
 import { CgCopy } from "react-icons/cg";
-import LikeButton from "./LikeButton";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import type React from "react";
@@ -58,8 +57,8 @@ export default function ModernCouponCard({ coupon, innerRef }: Props) {
         <div className="px-6 py-4 bg-gray-50 dark:bg-gray-700 flex justify-between items-center">
           <WishlistButton couponID={currentCoupon.id} labelToAdd="Add to Wishlist" labelToRemove="Wishlisted" />
           <div className="flex space-x-2">
-            <DislikeButton coupon={currentCoupon} setCoupon={handleSetCoupon} />
-            <LikeButton coupon={currentCoupon} setCoupon={handleSetCoupon} />
+            <VoteButton kind="dislikes" coupon={currentCoupon} setCoupon={handleSetCoupon} />
+            <VoteButton kind="likes" coupon={currentCoupon} setCoupon={handleSetCoupon} />
           </div>
         </div>
       </div>

@@ -123,12 +123,21 @@ await check("bob dislikes c1 -> dislikes=1", async () => {
   await assertSucceeds(setDoc(doc(bob, "UserVotes/bob/dislikes/c1"), coupon("alice")));
   await waitFor(async () => (await readRaw("Coupons/c1"))?.dislikes === 1);
 });
+await check("bob switches dislike -> like: dislike removed, likes=1 dislikes=0", async () => {
+  await assertSucceeds(setDoc(doc(bob, "UserVotes/bob/likes/c1"), coupon("alice")));
+  await waitFor(async () => {
+    const p = await readRaw("Coupons/c1");
+    const o = await readRaw("UserCoupons/alice/Coupons/c1");
+    const oldVote = await readRaw("UserVotes/bob/dislikes/c1");
+    return p?.likes === 1 && p?.dislikes === 0 && o?.likes === 1 && o?.dislikes === 0 && oldVote === null;
+  });
+});
 await check("alice cannot edit own likes", () => assertFails(updateDoc(doc(alice, "UserCoupons/alice/Coupons/c1"), { likes: 50 })));
 await check("alice edits description -> mirrored, counters kept", async () => {
   await assertSucceeds(updateDoc(doc(alice, "UserCoupons/alice/Coupons/c1"), { description: "new", discount: 20 }));
   await waitFor(async () => {
     const p = await readRaw("Coupons/c1");
-    return p?.description === "new" && p?.discount === 20 && p?.dislikes === 1;
+    return p?.description === "new" && p?.discount === 20 && p?.likes === 1 && p?.dislikes === 0;
   });
 });
 await check("vote on admin coupon (no owner copy) -> public likes=1", async () => {
