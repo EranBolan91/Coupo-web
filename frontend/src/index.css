@@ -13,9 +13,20 @@
     line-height: 1.5;
   }
 
-  /* Visible keyboard focus everywhere, never on mouse click. */
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+    font-optical-sizing: auto;
+  }
+
+  /* Visible keyboard focus everywhere (ink/light outline, never lime-on-white). */
   :focus-visible {
-    @apply outline outline-2 outline-offset-2 outline-primary;
+    @apply outline outline-2 outline-offset-2 outline-base-content;
+  }
+
+  ::selection {
+    @apply bg-primary text-primary-content;
   }
 }
 
@@ -23,6 +34,88 @@
   /* Page wrapper: same max width and gutters on every page. */
   .page-container {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Pressable buttons: a small bottom edge that flattens when pressed. */
+  .btn {
+    @apply font-bold normal-case;
+  }
+  .btn-primary,
+  .btn-secondary {
+    box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.18);
+  }
+  .btn-primary:active,
+  .btn-secondary:active {
+    box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.18);
+  }
+
+  /* Textareas are containers, not pills. */
+  .textarea {
+    border-radius: 1rem;
+  }
+
+  /* Form field label + helper/error text (see components/ui/Field.tsx). */
+  .field-label {
+    @apply mb-1.5 block text-sm font-semibold;
+  }
+  .field-error {
+    @apply mt-1.5 text-sm font-medium text-error;
+  }
+
+  /*
+   * Ticket with a stub on the right: two half-circle notches cut into the top and bottom edges
+   * at the tear line. Works on any background because it's a mask, not painted circles.
+   * Set --stub (stub width) and --notch (notch radius) on the element.
+   */
+  .ticket {
+    --notch: 0.7rem;
+    --stub: 6.5rem;
+    --tear: calc(100% - var(--stub));
+    -webkit-mask:
+      radial-gradient(circle var(--notch) at var(--tear) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle var(--notch) at var(--tear) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+    mask:
+      radial-gradient(circle var(--notch) at var(--tear) 0, #0000 98%, #000) top / 100% 51% no-repeat,
+      radial-gradient(circle var(--notch) at var(--tear) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+  }
+
+  /* Perforation lines (dotted "tear here"). Color comes from currentColor. */
+  .perf-y {
+    width: 2px;
+    background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.5px);
+    background-size: 2px 8px;
+    background-repeat: repeat-y;
+    background-position: center;
+  }
+  .perf-x {
+    height: 2px;
+    background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.5px);
+    background-size: 8px 2px;
+    background-repeat: repeat-x;
+    background-position: center;
+  }
+
+  /* Scalloped top and bottom edges, like the edge of a stamp or ticket roll. */
+  .edge-scallop {
+    -webkit-mask:
+      radial-gradient(circle 0.55rem at 50% 0, #0000 98%, #000) 50% 0 / 1.6rem 51% repeat-x,
+      radial-gradient(circle 0.55rem at 50% 100%, #0000 98%, #000) 50% 100% / 1.6rem 51% repeat-x;
+    mask:
+      radial-gradient(circle 0.55rem at 50% 0, #0000 98%, #000) 50% 0 / 1.6rem 51% repeat-x,
+      radial-gradient(circle 0.55rem at 50% 100%, #0000 98%, #000) 50% 100% / 1.6rem 51% repeat-x;
+  }
+
+  /* Lime label behind a word in a headline (readable in both themes: ink text on lime). */
+  .marker {
+    @apply rounded-[0.18em] bg-primary px-[0.12em] text-primary-content;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  /* Rubber-stamp discount badge. */
+  .stamp {
+    @apply inline-flex flex-col items-center justify-center rounded-[0.65rem] border-2 border-current font-display font-extrabold uppercase leading-none;
+    font-stretch: 80%;
   }
 }
 
@@ -37,12 +130,9 @@
   }
 }
 
-/* Hide scrollbar for Webkit-based browsers (Chrome, Safari, newer versions of Edge) */
 .hide-scrollbar::-webkit-scrollbar {
   display: none;
 }
-
-/* Hide scrollbar for Firefox */
 .hide-scrollbar {
   scrollbar-width: none;
 }

@@ -1,86 +1,69 @@
+import { PiThumbsDownBold, PiThumbsUpBold } from "react-icons/pi";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { getUserCoupons } from "../../../database/databaseCalls";
+import CouponCard, { CouponCardSkeleton } from "../../coupons/components/CouponCard";
+import EmptyState from "../../../components/ui/EmptyState";
 import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 import RemoveCouponBtn from "./RemoveCouponBtn";
 import ModalEditCoupon from "./ModalEditCoupon";
+import { Link } from "react-router-dom";
 
+// The user's own active coupons: ticket preview + an owner bar with votes, Edit and Remove.
 const MyCoupons = () => {
   const userDocument = useCurrentUser();
-
-  const { data, refetch } = useQuery<Coupon[]>({
+  const { data = [], isLoading, refetch } = useQuery<Coupon[]>({
     queryKey: ["usercoupons"],
     queryFn: () => getUserCoupons(userDocument?.userUID ?? ""),
   });
 
+  if (isLoading) {
+    return (
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3" role="status" aria-label="Loading your coupons">
+        <CouponCardSkeleton />
+        <CouponCardSkeleton />
+      </div>
+    );
+  }
+
+  if (data.length === 0) {
+    return (
+      <EmptyState
+        title="You haven't shared a coupon yet"
+        description="Got a code that worked for you? Share it and help everyone save."
+        action={
+          <Link to="/addcoupon" className="btn btn-primary">
+            Share a coupon
+          </Link>
+        }
+      />
+    );
+  }
+
   return (
-    <div className="overflow-x-auto overflow-y-auto hide-scrollbar">
-      {data?.length === 0 ? (
-        <div>
-          <span> Add your first coupon </span>
-        </div>
-      ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Code</th>
-              <th>Discount</th>
-              <th>Likes</th>
-              <th>Dislikes</th>
-              <th>Expiration</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {data?.map((coupon: Coupon, index: number) => (
-              <tr key={index}>
-                <th>
-                  <div className="avatar">
-                    <div className="mask mask-squircle w-14 h-14">
-                      <img src={coupon.imgUrl} style={{ objectFit: "fill" }} />
-                    </div>
-                  </div>
-                </th>
-                <td>
-                  <div className="flex items-center gap-3">
-                    <div className="font-bold">{coupon.name}</div>
-                  </div>
-                </td>
-                <td className="w-1/4">
-                  <div className="text-sm">{coupon.description}</div>
-                </td>
-                <td>
-                  <div className="text-sm">{coupon.category}</div>
-                </td>
-                <td>
-                  <div className="text-sm">{coupon.code}</div>
-                </td>
-                <td>
-                  <div className="text-sm">{coupon.discount}%</div>
-                </td>
-                <td>
-                  <div className="text-sm">{coupon.likes}</div>
-                </td>
-                <td>
-                  <div className="text-sm">{coupon.dislikes}</div>
-                </td>
-                <td>
-                  <div className="text-sm">{coupon.expiry.toDate().toDateString()}</div>
-                </td>
-                <th>
-                  <RemoveCouponBtn {...coupon} />
-                  <ModalEditCoupon key={index} coupon={coupon} index={index} refetchData={refetch} />
-                </th>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+    <ul className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      {data.map((coupon, index) => (
+        <li key={coupon.id} className="flex flex-col gap-2">
+          <CouponCard coupon={coupon} preview />
+          <div className="flex items-center justify-between rounded-btn bg-base-100 px-2 py-1">
+            <span className="flex items-center gap-3 px-2 text-sm font-semibold text-base-content/70">
+              <span className="inline-flex items-center gap-1" title="Likes">
+                <PiThumbsUpBold aria-hidden /> {coupon.likes}
+                <span className="sr-only">likes</span>
+              </span>
+              <span className="inline-flex items-center gap-1" title="Dislikes">
+                <PiThumbsDownBold aria-hidden /> {coupon.dislikes}
+                <span className="sr-only">dislikes</span>
+              </span>
+            </span>
+            <span className="flex">
+              <ModalEditCoupon coupon={coupon} index={index} refetchData={refetch} />
+              <RemoveCouponBtn {...coupon} />
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 };
 

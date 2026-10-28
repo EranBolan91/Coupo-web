@@ -10,17 +10,17 @@ interface Props {
 const LoginModal = ({ open, onClose }: Props) => {
   return (
     <Modal isOpen={open} onClose={onClose} label="Log in to continue">
-      <div className="mb-6 flex flex-col items-center text-center">
-        <LogoMark className="mb-4 size-10" />
-        <h2 className="text-2xl font-bold">Log in to continue</h2>
-        <p className="mt-2 text-base-content/70">Voting and saving coupons need a free account.</p>
+      <div className="flex flex-col items-center text-center">
+        <LogoMark className="size-14 -rotate-6" />
+        <h2 className="mt-5 text-3xl font-extrabold tracking-tight">Log in to continue</h2>
+        <p className="mt-2 text-base-content/70">Saving and voting on coupons need a free account.</p>
       </div>
-      <div className="flex flex-col gap-3">
-        <Link to="/login" className="btn btn-primary w-full" onClick={onClose}>
-          Log in
+      <div className="mt-8 flex flex-col gap-3">
+        <Link to="/signup" className="btn btn-primary h-12 min-h-12 w-full" onClick={onClose}>
+          Create a free account
         </Link>
-        <Link to="/signup" className="btn btn-ghost w-full" onClick={onClose}>
-          Create an account
+        <Link to="/login" className="btn btn-ghost h-12 min-h-12 w-full" onClick={onClose}>
+          Log in
         </Link>
       </div>
     </Modal>

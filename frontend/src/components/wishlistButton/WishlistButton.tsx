@@ -66,7 +66,7 @@ const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
         disabled={isLoading}
         aria-pressed={isWishList}
         className={`btn btn-ghost btn-sm h-10 min-h-10 gap-1.5 px-2.5 font-semibold ${
-          isWishList ? "text-primary" : "text-base-content/70"
+          isWishList ? "text-accent" : "text-base-content/70"
         }`}
       >
         {isWishList ? (

@@ -13,29 +13,36 @@ const Categories = () => {
 
   return (
     <>
-      <PageHeader title="Categories" description="Pick a category to see its coupons." />
+      <PageHeader title="Categories" description="Pick a category to see every coupon in it." />
       <section className="page-container py-8">
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4" role="status" aria-label="Loading categories">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" role="status" aria-label="Loading categories">
             {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className="skeleton h-16 rounded-box" />
+              <div key={i} className="skeleton h-36 rounded-box" />
             ))}
           </div>
         ) : !data || data.length === 0 ? (
           <EmptyState title="No categories yet" />
         ) : (
-          <ul className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+          <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[...data].sort((a, b) => a.localeCompare(b)).map((category) => (
               <li key={category}>
                 <Link
                   to={encodeURIComponent(category)}
-                  className="group flex h-16 items-center justify-between gap-2 rounded-box border border-base-300 bg-base-100 px-4 font-semibold capitalize transition-colors hover:border-primary hover:text-primary"
+                  className="group relative flex h-36 flex-col justify-end overflow-hidden rounded-box border-2 border-base-300 bg-base-100 p-6 transition-colors hover:border-base-content hover:bg-primary hover:text-primary-content"
                 >
-                  <span className="truncate">{category}</span>
-                  <PiArrowRightBold
-                    className="size-4 shrink-0 text-base-content/40 transition-transform group-hover:translate-x-0.5 group-hover:text-primary"
-                    aria-hidden
-                  />
+                  <span className="flex items-end justify-between gap-3">
+                    <span className="truncate font-display text-4xl font-extrabold capitalize tracking-tight">{category}</span>
+                    <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-base-200 transition-all group-hover:-rotate-45 group-hover:bg-primary-content group-hover:text-primary">
+                      <PiArrowRightBold className="size-5" aria-hidden />
+                    </span>
+                  </span>
+                  <span
+                    className="pointer-events-none absolute -right-4 -top-10 select-none font-display text-[9rem] font-extrabold uppercase leading-none opacity-[0.04]"
+                    aria-hidden="true"
+                  >
+                    {category.charAt(0)}
+                  </span>
                 </Link>
               </li>
             ))}

@@ -7,8 +7,8 @@ interface Props {
 
 const SearchBar = ({ filter, placeholder = "Search by brand" }: Props) => {
   return (
-    <label className="input input-bordered flex w-full items-center gap-2 bg-base-100">
-      <PiMagnifyingGlassBold className="size-5 shrink-0 text-base-content/50" aria-hidden />
+    <label className="input input-bordered flex h-14 w-full items-center gap-3 border-2 bg-base-100 px-5 text-base focus-within:border-base-content">
+      <PiMagnifyingGlassBold className="size-5 shrink-0 text-base-content/60" aria-hidden />
       <span className="sr-only">Search coupons</span>
       <input
         type="search"

@@ -217,8 +217,10 @@ export const saveUserNewCoupon = async (coupon: Omit<Coupon, "id">, userID: stri
     coupon.createdAt = Timestamp.fromDate(new Date());
     coupon.likes = 0;
     coupon.dislikes = 0;
-    const expiryDate = new Date(coupon.expiry.toString());
-    coupon.expiry = Timestamp.fromDate(expiryDate);
+    // Accept a Timestamp (CouponForm) or a date string (older callers).
+    if (!(coupon.expiry instanceof Timestamp)) {
+      coupon.expiry = Timestamp.fromDate(new Date(String(coupon.expiry)));
+    }
 
     const userCouponsRef = collection(db, `${collectionsList.userCoupons}/${userID}/${collectionsList.coupons}/`);
     await addDoc(userCouponsRef, coupon);

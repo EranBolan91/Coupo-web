@@ -1,82 +1,30 @@
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import CouponGrid from "../../../components/coupons/CouponGrid";
 import { getUserWishlistCoupons } from "../../../logic/logic";
 import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 
 const Wishlist = () => {
   const userDocument = useCurrentUser();
-
-  const { data: wishListData, isLoading } = useQuery<Coupon[] | undefined>({
+  const { data = [], isLoading } = useQuery<Coupon[]>({
     queryKey: ["userWishlist"],
     queryFn: () => getUserWishlistCoupons(userDocument?.userUID ?? ""),
   });
 
   return (
-    <div className="overflow-x-auto overflow-y-auto hide-scrollbar">
-      {wishListData?.length === 0 ? (
-        <div>
-          <span> Your wishlist is empty</span>
-        </div>
-      ) : (
-        <table className="table">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Code</th>
-              <th>Discount</th>
-              <th>Likes</th>
-              <th>Dislikes</th>
-              <th>Expiration</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading === false &&
-              wishListData?.map((coupon: Coupon, index: number) => (
-                <tr key={index}>
-                  <th>
-                    <div className="avatar">
-                      <div className="mask mask-squircle w-14 h-14">
-                        <img src={coupon.imgUrl} style={{ objectFit: "fill" }} />
-                      </div>
-                    </div>
-                  </th>
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div className="font-bold">{coupon.name}</div>
-                    </div>
-                  </td>
-                  <td className="w-1/4">
-                    <div className="text-sm">{coupon.description}</div>
-                  </td>
-                  <td>
-                    <div className="text-sm">{coupon.category}</div>
-                  </td>
-                  <td>
-                    <div className="text-sm">{coupon.code}</div>
-                  </td>
-                  <td>
-                    <div className="text-sm">{coupon.discount}%</div>
-                  </td>
-                  <td>
-                    <div className="text-sm">{coupon.likes}</div>
-                  </td>
-                  <td>
-                    <div className="text-sm">{coupon.dislikes}</div>
-                  </td>
-                  <td>
-                    <div className="text-sm">{coupon.expiry.toDate().toDateString()}</div>
-                  </td>
-                  <th></th>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      )}
-    </div>
+    <CouponGrid
+      coupons={data}
+      isLoading={isLoading}
+      skeletonCount={3}
+      emptyTitle="No saved coupons yet"
+      emptyDescription="Tap Save on any coupon to keep it here for later."
+      emptyAction={
+        <Link to="/coupons" className="btn btn-primary">
+          Browse coupons
+        </Link>
+      }
+    />
   );
 };
 

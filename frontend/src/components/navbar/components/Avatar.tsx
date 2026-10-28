@@ -47,7 +47,7 @@ const Avatar = ({ imgURL }: Props) => {
         </li>
         <li>
           <Link to="/addcoupon">
-            <PiTicketBold aria-hidden /> Add coupon
+            <PiTicketBold aria-hidden /> Share a coupon
           </Link>
         </li>
         <li>

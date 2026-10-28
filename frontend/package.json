@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@firebase/vertexai": "^1.0.4",
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",

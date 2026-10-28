@@ -2,6 +2,7 @@ import { VoteKind, VotingCouponsContext } from "../../../context/VotingContext";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { PiThumbsDownBold, PiThumbsDownFill, PiThumbsUpBold, PiThumbsUpFill } from "react-icons/pi";
 import { Coupon } from "../../../types/CouponType";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useContext, useState } from "react";
 import LoginModal from "./LoginModal";
 import toast from "react-hot-toast";
@@ -13,7 +14,7 @@ interface Props {
 }
 
 const styles = {
-  likes: { Icon: PiThumbsUpBold, ActiveIcon: PiThumbsUpFill, active: "text-primary" },
+  likes: { Icon: PiThumbsUpBold, ActiveIcon: PiThumbsUpFill, active: "text-accent" },
   dislikes: { Icon: PiThumbsDownBold, ActiveIcon: PiThumbsDownFill, active: "text-error" },
 };
 
@@ -23,6 +24,7 @@ const VoteButton = ({ coupon, setCoupon, kind }: Props) => {
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const userDocument = useCurrentUser();
+  const reduceMotion = useReducedMotion();
   const { Icon, ActiveIcon, active } = styles[kind];
   const isActive = voting?.getUserVote(coupon.id) === kind;
 
@@ -37,7 +39,6 @@ const VoteButton = ({ coupon, setCoupon, kind }: Props) => {
     setIsSaving(true);
     try {
       setCoupon(await voting.toggleVote(coupon, kind));
-      if (!isActive) toast.success("Thanks for voting!");
     } catch (error: any) {
       toast.error(error.message ?? "Could not save your vote");
     } finally {
@@ -57,8 +58,28 @@ const VoteButton = ({ coupon, setCoupon, kind }: Props) => {
         aria-label={`${kind === "likes" ? "Like" : "Dislike"} (${coupon[kind]})`}
         aria-pressed={isActive}
       >
-        {isActive ? <ActiveIcon className="size-5" aria-hidden /> : <Icon className="size-5" aria-hidden />}
-        <span aria-hidden>{coupon[kind]}</span>
+        <motion.span
+          key={isActive ? "on" : "off"}
+          initial={reduceMotion ? false : { scale: 0.6, rotate: kind === "likes" ? -18 : 18 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 500, damping: 15 }}
+          className="inline-flex"
+        >
+          {isActive ? <ActiveIcon className="size-5" aria-hidden /> : <Icon className="size-5" aria-hidden />}
+        </motion.span>
+        <span className="relative inline-flex h-5 min-w-[1ch] overflow-hidden" aria-hidden>
+          <AnimatePresence mode="popLayout" initial={false}>
+            <motion.span
+              key={coupon[kind]}
+              initial={reduceMotion ? false : { y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "-100%" }}
+              transition={{ duration: 0.2 }}
+            >
+              {coupon[kind]}
+            </motion.span>
+          </AnimatePresence>
+        </span>
       </button>
       <LoginModal open={openLoginModal} onClose={handleShowLoginModal} />
     </>

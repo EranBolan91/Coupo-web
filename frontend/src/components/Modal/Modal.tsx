@@ -1,22 +1,35 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import React, { useEffect } from "react";
+import { PiXBold } from "react-icons/pi";
+import React, { useEffect, useId } from "react";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
-  // Accessible name for the dialog (usually the heading text).
+  // Visible heading. When omitted, pass `label` so screen readers still get a name.
+  title?: string;
+  description?: React.ReactNode;
   label?: string;
+  // Buttons row at the bottom.
+  footer?: React.ReactNode;
+  size?: "md" | "lg";
 }
 
-const Modal = ({ isOpen, onClose, children, label }: Props) => {
+// The app's one dialog: backdrop, Escape / backdrop click to close, spring-in panel.
+const Modal = ({ isOpen, onClose, children, title, description, label, footer, size = "md" }: Props) => {
   const reduceMotion = useReducedMotion();
+  const titleId = useId();
 
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+    };
   }, [isOpen, onClose]);
 
   return (
@@ -27,21 +40,41 @@ const Modal = ({ isOpen, onClose, children, label }: Props) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-neutral/50 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-neutral/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={onClose}
         >
           <motion.div
             role="dialog"
             aria-modal="true"
-            aria-label={label}
-            initial={reduceMotion ? false : { scale: 0.96, opacity: 0, y: 8 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.98, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
-            className="w-full max-w-md rounded-box border border-base-300 bg-base-100 p-6 shadow-xl sm:p-8"
+            aria-labelledby={title ? titleId : undefined}
+            aria-label={title ? undefined : label}
+            initial={reduceMotion ? false : { opacity: 0, y: 40, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ type: "spring", stiffness: 380, damping: 32 }}
+            className={`relative max-h-[92dvh] w-full overflow-y-auto rounded-t-box bg-base-100 p-6 shadow-2xl sm:rounded-box sm:p-8 ${
+              size === "lg" ? "sm:max-w-2xl" : "sm:max-w-md"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-ghost btn-sm btn-circle absolute right-4 top-4"
+              aria-label="Close"
+            >
+              <PiXBold className="size-5" aria-hidden />
+            </button>
+            {title && (
+              <div className="mb-6 pr-10">
+                <h2 id={titleId} className="text-3xl font-extrabold leading-tight tracking-tight">
+                  {title}
+                </h2>
+                {description && <p className="mt-2 text-base-content/70">{description}</p>}
+              </div>
+            )}
             {children}
+            {footer && <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">{footer}</div>}
           </motion.div>
         </motion.div>
       )}

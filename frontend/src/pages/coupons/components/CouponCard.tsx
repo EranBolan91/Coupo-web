@@ -1,5 +1,6 @@
+import { motion, useAnimationControls, useReducedMotion } from "motion/react";
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
-import { PiCopyBold, PiCheckBold } from "react-icons/pi";
+import { PiCheckBold, PiCopyBold } from "react-icons/pi";
 import { Coupon } from "../../../types/CouponType";
 import VoteButton from "./VoteButton";
 import toast from "react-hot-toast";
@@ -9,17 +10,21 @@ import type React from "react";
 interface Props {
   coupon: Coupon;
   innerRef?: React.Ref<HTMLElement>;
+  // Static preview (add-coupon builder): no copy/vote/save actions.
+  preview?: boolean;
 }
 
-const formatDate = (coupon: Coupon) =>
-  coupon.expiry?.toDate().toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+const shortDate = (coupon: Coupon) =>
+  coupon.expiry?.toDate?.().toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
 // Brand logo with a letter fallback when there is no image or it fails to load.
-const BrandImage = ({ name, src }: { name: string; src?: string }) => {
+export const BrandImage = ({ name, src, className = "size-11" }: { name: string; src?: string; className?: string }) => {
   const [failed, setFailed] = useState(false);
   if (!src || failed) {
     return (
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-btn bg-base-200 text-lg font-bold text-base-content/70">
+      <div
+        className={`flex shrink-0 items-center justify-center rounded-xl bg-base-200 font-display text-lg font-extrabold text-base-content/70 ${className}`}
+      >
         {name?.charAt(0).toUpperCase() || "?"}
       </div>
     );
@@ -30,23 +35,31 @@ const BrandImage = ({ name, src }: { name: string; src?: string }) => {
       alt=""
       loading="lazy"
       onError={() => setFailed(true)}
-      className="size-12 shrink-0 rounded-btn border border-base-300 bg-white object-contain p-1"
+      className={`shrink-0 rounded-xl border border-base-300 bg-white object-contain p-1 ${className}`}
     />
   );
 };
 
-// A coupon shown as a ticket: details on top, a perforated tear line, then the code and actions.
-export default function CouponCard({ coupon, innerRef }: Props) {
+// A coupon as a physical ticket: details on the left, a lime stub with the discount on the right,
+// notches + perforation at the tear line. Copying the code "tears" the stub a little.
+export default function CouponCard({ coupon, innerRef, preview = false }: Props) {
   const [currentCoupon, setCurrentCoupon] = useState<Coupon>(coupon);
   const [copied, setCopied] = useState(false);
-  const isExpired = (currentCoupon.expiry?.toMillis() ?? Infinity) < Date.now();
+  const stub = useAnimationControls();
+  const reduceMotion = useReducedMotion();
+  const shown = preview ? coupon : currentCoupon;
+  const isExpired = (shown.expiry?.toMillis?.() ?? Infinity) < Date.now();
 
   const copyCode = async () => {
     try {
-      await navigator.clipboard.writeText(currentCoupon.code);
+      await navigator.clipboard.writeText(shown.code);
       setCopied(true);
-      toast.success(`Copied ${currentCoupon.code}`);
-      setTimeout(() => setCopied(false), 1500);
+      toast.success(`Copied ${shown.code}`);
+      if (!reduceMotion) {
+        await stub.start({ rotate: 7, x: 6, y: -2, transition: { duration: 0.12, ease: "easeOut" } });
+        stub.start({ rotate: 0, x: 0, y: 0, transition: { type: "spring", stiffness: 420, damping: 14 } });
+      }
+      setTimeout(() => setCopied(false), 1600);
     } catch {
       toast.error("Couldn't copy the code");
     }
@@ -55,74 +68,87 @@ export default function CouponCard({ coupon, innerRef }: Props) {
   return (
     <article
       ref={innerRef}
-      className="flex h-full flex-col rounded-box border border-base-300 bg-base-100 shadow-sm transition-shadow hover:shadow-md"
+      className="group h-full transition-transform duration-300 ease-out [filter:drop-shadow(0_1px_0_rgb(16_17_14/0.06))_drop-shadow(0_10px_24px_rgb(16_17_14/0.08))] hover:-translate-y-1 motion-reduce:hover:translate-y-0 dark:[filter:drop-shadow(0_10px_24px_rgb(0_0_0/0.45))]"
     >
-      <div className="flex flex-1 flex-col gap-3 p-5">
-        <div className="flex items-start gap-3">
-          <BrandImage name={currentCoupon.name} src={currentCoupon.imgUrl} />
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate text-lg font-bold leading-tight">{currentCoupon.name}</h3>
-            {currentCoupon.category && (
-              <p className="mt-0.5 truncate text-sm capitalize text-base-content/60">{currentCoupon.category}</p>
+      <div className="ticket flex h-full min-h-[13.5rem] bg-base-100 [--stub:6.25rem]">
+        {/* Details */}
+        <div className="flex min-w-0 flex-1 flex-col gap-3 p-5">
+          <div className="flex items-start gap-3">
+            <BrandImage name={shown.name} src={shown.imgUrl} />
+            <div className="min-w-0">
+              <h3 className="truncate text-xl font-extrabold leading-tight tracking-tight">{shown.name || "Brand"}</h3>
+              <p className="truncate text-sm capitalize text-base-content/60">
+                {shown.category || "Category"}
+                {shown.username && <> · by {shown.username}</>}
+              </p>
+            </div>
+          </div>
+
+          {shown.description && <p className="line-clamp-2 text-sm text-base-content/75">{shown.description}</p>}
+
+          <div className="mt-auto flex items-center gap-2">
+            <code className="min-w-0 flex-1 truncate rounded-btn border-2 border-dashed border-base-300 bg-base-200/70 px-3.5 py-1.5 font-mono text-[0.95rem] font-bold uppercase tracking-wider">
+              {shown.code || "CODE"}
+            </code>
+            {!preview && (
+              <button
+                type="button"
+                onClick={copyCode}
+                className="btn btn-primary btn-sm h-10 min-h-10 shrink-0 px-4"
+                aria-label={`Copy code ${shown.code}`}
+              >
+                {copied ? <PiCheckBold className="size-4" aria-hidden /> : <PiCopyBold className="size-4" aria-hidden />}
+                {copied ? "Copied" : "Copy"}
+              </button>
             )}
           </div>
-          <p className="shrink-0 text-right leading-none">
-            <span className="text-2xl font-extrabold tracking-tight text-primary">{currentCoupon.discount}%</span>
-            <span className="block text-xs font-semibold uppercase text-base-content/60">off</span>
-          </p>
-        </div>
 
-        {currentCoupon.description && (
-          <p className="line-clamp-2 text-sm text-base-content/75">{currentCoupon.description}</p>
-        )}
-
-        <p className="mt-auto text-xs text-base-content/60">
-          {isExpired ? (
-            <span className="font-semibold text-error">Expired {formatDate(currentCoupon)}</span>
-          ) : (
-            <>Expires {formatDate(currentCoupon)}</>
+          {!preview && (
+            <div className="-mx-2 -mb-2 flex items-center justify-between">
+              <WishlistButton couponID={shown.id} />
+              <div className="flex items-center">
+                <VoteButton kind="likes" coupon={currentCoupon} setCoupon={setCurrentCoupon} />
+                <VoteButton kind="dislikes" coupon={currentCoupon} setCoupon={setCurrentCoupon} />
+              </div>
+            </div>
           )}
-          {currentCoupon.username && <> · Shared by {currentCoupon.username}</>}
-        </p>
-      </div>
-
-      {/* Tear line between the details and the code, like a ticket stub. */}
-      <div className="mx-5 border-t border-dashed border-base-300" aria-hidden="true" />
-
-      <div className="flex flex-col gap-3 p-5 pt-4">
-        <div className="flex items-center gap-2">
-          <code className="min-w-0 flex-1 truncate rounded-btn bg-base-200 px-3 py-2 font-mono text-base font-bold tracking-wider">
-            {currentCoupon.code}
-          </code>
-          <button type="button" onClick={copyCode} className="btn btn-primary btn-sm h-10 min-h-10">
-            {copied ? <PiCheckBold aria-hidden /> : <PiCopyBold aria-hidden />}
-            {copied ? "Copied" : "Copy"}
-          </button>
         </div>
-        <div className="flex items-center justify-between">
-          <WishlistButton couponID={currentCoupon.id} />
-          <div className="flex items-center gap-1">
-            <VoteButton kind="likes" coupon={currentCoupon} setCoupon={setCurrentCoupon} />
-            <VoteButton kind="dislikes" coupon={currentCoupon} setCoupon={setCurrentCoupon} />
-          </div>
-        </div>
+
+        {/* Stub */}
+        <motion.div
+          animate={stub}
+          style={{ originX: 0, originY: 1 }}
+          className={`relative flex w-[6.25rem] shrink-0 flex-col items-center justify-center gap-3 px-2 py-5 text-center ${
+            isExpired ? "bg-base-300 text-base-content/60" : "bg-primary text-primary-content"
+          }`}
+        >
+          <span className="perf-y absolute inset-y-3 left-0 opacity-40" aria-hidden="true" />
+          <span className="stamp -rotate-6 px-2 py-1.5">
+            <span className="text-[2.1rem] tracking-tight">{shown.discount || 0}%</span>
+            <span className="mt-0.5 text-sm tracking-[0.2em]">off</span>
+          </span>
+          <span className="text-[0.7rem] font-bold uppercase leading-tight tracking-wide">
+            {isExpired ? "Expired" : shortDate(shown) ? <>Until {shortDate(shown)}</> : "No expiry"}
+          </span>
+        </motion.div>
       </div>
     </article>
   );
 }
 
 export const CouponCardSkeleton = () => (
-  <div className="flex h-full flex-col gap-4 rounded-box border border-base-300 bg-base-100 p-5" aria-hidden="true">
-    <div className="flex items-center gap-3">
-      <div className="skeleton size-12 rounded-btn" />
-      <div className="flex-1 space-y-2">
-        <div className="skeleton h-4 w-2/3" />
-        <div className="skeleton h-3 w-1/3" />
+  <div className="ticket flex h-full min-h-[13.5rem] bg-base-100 [--stub:6.25rem]" aria-hidden="true">
+    <div className="flex flex-1 flex-col gap-3 p-5">
+      <div className="flex items-center gap-3">
+        <div className="skeleton size-11 rounded-xl" />
+        <div className="flex-1 space-y-2">
+          <div className="skeleton h-4 w-2/3" />
+          <div className="skeleton h-3 w-1/3" />
+        </div>
       </div>
-      <div className="skeleton h-8 w-12" />
+      <div className="skeleton h-3 w-full" />
+      <div className="skeleton mt-auto h-10 w-full rounded-btn" />
     </div>
-    <div className="skeleton h-3 w-full" />
-    <div className="skeleton h-3 w-4/5" />
-    <div className="skeleton mt-4 h-10 w-full" />
+    <div className="w-[6.25rem] bg-base-300/60" />
   </div>
 );
