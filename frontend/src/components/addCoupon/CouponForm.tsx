@@ -32,6 +32,13 @@ interface Props {
 
 const today = () => new Date().toISOString().split("T")[0];
 
+// Small "Try again" link next to a field label, for when its options failed to load.
+const RetryLink = ({ onClick }: { onClick: () => void }) => (
+  <button type="button" onClick={onClick} className="text-sm font-semibold text-base-content/70 hover:text-base-content hover:underline">
+    Try again
+  </button>
+);
+
 // Brand dropdown with logos (Headless UI Listbox, keyboard accessible).
 const BrandPicker = ({
   brands,
@@ -91,8 +98,10 @@ const BrandPicker = ({
 // Shared "share a coupon" form with a live ticket preview. Used by the store, social and admin flows.
 const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   const userDocument = useCurrentUser();
-  const { data: brands = [] } = useQuery({ queryKey: ["brands"], queryFn: getCouponsBrands, enabled: brandMode === "store" });
-  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
+  const brandsQuery = useQuery({ queryKey: ["brands"], queryFn: getCouponsBrands, enabled: brandMode === "store" });
+  const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: getCategories });
+  const brands = brandsQuery.data ?? [];
+  const categories = categoriesQuery.data ?? [];
 
   const {
     register,
@@ -144,7 +153,12 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     <div className="grid gap-10 lg:grid-cols-[1fr_minmax(0,26rem)] lg:gap-14">
       <form onSubmit={handleSubmit(submit)} className="space-y-6" noValidate>
         <div className="grid gap-6 sm:grid-cols-2">
-          <Field label="Brand" htmlFor="brand" error={errors.name?.message}>
+          <Field
+            label="Brand"
+            htmlFor="brand"
+            error={errors.name?.message ?? (brandMode === "store" && brandsQuery.isError ? "Couldn't load the brands." : undefined)}
+            labelAside={brandMode === "store" && brandsQuery.isError && <RetryLink onClick={() => brandsQuery.refetch()} />}
+          >
             {brandMode === "store" ? (
               <BrandPicker
                 brands={brands}
@@ -167,7 +181,12 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
               />
             )}
           </Field>
-          <Field label="Category" htmlFor="category" error={errors.category?.message}>
+          <Field
+            label="Category"
+            htmlFor="category"
+            error={errors.category?.message ?? (categoriesQuery.isError ? "Couldn't load the categories." : undefined)}
+            labelAside={categoriesQuery.isError && <RetryLink onClick={() => categoriesQuery.refetch()} />}
+          >
             <select
               id="category"
               className="select select-bordered h-12 w-full bg-base-100"

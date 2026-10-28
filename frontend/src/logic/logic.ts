@@ -1,5 +1,5 @@
 import { getUserDislikesVotes, getUserLikesVotes, saveImageBrand } from "../database/databaseCalls";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocsFromServer } from "firebase/firestore";
 import { saveProfileImage, updatePersonalDocument } from "../database/profile";
 import { getUserWishlist } from "../database/wishlist";
 import { UserDocument } from "../types/UserType";
@@ -45,7 +45,7 @@ export const getUserWishlistCoupons = async (userID: string): Promise<Coupon[]> 
         { name: collectionsList.socialCoupons, type: "socialCoupon" },
       ].map(async ({ name, type }) => {
         const q = query(collection(db, name), where("__name__", "in", batch));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocsFromServer(q);
         return querySnapshot.docs.map((doc) => ({ id: doc.id, type, ...doc.data() } as Coupon));
       })
     );

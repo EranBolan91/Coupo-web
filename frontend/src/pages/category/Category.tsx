@@ -1,48 +1,37 @@
-import { getPaginatedCouponsByCategory } from "../../database/databaseCalls";
+import { collectionsList } from "../../../firebaseCollections";
 import CouponGrid from "../../components/coupons/CouponGrid";
 import PageHeader from "../../components/ui/PageHeader";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useInView } from "react-intersection-observer";
-import { Coupon } from "../../types/CouponType";
-import { useParams } from "react-router-dom";
-import { useEffect } from "react";
+import useCouponFeed from "../../hooks/useCouponFeed";
+import useShowMore from "../../hooks/useShowMore";
+import { Link, useParams } from "react-router-dom";
+import { useMemo } from "react";
 
 const Category = () => {
-  const { categoryName } = useParams<{ categoryName: string }>();
-  const { ref, inView } = useInView();
+  const { categoryName = "" } = useParams<{ categoryName: string }>();
+  const { data: coupons = [], isPending: isLoading, isError, refetch } = useCouponFeed(collectionsList.coupons);
 
-  const { data, hasNextPage, fetchNextPage, isLoading, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["categorycoupons", categoryName],
-    queryFn: ({ pageParam = null }: { pageParam?: number[] | null; searchQuery?: string }) =>
-      getPaginatedCouponsByCategory(pageParam, categoryName),
-    initialPageParam: null,
-    staleTime: 2000,
-    getNextPageParam: (lastPage) => {
-      const lastItem = lastPage ? [lastPage?.length - 1] : undefined;
-      return lastItem;
-    },
-  });
-
-  useEffect(() => {
-    if (inView && hasNextPage) {
-      fetchNextPage();
-    }
-  }, [inView, hasNextPage]);
-
-  const coupons: Coupon[] = (data?.pages.flatMap((coupon) => coupon) || []).filter(
-    (coupon): coupon is Coupon => coupon !== undefined
+  const inCategory = useMemo(
+    () => coupons.filter((coupon) => coupon.category?.toLowerCase() === categoryName.toLowerCase()),
+    [coupons, categoryName]
   );
+  const { visible, lastItemRef } = useShowMore(inCategory, categoryName);
 
   return (
     <>
-      <PageHeader title={categoryName ?? "Category"} description={`Coupons in ${categoryName ?? "this category"}.`} />
+      <PageHeader title={categoryName || "Category"} description={`Coupons in ${categoryName || "this category"}.`} />
       <section className="page-container py-8">
         <CouponGrid
-          coupons={coupons}
+          coupons={visible}
           isLoading={isLoading}
-          isFetchingMore={isFetchingNextPage}
-          lastItemRef={ref}
+          isError={isError}
+          onRetry={() => refetch()}
+          lastItemRef={lastItemRef}
           emptyTitle="No coupons in this category yet"
+          emptyAction={
+            <Link to="/addcoupon" className="btn btn-primary">
+              Share a coupon
+            </Link>
+          }
         />
       </section>
     </>
