@@ -10,7 +10,7 @@ The repo has separate npm projects (no workspace setup, no root `package.json`):
 
 - `frontend/` — React 18 + TypeScript + Vite SPA
 - `cloud functions/` — Firebase project config (`firebase.json`, `.firebaserc` → project `coupo-e03c4`, `firestore.rules`, `storage.rules`, `firestore.indexes.json`)
-  - `cloud functions/functions/` — Cloud Functions (TypeScript, Node 18)
+  - `cloud functions/functions/` — Cloud Functions (TypeScript, Node 22 — `engines.node` in its package.json; Node 18 and 20 are decommissioned by Firebase)
   - `cloud functions/emulator-tests/` — rules + trigger tests against the local emulators
 
 The directory name has a space in it, so quote paths in shell commands.
