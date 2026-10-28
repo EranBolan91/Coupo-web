@@ -89,6 +89,7 @@ Exported function names are what Firebase deploys under; renaming one deletes th
 ### Known remaining issues
 
 - Counters on coupons voted on before the `countVote` trigger was deployed may be inflated, since un-voting used to add +1. `functions/scripts/recountVotes.js` recounts them from the vote docs: run it without flags to see what's wrong, then with `--write` to fix it (needs a service-account key, like `setAdmin.js`).
+- `functions/scripts/addCoupons.js` publishes admin coupons in bulk from a JSON file (dry run by default, `--write` to publish; same service-account key as `setAdmin.js`). Coupons marked `"sample": true` are demo data with made-up codes; remove them all with `--remove-samples` before real launch.
 - Coupons created by the admin page (`saveNewCoupon`) have no owner copy, and owner-only features (edit/remove from profile) don't apply to them.
 
 ## Security
