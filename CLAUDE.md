@@ -81,7 +81,7 @@ Storage paths: `ProfileImage/{uid}/profile.svg` (always this name, whatever the 
 The client writes only to user-owned paths; functions maintain the public collections and counters:
 
 - `UserCoupons/{uid}/Coupons|SocialCoupons/{id}`: on create, copy to `Coupons|SocialCoupons/{id}`; on update, copy the edited fields (everything except `likes`/`dislikes`) to the public doc; on delete, delete the public doc.
-- `UserVotes/{voter}/likes|dislikes/{couponId}` (`countVote`): a created vote doc adds 1, a deleted one subtracts 1, and re-saving an existing vote changes nothing. It updates the public coupon (looked up in `Coupons`, then `SocialCoupons`) and the **owner's** copy, found through the public doc's `userID`.
+- `UserVotes/{voter}/likes|dislikes/{couponId}` (`countVote`): a created vote doc adds 1, a deleted one subtracts 1, and re-saving an existing vote changes nothing. A new vote also deletes the same user's opposite vote on that coupon (one vote per user per coupon), whose deletion then subtracts 1 from the other counter. It updates the public coupon (looked up in `Coupons`, then `SocialCoupons`) and the **owner's** copy, found through the public doc's `userID`.
 - Auth `onCreate` for non-password providers (Google) → creates `Users/{uid}`. Email/password sign-up creates it on the client (`saveUserToDatabase`).
 - Storage `onFinalize` (`uploadImage`): only `Brands/{name}.{ext}` is handled. It makes the file public and adds the `Brands` doc. Profile images are handled entirely by the client (`saveProfileImage` writes the download URL to `Users/{uid}.imageURL`).
 
@@ -91,7 +91,6 @@ Exported function names are what Firebase deploys under; renaming one deletes th
 
 - Counters on coupons voted on before the `countVote` trigger was deployed may be inflated, since un-voting used to add +1. `functions/scripts/recountVotes.js` recounts them from the vote docs: run it without flags to see what's wrong, then with `--write` to fix it (needs a service-account key, like `setAdmin.js`).
 - Coupons created by the admin page (`saveNewCoupon`) have no owner copy, and owner-only features (edit/remove from profile) don't apply to them.
-- Nothing stops a user from both liking and disliking the same coupon.
 
 ## Security
 
@@ -132,7 +131,7 @@ Provider order in `main.tsx`: `ErrorBoundary > Redux Provider > BrowserRouter > 
 
 - **React Query** fetches server data. The global `QueryClient` sets `staleTime: Infinity` and disables refetch on focus/reconnect/mount, so cached data never refreshes on its own. After a mutation, `invalidateQueries` or `setQueryData` the affected keys yourself (see `WishlistButton.tsx`). Put the user's `uid` in the query key for per-user data (e.g. `["userVotes", uid]`, `["wishlist", uid]`) and use `enabled: !!uid` while signed out. Several old per-user keys (`["usercoupons"]`, `["userWishlist"]`, `["expireCoupons"]`) don't include the uid; that's safe only because the cache is cleared on sign-out.
 - **Redux Toolkit** (`src/redux/`) holds client state: `profile`, `wishlist`, `filters`. Use `RootState` from `redux/store/store.ts`. `store.ts` logs the whole state on every change, and Firestore `Timestamp`s in `profile` trigger RTK's non-serializable warning in development; both are known.
-- **React Context:** `AuthProvider` (actions) and `context/VotingContext.tsx` (the current user's likes/dislikes; children render immediately and the vote buttons update when the votes arrive).
+- **React Context:** `AuthProvider` (actions) and `context/VotingContext.tsx` (the current user's likes/dislikes; children render immediately and the vote buttons update when the votes arrive). Voting goes through `toggleVote(coupon, "likes" | "dislikes")`, used by `pages/coupons/components/VoteButton.tsx`.
 
 Which one to use for new code:
 
