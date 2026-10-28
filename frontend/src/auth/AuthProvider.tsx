@@ -23,6 +23,8 @@ import { clearUserDocument, setUserDocument } from "../redux/reducers/profileRed
 import { createContext, ReactNode, useCallback, useContext, useEffect, useRef, useState } from "react";
 
 interface AuthProviderProps {
+  // True when the signed-in user has the `admin` custom claim (granted with functions/scripts/setAdmin.js).
+  isAdmin: boolean;
   logout: () => Promise<void>;
   signinWthGoogle: () => Promise<void>;
   sendEmailVerification: (user: User, actionCodeSettings?: ActionCodeSettings | null) => Promise<void>;
@@ -62,6 +64,7 @@ const userDocumentFromAuthUser = (user: User): UserDocument => ({
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authReady, setAuthReady] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const signedInUID = useRef<string | null>(null);
   const queryClient = useQueryClient();
   const dispatch = useDispatch();
@@ -76,6 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           queryClient.clear();
         }
         signedInUID.current = null;
+        setIsAdmin(false);
         dispatch(clearUserDocument());
         return;
       }
@@ -84,6 +88,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         queryClient.clear();
       }
       signedInUID.current = user.uid;
+
+      try {
+        const token = await user.getIdTokenResult();
+        setIsAdmin(token.claims.admin === true);
+      } catch {
+        setIsAdmin(false);
+      }
 
       try {
         const userDocument = await getUserDocument(user.uid);
@@ -191,6 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   return (
     <AuthContext.Provider
       value={{
+        isAdmin,
         logout,
         signinWthGoogle,
         sendEmailVerification,
