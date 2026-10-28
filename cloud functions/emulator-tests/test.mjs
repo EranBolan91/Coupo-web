@@ -4,6 +4,7 @@ import { doc, setDoc, getDoc, updateDoc, deleteDoc, Timestamp } from "firebase/f
 import { ref, uploadBytes } from "firebase/storage";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
+import { execFileSync } from "child_process";
 
 const RULES_DIR = fileURLToPath(new URL("..", import.meta.url));
 const env = await initializeTestEnvironment({
@@ -145,6 +146,35 @@ await check("social coupon create/vote/delete", async () => {
 await check("alice deletes coupon -> removed from Coupons", async () => {
   await assertSucceeds(deleteDoc(doc(alice, "UserCoupons/alice/Coupons/c1")));
   await waitFor(async () => (await readRaw("Coupons/c1")) === null);
+});
+
+// ---------- scripts/recountVotes.js ----------
+await check("recountVotes reports, then fixes inflated counters", async () => {
+  await assertSucceeds(setDoc(doc(alice, "UserCoupons/alice/Coupons/r1"), coupon("alice")));
+  await waitFor(async () => (await readRaw("Coupons/r1")) !== null);
+  await assertSucceeds(setDoc(doc(bob, "UserVotes/bob/likes/r1"), { a: 1 }));
+  await waitFor(async () => (await readRaw("Coupons/r1"))?.likes === 1);
+  // Simulate counters inflated by the old trigger.
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await updateDoc(doc(db, "Coupons/r1"), { likes: 7, dislikes: 3 });
+    await updateDoc(doc(db, "UserCoupons/alice/Coupons/r1"), { likes: 5 });
+  });
+  const script = fileURLToPath(new URL("../functions/scripts/recountVotes.js", import.meta.url));
+  const run = (...args) =>
+    execFileSync("node", [script, ...args], { env: { ...process.env, GCLOUD_PROJECT: "demo-coupo" } }).toString();
+
+  const report = run();
+  if (!report.includes("Coupons/r1: likes 7 -> 1, dislikes 3 -> 0")) throw new Error("report: " + report);
+  if ((await readRaw("Coupons/r1")).likes !== 7) throw new Error("report mode changed data");
+
+  run("--write");
+  const pub = await readRaw("Coupons/r1");
+  const own = await readRaw("UserCoupons/alice/Coupons/r1");
+  if (pub.likes !== 1 || pub.dislikes !== 0 || own.likes !== 1 || own.dislikes !== 0) {
+    throw new Error(`after write: public ${pub.likes}/${pub.dislikes}, owner ${own.likes}/${own.dislikes}`);
+  }
+  if (run().includes("Coupons/r1")) throw new Error("still reports r1 after write");
 });
 
 await env.cleanup();
