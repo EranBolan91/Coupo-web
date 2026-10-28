@@ -3,6 +3,7 @@ import AdminSidebar from "./pages/admin/components/AdminSidebar";
 import SocialCoupons from "./pages/socialCoupons/SocialCoupons";
 import { Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
+import AdminRoute from "./auth/components/AdminRoute";
 import Categories from "./pages/categories/Categories";
 import CouponsPage from "./pages/coupons/CouponsPage";
 import Brand from "./pages/admin/components/Brand";
@@ -54,17 +55,17 @@ const App = () => {
             <Route
               path="/admin"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <AdminPage />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
             <Route
               path="/admin/addBrand"
               element={
-                <ProtectedRoute>
+                <AdminRoute>
                   <Brand />
-                </ProtectedRoute>
+                </AdminRoute>
               }
             />
           </Routes>

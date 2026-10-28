@@ -101,7 +101,7 @@ The rules in this repo implement the model below. **Check whether they've been d
 - **Public collections** (`Coupons`, `SocialCoupons`, `Brands`, `Category`) are world-readable. Only admins can write `Coupons`, `Brands` and `Category`; nobody can write `SocialCoupons` from the client. Cloud Functions use the Admin SDK and bypass rules.
 - **Storage:** `ProfileImage/{uid}/*` is writable only by that user, and `Brands/*` only by admins. Both must be images under 5 MB. Both are publicly readable.
 - **Admin = Firebase Auth custom claim `admin: true`.** Grant or revoke it with `GOOGLE_APPLICATION_CREDENTIALS=<service-account.json> node scripts/setAdmin.js <email> [--remove]` (in `"cloud functions/functions"`). The user must sign in again to pick it up. Never commit the service-account key. In rules, check `request.auth.token.admin == true`. Never use a field on the user's own `Users` doc, since users can write that.
-- **Admin UI is not gated yet:** `/admin` routes only require sign-in. The rules block non-admin writes, but the pages still render. To gate them, read the claim with `auth.currentUser.getIdTokenResult()` (`claims.admin`).
+- **Admin UI:** `AuthProvider` reads the claim from `getIdTokenResult()` and exposes it as `isAdmin` on `UserAuth()`. `auth/components/AdminRoute` sends non-admins away from `/admin` pages. That only hides the UI; the rules are what enforce the admin check.
 - When adding a collection or a new client write, add a matching `match` block and emulator tests in the same change. Any path without a rule is denied. Keep the user-owned-path pattern; don't give the client write access to public collections or counters.
 - Safe deploy order after changes to both client and rules: functions → frontend → rules. Old clients that don't write a field the new rules require will start failing as soon as the rules are deployed.
 - Don't log user documents or tokens (there are many `console.log` calls with user data today; don't add more).
@@ -124,7 +124,7 @@ The rules in this repo implement the model below. **Check whether they've been d
 - `loginUserWithEmailPassword` and `signinWthGoogle` wait for the profile to load before returning, so callers can `navigate("/profile")` right away.
 - After editing the user's own profile, call `refreshUserDocument()` from `UserAuth()`.
 - On sign-out or account switch, `AuthProvider` calls `queryClient.clear()` so the next user never sees the previous user's cached data.
-- `UserAuth()` exposes only actions (login, signup, logout, `sendEmailVerification`, `refreshUserDocument`), not the user. It is the only supported auth API.
+- `UserAuth()` exposes actions (login, signup, logout, `sendEmailVerification`, `refreshUserDocument`) and `isAdmin`, not the user document. It is the only supported auth API.
 
 ### State management
 
@@ -143,7 +143,7 @@ Which one to use for new code:
 
 ### Routing and UI
 
-Routes are in `src/App.tsx`. `/addcoupon`, `/profile`, `/admin` and `/admin/addBrand` are wrapped in `auth/components/ProtectedRoute`, which redirects to `/login` when `useCurrentUser()` is null. Paths containing `/admin` render `AdminSidebar` instead of `Navbar`.
+Routes are in `src/App.tsx`. `/addcoupon` and `/profile` are wrapped in `auth/components/ProtectedRoute`, which redirects to `/login` when `useCurrentUser()` is null. `/admin` and `/admin/addBrand` are wrapped in `AdminRoute` (signed out → `/login`, not admin → `/`). Paths containing `/admin` render `AdminSidebar` instead of `Navbar`.
 
 Styling is Tailwind with DaisyUI (custom `coupoThem` theme in `tailwind.config.js`) and `@tailwindcss/forms`. Forms use `react-hook-form`; toasts use `react-hot-toast`. Page-specific components live in `pages/<page>/components/`, shared ones in `src/components/`.
 
