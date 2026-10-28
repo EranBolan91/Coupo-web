@@ -82,7 +82,7 @@ const steps = [
 ];
 
 const MainPage = () => {
-  const { data: latest = [], isLoading: latestLoading } = useQuery({
+  const { data: latest = [], isPending: latestLoading, isError: latestError, refetch: refetchLatest } = useQuery({
     queryKey: ["latestCoupons"],
     queryFn: () => getLatestCoupons(12),
   });
@@ -190,6 +190,8 @@ const MainPage = () => {
         <CouponGrid
           coupons={biggestDiscounts}
           isLoading={latestLoading}
+          isError={latestError}
+          onRetry={() => refetchLatest()}
           skeletonCount={3}
           emptyTitle="No coupons yet"
           emptyDescription="Be the first to share one."

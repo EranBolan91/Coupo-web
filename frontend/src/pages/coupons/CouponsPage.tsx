@@ -1,81 +1,40 @@
-import { getPaginatedCoupons } from "../../database/databaseCalls";
+import { CouponSort, couponSortOptions, matchesSearch, sortCoupons } from "../../logic/couponFilters";
 import { initFilters } from "../../redux/reducers/filterReducer";
+import { collectionsList } from "../../../firebaseCollections";
 import FilterChip from "../../components/filterChip/FilterChip";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useInView } from "react-intersection-observer";
+import CouponGrid from "../../components/coupons/CouponGrid";
+import PageHeader from "../../components/ui/PageHeader";
 import { useDispatch, useSelector } from "react-redux";
+import useCouponFeed from "../../hooks/useCouponFeed";
 import SearchBar from "../main/components/Searchbar";
-import { useEffect, useMemo, useState } from "react";
+import useShowMore from "../../hooks/useShowMore";
 import Filter from "../../components/filter/Filter";
 import { RootState } from "../../redux/store/store";
 import { useSearchParams } from "react-router-dom";
-import useDebounce from "../../hooks/useDebounce";
-import CouponGrid from "../../components/coupons/CouponGrid";
-import PageHeader from "../../components/ui/PageHeader";
-import { Coupon } from "../../types/CouponType";
+import { useEffect, useMemo, useState } from "react";
 
 const CouponsPage = () => {
   const filters = useSelector((state: RootState) => state.filters);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [sortOption, setSortOption] = useState("date-desc");
-  const debounceSearch = useDebounce(searchQuery, 700);
+  const [search, setSearch] = useState<string>("");
+  const [sort, setSort] = useState<CouponSort>("newest");
   const [searchParams] = useSearchParams();
-  const { ref, inView } = useInView();
   const dispatch = useDispatch();
 
-  const handleCouponsFilter = (text: string) => setSearchQuery(text);
+  const { data: coupons = [], isPending: isLoading, isError, refetch } = useCouponFeed(collectionsList.coupons);
 
-  const { data, hasNextPage, fetchNextPage, isLoading, isFetchingNextPage } = useInfiniteQuery({
-    queryKey: ["coupons", debounceSearch],
-    queryFn: ({ pageParam = null }: { pageParam?: number[] | null }) => getPaginatedCoupons(debounceSearch, pageParam),
-    initialPageParam: null,
-    staleTime: 2000,
-    getNextPageParam: (lastPage) => {
-      return lastPage ? [lastPage?.length - 1] : undefined;
-    },
-  });
+  // Search, category filters and sort apply to every coupon, not only the ones on screen.
+  const results = useMemo(() => {
+    const matching = coupons.filter(
+      (coupon) =>
+        matchesSearch(coupon, search) &&
+        Object.values(filters).every((values) => values.length === 0 || values.includes(coupon.category))
+    );
+    return sortCoupons(matching, sort);
+  }, [coupons, search, filters, sort]);
 
-  const filteredItems = useMemo(() => {
-    if (!data?.pages) return [];
+  const { visible, lastItemRef } = useShowMore(results, `${search}|${sort}|${JSON.stringify(filters)}`);
 
-    const coupons: Coupon[] = data?.pages.flatMap((coupon) => coupon || []);
-
-    const filteredCoupons = coupons.filter((coupon: Coupon) => {
-      const matchesCategory = Object.values(filters).every(
-        (filterArray) => filterArray.length === 0 || filterArray.includes(coupon.category)
-      );
-      const matchesSearch = !searchQuery || coupon.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-      return matchesCategory && matchesSearch;
-    });
-
-    const sortedCoupons = [...filteredCoupons].sort((a, b) => {
-      switch (sortOption) {
-        case "date-desc":
-          return new Date(b.expiry.toDate()).getTime() - new Date(a.expiry.toDate()).getTime();
-        case "date-asc":
-          return new Date(a.expiry.toDate()).getTime() - new Date(b.expiry.toDate()).getTime();
-        case "discount-desc":
-          return Number(b.discount) - Number(a.discount);
-        case "discount-asc":
-          return Number(a.discount) - Number(b.discount);
-        case "brand-asc":
-          return a.name?.localeCompare(b.name ?? "") ?? 0;
-        case "brand-desc":
-          return b.name.localeCompare(a.name);
-        default:
-          return 0;
-      }
-    });
-    return sortedCoupons;
-  }, [data?.pages, filters, debounceSearch, sortOption]);
-
-  useEffect(() => {
-    if (inView && hasNextPage) {
-      fetchNextPage();
-    }
-  }, [inView, hasNextPage, debounceSearch, searchParams]);
-
+  // Category filters can come from the URL (?category=sport).
   useEffect(() => {
     const filters: { [key: string]: string[] } = {};
     searchParams.forEach((value, key) => {
@@ -87,10 +46,12 @@ const CouponsPage = () => {
     dispatch(initFilters(filters));
   }, []);
 
+  const filtering = search.trim() !== "" || Object.values(filters).some((values) => values.length > 0);
+
   return (
     <>
       <PageHeader title="Coupons" description="Codes shared by the Coupo community. Copy one, then vote on whether it worked.">
-        <SearchBar filter={handleCouponsFilter} />
+        <SearchBar filter={setSearch} placeholder="Search by brand, code or category" />
       </PageHeader>
 
       <section className="page-container py-8">
@@ -99,30 +60,33 @@ const CouponsPage = () => {
           <label className="flex items-center gap-2 text-sm font-medium">
             <span className="shrink-0 text-base-content/70">Sort by</span>
             <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
+              value={sort}
+              onChange={(e) => setSort(e.target.value as CouponSort)}
               className="select select-bordered select-sm w-full bg-base-100 py-0 sm:w-56"
             >
-              <option value="date-desc">Expires latest</option>
-              <option value="date-asc">Expires soonest</option>
-              <option value="discount-desc">Biggest discount</option>
-              <option value="discount-asc">Smallest discount</option>
-              <option value="brand-asc">Brand (A-Z)</option>
-              <option value="brand-desc">Brand (Z-A)</option>
+              {couponSortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </label>
         </div>
         <FilterChip />
+        {!isLoading && !isError && filtering && results.length > 0 && (
+          <p className="mt-4 text-sm text-base-content/70" aria-live="polite">
+            {results.length === 1 ? "1 coupon" : `${results.length} coupons`}
+          </p>
+        )}
         <div className="mt-6">
           <CouponGrid
-            coupons={filteredItems}
+            coupons={visible}
             isLoading={isLoading}
-            isFetchingMore={isFetchingNextPage}
-            lastItemRef={ref}
-            emptyTitle={searchQuery ? "No coupons match your search" : "No coupons yet"}
-            emptyDescription={
-              searchQuery ? "Try another brand name, or clear the filters." : "Be the first to share one."
-            }
+            isError={isError}
+            onRetry={() => refetch()}
+            lastItemRef={lastItemRef}
+            emptyTitle={filtering ? "No coupons match your search" : "No coupons yet"}
+            emptyDescription={filtering ? "Try another word, or clear the filters." : "Be the first to share one."}
           />
         </div>
       </section>
