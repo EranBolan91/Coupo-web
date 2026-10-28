@@ -143,7 +143,23 @@ Which one to use for new code:
 
 Routes are in `src/App.tsx`. `/addcoupon` and `/profile` are wrapped in `auth/components/ProtectedRoute`, which redirects to `/login` when `useCurrentUser()` is null. `/admin` and `/admin/addBrand` are wrapped in `AdminRoute` (signed out → `/login`, not admin → `/`). Paths containing `/admin` render `AdminSidebar` instead of `Navbar`.
 
-Styling is Tailwind with DaisyUI (custom `coupoThem` theme in `tailwind.config.js`) and `@tailwindcss/forms`. Forms use `react-hook-form`; toasts use `react-hot-toast`. Page-specific components live in `pages/<page>/components/`, shared ones in `src/components/`.
+Forms use `react-hook-form`; toasts use `react-hot-toast`. Page-specific components live in `pages/<page>/components/`, shared ones in `src/components/`.
+
+## Design system
+
+Tailwind 3.4 + DaisyUI 4. All tokens are in the two DaisyUI themes in `frontend/tailwind.config.js`: `coupo` (light) and `coupo-dark`.
+
+- **Colors:** zinc neutrals with one accent, emerald (`primary`). Use semantic classes only: `bg-base-100` (cards, header, footer), `bg-base-200` (page background), `border-base-300`, `text-base-content` with `/70` or `/60` for secondary text, `text-primary` / `btn-primary` for the accent, `text-error` for destructive or expired states. No raw Tailwind palette colors (`gray-*`, `indigo-*`, `purple-*`) and no hex values in components, so both themes stay correct. `primary` is not a text color for body copy.
+- **Light/dark:** the theme is the `data-theme` attribute on `<html>`. `index.html` sets it before first paint, and `hooks/useTheme.ts` changes it (saved in `localStorage` as `coupo-theme`; with no saved choice it follows the OS). `ThemeToggle` is in the navbar. `dark:` utilities follow the theme (`darkMode` is bound to `[data-theme="coupo-dark"]`), but prefer theme tokens over `dark:` pairs.
+- **Type:** Plus Jakarta Sans (self-hosted via `@fontsource-variable/plus-jakarta-sans`), the default `font-sans`. Page titles `text-3xl md:text-4xl font-extrabold tracking-tight`; section titles `text-xl font-bold`. Coupon codes use `font-mono`.
+- **Shape:** cards and panels `rounded-box` (1rem), buttons and inputs `rounded-btn` (0.625rem), chips and badges `rounded-badge` (full). Don't mix in other radii.
+- **Icons:** Phosphor via `react-icons/pi` (`Pi...Bold`, `Pi...Fill` for active states). Icon-only buttons need an `aria-label`. Older code still uses other `react-icons` sets and Heroicons; switch them to Phosphor when touching that code.
+- **Logo:** `components/logo/Logo.tsx` (ticket mark + "coupo" wordmark; `LogoMark` alone). Same shape as `public/favicon.svg`. The older files in `public/` (`coupo_logo*`, `just_logo.png`) are not the brand logo.
+- **Layout:** wrap page content in `.page-container` (max-w-7xl with responsive gutters, defined in `index.css`). Pages start with `components/ui/PageHeader`. Coupon lists use `components/coupons/CouponGrid` (loading skeletons, empty state, infinite-scroll ref) with `CouponCard`. Use `components/ui/EmptyState` for empty lists and `components/Modal/Modal` for dialogs.
+- **Motion:** `motion/react`, small and purposeful (cards entering, dialog open). Respect `useReducedMotion()`; `index.css` also disables transitions under `prefers-reduced-motion`. Don't hide important content behind an entry animation.
+- **Forms:** DaisyUI `input`/`select`/`checkbox` classes. `@tailwindcss/forms` is also loaded and adds its own borders/padding to raw inputs, so an `input` nested inside a DaisyUI `input` wrapper needs `border-0 bg-transparent p-0 focus:ring-0` (see `Searchbar.tsx`).
+- **Copy:** plain and short. No placeholder or template text (fake banners, "Your Company", lorem ipsum), no emoji in UI, no em dashes.
+- **Checking UI changes:** run the dev server and look at the page in both themes and at phone width. Headless Chrome screenshots work (`google-chrome --headless=new --screenshot ... --blink-settings=preferredColorScheme=0|1` for dark|light); its minimum window width is 500px, so check phone layouts inside a 390px-wide `<iframe>`.
 
 ## Git conventions
 

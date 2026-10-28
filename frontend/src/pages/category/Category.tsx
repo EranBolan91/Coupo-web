@@ -1,5 +1,6 @@
 import { getPaginatedCouponsByCategory } from "../../database/databaseCalls";
-import CouponCard from "../coupons/components/CouponCard";
+import CouponGrid from "../../components/coupons/CouponGrid";
+import PageHeader from "../../components/ui/PageHeader";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
 import { Coupon } from "../../types/CouponType";
@@ -10,7 +11,7 @@ const Category = () => {
   const { categoryName } = useParams<{ categoryName: string }>();
   const { ref, inView } = useInView();
 
-  const { data, hasNextPage, fetchNextPage } = useInfiniteQuery({
+  const { data, hasNextPage, fetchNextPage, isLoading, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["categorycoupons", categoryName],
     queryFn: ({ pageParam = null }: { pageParam?: number[] | null; searchQuery?: string }) =>
       getPaginatedCouponsByCategory(pageParam, categoryName),
@@ -34,25 +35,16 @@ const Category = () => {
 
   return (
     <>
-      <div className=" text-lg md:text-6xl p-2">{categoryName}</div>
-      <div className="grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center p-2">
-        {coupons &&
-          coupons.map((coupon: Coupon, index: number) => {
-            if (index === coupons.length - 1) {
-              return (
-                <div key={index} className="flex justify-center col-span-12  md:col-span-3 w-full">
-                  <CouponCard innerRef={ref} coupon={coupon} key={index} />
-                </div>
-              );
-            } else {
-              return (
-                <div key={index} className="flex justify-center col-span-12 md:col-span-3 w-full">
-                  <CouponCard coupon={coupon} key={index} />
-                </div>
-              );
-            }
-          })}
-      </div>
+      <PageHeader title={categoryName ?? "Category"} description={`Coupons in ${categoryName ?? "this category"}.`} />
+      <section className="page-container py-8">
+        <CouponGrid
+          coupons={coupons}
+          isLoading={isLoading}
+          isFetchingMore={isFetchingNextPage}
+          lastItemRef={ref}
+          emptyTitle="No coupons in this category yet"
+        />
+      </section>
     </>
   );
 };

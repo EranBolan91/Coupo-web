@@ -1,5 +1,5 @@
 import { removeFilter } from "../../redux/reducers/filterReducer";
-import { IoIosCloseCircleOutline } from "react-icons/io";
+import { PiXBold } from "react-icons/pi";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store/store";
 import useURLParams from "../../hooks/useURLParams";
@@ -14,21 +14,25 @@ const FilterChip = () => {
     dispatch(removeFilter({ [filterKey]: filterValue }));
   };
 
+  const active = Object.keys(filters).flatMap((key) => filters[key].map((value) => ({ key, value })));
+  if (active.length === 0) return null;
+
   return (
-    <div className="flex my-2">
-      {filters &&
-        Object.keys(filters).map((key) =>
-          filters[key].map((filter) => (
-            <div key={filter} className="badge badge-info badge-lg gap-1 mx-1">
-              <IoIosCloseCircleOutline
-                style={{ cursor: "pointer" }}
-                onClick={() => removeFilterChip(key, filter)}
-              />
-              {filter}
-            </div>
-          ))
-        )}
-    </div>
+    <ul className="flex flex-wrap gap-2" aria-label="Active filters">
+      {active.map(({ key, value }) => (
+        <li key={`${key}-${value}`}>
+          <button
+            type="button"
+            onClick={() => removeFilterChip(key, value)}
+            className="inline-flex h-8 items-center gap-1.5 rounded-badge border border-primary/30 bg-primary/10 pl-3 pr-2 text-sm font-medium capitalize text-primary hover:bg-primary/20"
+            aria-label={`Remove filter ${value}`}
+          >
+            {value}
+            <PiXBold className="size-3.5" aria-hidden />
+          </button>
+        </li>
+      ))}
+    </ul>
   );
 };
 

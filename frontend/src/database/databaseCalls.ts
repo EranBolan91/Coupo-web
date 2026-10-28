@@ -75,6 +75,14 @@ export const getPaginatedCoupons = async (queryParam: string, pageParam: any) =>
   }
 };
 
+// Newest public coupons, for previews (home page). Independent of the paging cursor above.
+export const getLatestCoupons = async (count: number): Promise<Coupon[]> => {
+  const snapshot = await getDocs(
+    query(collection(db, collectionsList.coupons), orderBy("createdAt", "desc"), limit(count))
+  );
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Coupon));
+};
+
 export const getPaginatedCouponsByCategory = async (pageParam: any, categoryName: string | undefined) => {
   const dataLimit = 10;
   try {

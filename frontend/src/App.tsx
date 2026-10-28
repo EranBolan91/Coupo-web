@@ -24,9 +24,9 @@ const App = () => {
 
   return (
     <>
-      <div className="flex flex-col h-full">
-        <div className="z-50">{displayAdminSidebar ? <AdminSidebar /> : <Navbar />}</div>
-        <div className="grow">
+      <div className="flex min-h-[100dvh] flex-col">
+        {displayAdminSidebar ? <AdminSidebar /> : <Navbar />}
+        <main className="grow">
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/categories" element={<Categories />} />
@@ -69,12 +69,16 @@ const App = () => {
               }
             />
           </Routes>
-        </div>
+        </main>
         <div>
           <Footer />
         </div>
       </div>
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{ className: "!bg-base-100 !text-base-content border border-base-300 !rounded-box" }}
+      />
     </>
   );
 };

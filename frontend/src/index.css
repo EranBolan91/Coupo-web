@@ -2,66 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  height: 100vh;
-  color-scheme: light dark;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-
-/* @layer base {
-  :root {
-    --color-background: 360deg 0% 100%;
-    --color-primary: 360deg 6% 7%;
-    --color-secondary: 360deg 6% 17%;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --color-background: 130deg 10% 13%;
-      --color-primary: 100deg 100% 100%;
-      --color-secondary: 360deg 0% 89%;
-    }
-    a:hover {
-      color: #747bff;
-    }
-    button {
-      background-color: #f9f9f9;
-    }
+  body {
+    @apply min-h-[100dvh] bg-base-200 font-sans text-base-content antialiased;
+    line-height: 1.5;
   }
-} */
+
+  /* Visible keyboard focus everywhere, never on mouse click. */
+  :focus-visible {
+    @apply outline outline-2 outline-offset-2 outline-primary;
+  }
+}
+
+@layer components {
+  /* Page wrapper: same max width and gutters on every page. */
+  .page-container {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 
 /* Hide scrollbar for Webkit-based browsers (Chrome, Safari, newer versions of Edge) */
 .hide-scrollbar::-webkit-scrollbar {
@@ -70,5 +44,5 @@ button {
 
 /* Hide scrollbar for Firefox */
 .hide-scrollbar {
-  scrollbar-width: none; /* For Firefox */
+  scrollbar-width: none;
 }
