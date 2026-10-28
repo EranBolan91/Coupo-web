@@ -89,7 +89,7 @@ Exported function names are what Firebase deploys under; renaming one deletes th
 
 ### Known remaining issues
 
-- Counters on coupons voted on before the `countVote` trigger was deployed may be inflated, since un-voting used to add +1. There's no repair script yet.
+- Counters on coupons voted on before the `countVote` trigger was deployed may be inflated, since un-voting used to add +1. `functions/scripts/recountVotes.js` recounts them from the vote docs: run it without flags to see what's wrong, then with `--write` to fix it (needs a service-account key, like `setAdmin.js`).
 - Coupons created by the admin page (`saveNewCoupon`) have no owner copy, and owner-only features (edit/remove from profile) don't apply to them.
 - Nothing stops a user from both liking and disliking the same coupon.
 
