@@ -15,7 +15,6 @@ const Profile = () => {
   //   staleTime: Infinity,
   // });
 
-  console.log("userDetails", userDocument);
 
   const tabs = [
     {

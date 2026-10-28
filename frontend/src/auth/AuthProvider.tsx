@@ -185,8 +185,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return user;
       })
       .catch((error) => {
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        console.log("AuthProvider", credential);
+        console.error("Google sign-in failed:", error.code);
         return error;
       });
     return res;

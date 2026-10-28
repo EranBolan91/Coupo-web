@@ -5,9 +5,7 @@ import { db } from "./databaseConfig";
 export const getNotifications = async (userID: string) => {
   try {
     const docRef = doc(db, collectionsList.notifications, userID);
-    const notificationsDoc = await getDoc(docRef);
-    const notificationObj = notificationsDoc.data();
-    console.log(notificationObj);
+    await getDoc(docRef); // Not implemented yet
 
     return "";
   } catch (error: any) {

@@ -103,7 +103,7 @@ The rules in this repo implement the model below. **Check whether they've been d
 - **Admin UI:** `AuthProvider` reads the claim from `getIdTokenResult()` and exposes it as `isAdmin` on `UserAuth()`. `auth/components/AdminRoute` sends non-admins away from `/admin` pages. That only hides the UI; the rules are what enforce the admin check.
 - When adding a collection or a new client write, add a matching `match` block and emulator tests in the same change. Any path without a rule is denied. Keep the user-owned-path pattern; don't give the client write access to public collections or counters.
 - Safe deploy order after changes to both client and rules: functions → frontend → rules. Old clients that don't write a field the new rules require will start failing as soon as the rules are deployed.
-- Don't log user documents or tokens (there are many `console.log` calls with user data today; don't add more).
+- Don't log user documents, the Firebase `User` object, credentials or tokens. Logging error messages/codes is fine.
 
 ## Frontend architecture
 
@@ -130,7 +130,7 @@ The rules in this repo implement the model below. **Check whether they've been d
 Provider order in `main.tsx`: `ErrorBoundary > Redux Provider > BrowserRouter > QueryClientProvider > AuthProvider > VotingContextProvider > App`.
 
 - **React Query** fetches server data. The global `QueryClient` sets `staleTime: Infinity` and disables refetch on focus/reconnect/mount, so cached data never refreshes on its own. After a mutation, `invalidateQueries` or `setQueryData` the affected keys yourself (see `WishlistButton.tsx`). Put the user's `uid` in the query key for per-user data (e.g. `["userVotes", uid]`, `["wishlist", uid]`) and use `enabled: !!uid` while signed out. Several old per-user keys (`["usercoupons"]`, `["userWishlist"]`, `["expireCoupons"]`) don't include the uid; that's safe only because the cache is cleared on sign-out.
-- **Redux Toolkit** (`src/redux/`) holds client state: `profile`, `wishlist`, `filters`. Use `RootState` from `redux/store/store.ts`. `store.ts` logs the whole state on every change, and Firestore `Timestamp`s in `profile` trigger RTK's non-serializable warning in development; both are known.
+- **Redux Toolkit** (`src/redux/`) holds client state: `profile`, `wishlist`, `filters`. Use `RootState` from `redux/store/store.ts`. Firestore `Timestamp`s in `profile` trigger RTK's non-serializable warning in development; that's known.
 - **React Context:** `AuthProvider` (actions) and `context/VotingContext.tsx` (the current user's likes/dislikes; children render immediately and the vote buttons update when the votes arrive). Voting goes through `toggleVote(coupon, "likes" | "dislikes")`, used by `pages/coupons/components/VoteButton.tsx`.
 
 Which one to use for new code:
