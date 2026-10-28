@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { removeCouponFromWishList, saveCouponInWishList } from "../../database/wishlist";
 import LoginModal from "../../pages/coupons/components/LoginModal";
-import { FaRegStar, FaStar } from "react-icons/fa";
+import { PiBookmarkSimpleBold, PiBookmarkSimpleFill } from "react-icons/pi";
 import useWishlist from "../../hooks/useWishlist";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -13,10 +13,6 @@ interface Props {
   labelToRemove?: string;
 }
 
-const starStyle = {
-  color: "gold",
-  fontSize: "1.3rem",
-};
 
 const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
   const [openLoginModal, setOpenLoginModal] = useState<boolean>(false);
@@ -40,9 +36,9 @@ const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
     }
     toast
       .promise(saveCouponInWishList(userDocument.userUID, couponID), {
-        success: `Added to wishlist`,
-        loading: "",
-        error: "Some probles has accured",
+        success: "Saved to your wishlist",
+        loading: "Saving...",
+        error: "Couldn't save it. Please try again.",
       })
       .then(refreshWishlistQueries);
     setIsWishList(true);
@@ -60,21 +56,26 @@ const WishlistButton = ({ couponID, labelToAdd, labelToRemove }: Props) => {
   }, [wishlists]);
 
   //TODO: need to write a wrapper component for auth, if not user is not logged in, show a modal to login
+  const label = isWishList ? labelToRemove ?? "Saved" : labelToAdd ?? "Save";
+
   return (
     <>
-      {isLoading === false ? (
-        isWishList === true ? (
-          <div className="flex gap-2 cursor-pointer" onClick={removeFromWishList}>
-            <FaStar style={starStyle} />
-            {labelToRemove && <span>{labelToRemove}</span>}
-          </div>
+      <button
+        type="button"
+        onClick={isWishList ? removeFromWishList : addToWishlist}
+        disabled={isLoading}
+        aria-pressed={isWishList}
+        className={`btn btn-ghost btn-sm h-10 min-h-10 gap-1.5 px-2.5 font-semibold ${
+          isWishList ? "text-accent" : "text-base-content/70"
+        }`}
+      >
+        {isWishList ? (
+          <PiBookmarkSimpleFill className="size-5" aria-hidden />
         ) : (
-          <div className="flex gap-2 cursor-pointer" onClick={addToWishlist}>
-            <FaRegStar style={starStyle} />
-            {labelToAdd && <span>{labelToAdd}</span>}
-          </div>
-        )
-      ) : null}
+          <PiBookmarkSimpleBold className="size-5" aria-hidden />
+        )}
+        {label}
+      </button>
       <LoginModal open={openLoginModal} onClose={handleShowLoginModal} />
     </>
   );

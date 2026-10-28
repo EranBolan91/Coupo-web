@@ -1,7 +1,7 @@
 import AddCouponPage from "./components/addCoupon/AddCouponPage";
-import AdminSidebar from "./pages/admin/components/AdminSidebar";
 import SocialCoupons from "./pages/socialCoupons/SocialCoupons";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./auth/components/ProtectedRoute";
 import AdminRoute from "./auth/components/AdminRoute";
 import Categories from "./pages/categories/Categories";
@@ -16,17 +16,13 @@ import Login from "./auth/components/Login";
 import AdminPage from "./pages/admin/Admin";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
-import "./App.css";
 
 const App = () => {
-  const location = useLocation();
-  const displayAdminSidebar = location.pathname.includes("/admin");
-
   return (
     <>
-      <div className="flex flex-col h-full">
-        <div className="z-50">{displayAdminSidebar ? <AdminSidebar /> : <Navbar />}</div>
-        <div className="grow">
+      <div className="flex min-h-[100dvh] flex-col">
+        <Navbar />
+        <main className="grow">
           <Routes>
             <Route path="/" element={<MainPage />} />
             <Route path="/categories" element={<Categories />} />
@@ -68,13 +64,16 @@ const App = () => {
                 </AdminRoute>
               }
             />
+            <Route path="*" element={<NotFound />} />
           </Routes>
-        </div>
-        <div>
-          <Footer />
-        </div>
+        </main>
+        <Footer />
       </div>
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{ className: "!bg-base-100 !text-base-content border border-base-300 !rounded-box" }}
+      />
     </>
   );
 };

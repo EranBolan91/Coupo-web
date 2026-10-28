@@ -1,7 +1,10 @@
-import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { getCategories, updateCoupon } from "../../../database/databaseCalls";
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import Modal from "../../../components/Modal/Modal";
+import Field from "../../../components/ui/Field";
 import { Coupon } from "../../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
+import { PiPencilSimpleBold } from "react-icons/pi";
 import toast from "react-hot-toast";
 import { useState } from "react";
 
@@ -11,114 +14,103 @@ interface Props {
   refetchData: () => void;
 }
 
-const ModalEditCoupon = ({ coupon, index, refetchData }: Props) => {
-  const [discountPercentage, setDiscountPercentage] = useState<number>(coupon.discount);
+// Owner edits category, discount and description. The Cloud Function copies the change to the public coupon.
+const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
+  const [discount, setDiscount] = useState<string>(String(coupon.discount));
   const [description, setDescription] = useState<string>(coupon.description ?? "");
-  const [openEditModal, setOpenEditModal] = useState<boolean>(false);
   const [category, setCategory] = useState<string>(coupon.category);
-  const [error, setError] = useState<boolean>(false);
+  const [open, setOpen] = useState<boolean>(false);
   const userDocument = useCurrentUser();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-    enabled: openEditModal,
-  });
+  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: getCategories, enabled: open });
 
-  const updateCouponData = async () => {
+  const discountNumber = Number(discount);
+  const discountError =
+    discount === "" || !Number.isInteger(discountNumber) || discountNumber < 1 || discountNumber > 100
+      ? "Enter a whole number from 1 to 100"
+      : undefined;
+
+  const save = () => {
+    if (discountError) return;
+    setOpen(false);
     toast
-      .promise(updateCoupon(category, discountPercentage, description, coupon.id, userDocument?.userUID ?? "", coupon.type), {
-        success: "successfully updated",
-        loading: "updating",
-        error: "error in updaing",
+      .promise(updateCoupon(category, discountNumber, description, coupon.id, userDocument?.userUID ?? "", coupon.type), {
+        loading: "Saving changes...",
+        success: "Coupon updated",
+        error: "Couldn't update the coupon",
       })
-      .then(() => refetchData());
+      .then(() => refetchData())
+      .catch(() => {});
   };
-
-  const handleDiscount = (event: string) => {
-    const discountNumber = parseInt(event);
-    if (discountNumber < 0 || discountNumber > 100) {
-      setError(true);
-    } else {
-      setDiscountPercentage(parseInt(event));
-      setError(false);
-    }
-  };
-
-  const handleOpenEditModal = () => setOpenEditModal(!openEditModal);
 
   return (
     <>
-      <button className="btn" onClick={handleOpenEditModal}>
-        edit
+      <button type="button" className="btn btn-ghost btn-sm h-10 min-h-10 px-3" onClick={() => setOpen(true)}>
+        <PiPencilSimpleBold className="size-4" aria-hidden />
+        Edit
       </button>
-      <dialog id={`modal-${index}`} className="modal" open={openEditModal}>
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">Edit coupon - {coupon.name}</h3>
-          <div className="w-full my-4">
-            {isLoading ? (
-              ""
-            ) : (
-              <label className="form-control w-full">
-                <div className="label">
-                  <span className="label-text">Category</span>
-                </div>
-                <select
-                  className="select select-bordered w-full"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  {data?.map((category: string) => (
-                    <option key={category}>{category}</option>
-                  ))}
-                </select>
-              </label>
-            )}
-          </div>
-          <div className="my-4">
-            <label className="form-control w-full">
-              <div className="label">
-                <span className="label-text">Discount percentage</span>
-              </div>
+      <Modal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title={`Edit ${coupon.name}`}
+        description={
+          <>
+            Code <span className="font-mono font-bold text-base-content">{coupon.code}</span>
+          </>
+        }
+        footer={
+          <>
+            <button type="button" className="btn btn-ghost h-12 min-h-12" onClick={() => setOpen(false)}>
+              Cancel
+            </button>
+            <button type="button" className="btn btn-primary h-12 min-h-12" onClick={save} disabled={!!discountError}>
+              Save changes
+            </button>
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Category" htmlFor={`category-${coupon.id}`}>
+              <select
+                id={`category-${coupon.id}`}
+                className="select select-bordered h-12 w-full bg-base-100 capitalize"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+              >
+                {!categories.includes(category) && <option value={category}>{category}</option>}
+                {categories.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Discount (%)" htmlFor={`discount-${coupon.id}`} error={discountError}>
               <input
-                max={100}
-                min={0}
-                placeholder="15%"
+                id={`discount-${coupon.id}`}
                 type="number"
-                value={discountPercentage}
-                className="input input-bordered w-full"
-                onChange={(e) => handleDiscount(e.target.value)}
+                min={1}
+                max={100}
+                inputMode="numeric"
+                className="input input-bordered h-12 w-full bg-base-100"
+                value={discount}
+                aria-invalid={!!discountError}
+                onChange={(e) => setDiscount(e.target.value)}
               />
-            </label>
-            {error && <p className="text-red-500 italic font-normal">Value cannot be less 0 or more then 100</p>}
+            </Field>
           </div>
-          <div className="w-full my-4">
-            <label className="form-control w-full">
-              <div className="label">
-                <span className="label-text">Coupon description</span>
-              </div>
-              <textarea
-                value={description}
-                placeholder="description"
-                className="textarea textarea-bordered textarea-lg w-full"
-                onChange={(e) => setDescription(e.target.value)}
-              ></textarea>
-            </label>
-          </div>
-          <div className="modal-action">
-            <form method="dialog">
-              <button onClick={() => setOpenEditModal(false)} className="btn">
-                Close
-              </button>
-            </form>
-            <form method="dialog">
-              <button onClick={updateCouponData} className="btn">
-                Update
-              </button>
-            </form>
-          </div>
+          <Field label="Description" htmlFor={`description-${coupon.id}`} hint="Optional. Any conditions, like a minimum order.">
+            <textarea
+              id={`description-${coupon.id}`}
+              rows={3}
+              className="textarea textarea-bordered w-full bg-base-100 text-base"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Field>
         </div>
-      </dialog>
+      </Modal>
     </>
   );
 };

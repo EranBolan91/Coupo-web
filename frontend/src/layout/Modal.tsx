@@ -1,9 +1,8 @@
 import { useCurrentUser } from "../hooks/useCurrentUser";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { removeUserCoupon } from "../database/databaseCalls";
-import { Dialog, Transition } from "@headlessui/react";
+import { useQueryClient } from "@tanstack/react-query";
+import ModalDialog from "../components/Modal/Modal";
 import { Coupon } from "../types/CouponType";
-import { Fragment, useRef } from "react";
 import toast from "react-hot-toast";
 
 type Props = {
@@ -13,91 +12,52 @@ type Props = {
   title: string;
 };
 
-const Modal = (props: Props) => {
-  const cancelButtonRef = useRef(null);
+// "Remove this coupon?" confirmation for the owner.
+const Modal = ({ coupon, open, setOpen }: Props) => {
   const userDocument = useCurrentUser();
+  const queryClient = useQueryClient();
 
   const handleRemoveCoupon = () => {
-    toast.promise(removeUserCoupon(userDocument?.userUID ?? "", props.coupon.id, props.coupon.type), {
-      loading: `Removing ${props.coupon.code}, please wait...`,
-      success: `${props.coupon.code} is removed!`,
-      error: "Error removing copuon",
-    });
-    props.setOpen(false);
+    setOpen(false);
+    toast
+      .promise(removeUserCoupon(userDocument?.userUID ?? "", coupon.id, coupon.type), {
+        loading: `Removing ${coupon.code}...`,
+        success: `${coupon.code} removed`,
+        error: "Couldn't remove the coupon",
+      })
+      .then(() => {
+        // Lists are cached forever (see main.tsx), so refresh the ones that may show this coupon.
+        ["usercoupons", "expireCoupons", "latestCoupons", "coupons", "categorycoupons"].forEach((key) =>
+          queryClient.invalidateQueries({ queryKey: [key] })
+        );
+      })
+      .catch(() => {});
   };
 
   return (
-    <Transition.Root show={props.open} as={Fragment}>
-      <Dialog
-        as="div"
-        className="relative z-10"
-        initialFocus={cancelButtonRef}
-        onClose={() => {
-          props.setOpen(false);
-        }}
-      >
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-300"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-200"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-        </Transition.Child>
-
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-              enterTo="opacity-100 translate-y-0 sm:scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-              leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            >
-              <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                  <div className="sm:flex sm:items-start">
-                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                      <ExclamationTriangleIcon className="h-6 w-6 text-red-600" aria-hidden="true" />
-                    </div>
-                    <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                      <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900">
-                        Removing "{props.coupon.name}" coupon
-                      </Dialog.Title>
-                      <div className="mt-2">
-                        <p className="text-sm text-gray-500">Are you sure you want to delete it?</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                  <button
-                    type="button"
-                    className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
-                    onClick={() => handleRemoveCoupon()}
-                  >
-                    YES
-                  </button>
-                  <button
-                    type="button"
-                    className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                    onClick={() => props.setOpen(false)}
-                    ref={cancelButtonRef}
-                  >
-                    NO
-                  </button>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </div>
-      </Dialog>
-    </Transition.Root>
+    <ModalDialog
+      isOpen={open}
+      onClose={() => setOpen(false)}
+      title={`Remove ${coupon.name}?`}
+      description={
+        <>
+          The code <span className="font-mono font-bold text-base-content">{coupon.code}</span> will disappear from Coupo for
+          everyone. This can't be undone.
+        </>
+      }
+      footer={
+        <>
+          <button type="button" className="btn btn-ghost h-12 min-h-12" onClick={() => setOpen(false)}>
+            Keep it
+          </button>
+          <button type="button" className="btn btn-error h-12 min-h-12" onClick={handleRemoveCoupon}>
+            Remove coupon
+          </button>
+        </>
+      }
+    >
+      {null}
+    </ModalDialog>
   );
 };
 

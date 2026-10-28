@@ -1,8 +1,9 @@
+import { PiMagnifyingGlassPlusBold, PiXBold } from "react-icons/pi";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { uploadMultipleImages } from "../../../logic/logic";
-import { AnimatePresence, motion } from "motion/react";
-import { IoCloseSharp } from "react-icons/io5";
+import Modal from "../../../components/Modal/Modal";
+import { useEffect, useMemo, useState } from "react";
 import ModalImage from "./ModalImage";
-import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface Props {
@@ -11,132 +12,98 @@ interface Props {
   imagesFile: FileList | undefined;
 }
 
+const baseName = (fileName: string) => fileName.replace(/\.[^.]+$/, "");
+
+// Review brand images before upload: rename (the name becomes the brand name), remove, preview.
 const ModalAddBrands = ({ openModal, imagesFile, handleOpenModal }: Props) => {
   const [expandImage, setExpandImage] = useState<File | null>(null);
-  const [images, setImages] = useState<FileList | undefined>(imagesFile);
-  const [fileNames, setFileNames] = useState<Record<string, string>>(() => {
-    if (imagesFile !== undefined) {
-      return Array.from(imagesFile).reduce((acc, file) => {
-        acc[file.name] = file.name; // Default value is the file's original name
-        return acc;
-      }, {} as Record<string, string>); // Return the reduced object
-    } else {
-      return {}; // Always return a valid object
-    }
-  });
+  const [files, setFiles] = useState<File[]>(() => Array.from(imagesFile ?? []));
+  const [names, setNames] = useState<Record<string, string>>(() =>
+    Object.fromEntries(Array.from(imagesFile ?? []).map((file) => [file.name, baseName(file.name)]))
+  );
+  const reduceMotion = useReducedMotion();
 
-  const handleExpandImage = (imageFile: File | null) => setExpandImage(imageFile);
+  const urls = useMemo(() => Object.fromEntries(files.map((file) => [file.name, URL.createObjectURL(file)])), [files]);
+  useEffect(() => () => Object.values(urls).forEach((url) => URL.revokeObjectURL(url)), [urls]);
 
-  const arrayToFileList = (files: File[]): FileList => {
-    const dataTransfer = new DataTransfer();
-    files.forEach((file) => dataTransfer.items.add(file));
-    return dataTransfer.files;
-  };
+  const remove = (file: File) => setFiles((prev) => prev.filter((f) => f.name !== file.name));
 
-  const removeImageFromImages = (image: File) => {
-    if (images !== undefined) {
-      const filteredImages = Array.from(images).filter((img) => img.name !== image.name);
-      const newFileList = arrayToFileList(filteredImages);
-      setImages(newFileList);
-    }
-  };
-
-  const uploadImages = async () => {
-    if (imagesFile !== undefined) {
-      toast.promise(uploadMultipleImages(imagesFile, fileNames), {
-        loading: "Uploading images",
-        error: "Error in uploading images",
-        success: "Images successfully uploaded",
-      });
-    }
+  const upload = () => {
+    // Upload exactly the files still in the list, named "<brand>.<original extension>".
+    const transfer = new DataTransfer();
+    files.forEach((file) => transfer.items.add(file));
+    const fileNames = Object.fromEntries(
+      files.map((file) => [file.name, `${(names[file.name] || baseName(file.name)).trim()}${file.name.match(/\.[^.]+$/)?.[0] ?? ""}`])
+    );
+    toast.promise(uploadMultipleImages(transfer.files, fileNames), {
+      loading: "Uploading brands...",
+      error: "Couldn't upload the images",
+      success: `${files.length} brand${files.length === 1 ? "" : "s"} uploading. They'll appear in a few seconds.`,
+    });
     handleOpenModal();
-  };
-
-  const handleNameChange = (fileName: string, newName: string) => {
-    setFileNames((prev) => ({
-      ...prev,
-      [fileName]: newName,
-    }));
   };
 
   return (
     <>
-      <dialog id={`modal-${1}`} className="modal" open={openModal}>
-        <div className="modal-box">
-          <div className="flex justify-end">
-            <IoCloseSharp
-              className="cursor-pointer hover:text-secondary"
-              onClick={handleOpenModal}
-            />
-          </div>
-          <div className="modal-box w-full">
-            <h3 className="font-bold text-lg">Upload Image Brands</h3>
-            <div className="flex flex-col">
-              {images?.length === 0 ? <span>Nothing to upload</span> : null}
-              <AnimatePresence>
-                {images &&
-                  Array.from(images).map((file) => (
-                    <motion.div
-                      key={file.name}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div
-                        key={file.name}
-                        className="flex rounded bg-cyan-950 p-2 my-1 items-center"
-                      >
-                        <button
-                          className="btn btn-circle btn-sm btn-outline"
-                          onClick={() => removeImageFromImages(file)}
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth="2"
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
-                        <input
-                          type="text"
-                          value={fileNames[file.name]}
-                          className="input input-ghost input-sm w-full max-w-xs"
-                          name={file.name}
-                          onChange={(e) => handleNameChange(file.name, e.target.value)}
-                        />
-                        <div className="w-20">
-                          <img
-                            src={URL.createObjectURL(file)}
-                            className="cursor-pointer object-contain"
-                            onClick={() => handleExpandImage(file)}
-                          />
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-              </AnimatePresence>
-            </div>
-          </div>
-          <form method="dialog" className="modal-backdrop flex justify-end mt-2">
-            <button className="btn btn-outline" onClick={handleOpenModal}>
-              CLOSE
+      <Modal
+        isOpen={openModal}
+        onClose={handleOpenModal}
+        title="Review brands"
+        description="Each file name becomes the brand name. Fix any that look wrong."
+        size="lg"
+        footer={
+          <>
+            <button type="button" className="btn btn-ghost h-12 min-h-12" onClick={handleOpenModal}>
+              Cancel
             </button>
-            <button className="btn btn-active ml-2" onClick={uploadImages}>
-              UPLOAD
+            <button type="button" className="btn btn-primary h-12 min-h-12" onClick={upload} disabled={files.length === 0}>
+              Upload {files.length} brand{files.length === 1 ? "" : "s"}
             </button>
-          </form>
-        </div>
-      </dialog>
-      {expandImage && <ModalImage file={expandImage} handleExpandImage={handleExpandImage} />}
+          </>
+        }
+      >
+        {files.length === 0 ? (
+          <p className="text-base-content/70">Nothing left to upload.</p>
+        ) : (
+          <ul className="space-y-2">
+            <AnimatePresence initial={false}>
+              {files.map((file) => (
+                <motion.li
+                  key={file.name}
+                  layout={!reduceMotion}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="flex items-center gap-3 rounded-box bg-base-200 p-2 pr-3"
+                >
+                  <button
+                    type="button"
+                    className="group relative size-14 shrink-0 overflow-hidden rounded-xl bg-white"
+                    onClick={() => setExpandImage(file)}
+                    aria-label={`Preview ${file.name}`}
+                  >
+                    <img src={urls[file.name]} alt="" className="size-full object-contain p-1" />
+                    <span className="absolute inset-0 flex items-center justify-center bg-neutral/50 opacity-0 transition-opacity group-hover:opacity-100">
+                      <PiMagnifyingGlassPlusBold className="size-5 text-neutral-content" aria-hidden />
+                    </span>
+                  </button>
+                  <label className="min-w-0 flex-1">
+                    <span className="sr-only">Brand name for {file.name}</span>
+                    <input
+                      type="text"
+                      value={names[file.name] ?? ""}
+                      onChange={(e) => setNames((prev) => ({ ...prev, [file.name]: e.target.value }))}
+                      className="input input-bordered h-11 w-full bg-base-100 font-semibold"
+                    />
+                  </label>
+                  <button type="button" className="btn btn-ghost btn-sm btn-circle" onClick={() => remove(file)} aria-label={`Remove ${file.name}`}>
+                    <PiXBold className="size-4" aria-hidden />
+                  </button>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        )}
+      </Modal>
+      {expandImage && <ModalImage file={expandImage} handleExpandImage={setExpandImage} />}
     </>
   );
 };

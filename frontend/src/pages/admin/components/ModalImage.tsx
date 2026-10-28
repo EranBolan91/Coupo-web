@@ -1,25 +1,20 @@
+import Modal from "../../../components/Modal/Modal";
+import { useEffect, useMemo } from "react";
+
 interface Props {
   file: File;
   handleExpandImage: (imageFile: File | null) => void;
 }
 
+// Full-size preview of a brand image before upload.
 const ModalImage = ({ file, handleExpandImage }: Props) => {
+  const url = useMemo(() => URL.createObjectURL(file), [file]);
+  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+
   return (
-    <>
-      <dialog id="my_modal_2" className="modal z-auto" onClose={() => handleExpandImage(null)}>
-        <div className="modal-box">
-          <div className="avatar">
-            <div className="w-full h-full">
-              <img src={URL.createObjectURL(file)} />
-              <h1>HAALLLOOO</h1>
-            </div>
-          </div>
-        </div>
-        <form method="dialog" className="modal-backdrop">
-          <button onClick={() => handleExpandImage(null)}>close</button>
-        </form>
-      </dialog>
-    </>
+    <Modal isOpen onClose={() => handleExpandImage(null)} title={file.name} size="lg">
+      <img src={url} alt={`Preview of ${file.name}`} className="max-h-[60dvh] w-full rounded-box bg-white object-contain p-4" />
+    </Modal>
   );
 };
 

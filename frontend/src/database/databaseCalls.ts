@@ -75,6 +75,14 @@ export const getPaginatedCoupons = async (queryParam: string, pageParam: any) =>
   }
 };
 
+// Newest public coupons, for previews (home page). Independent of the paging cursor above.
+export const getLatestCoupons = async (count: number): Promise<Coupon[]> => {
+  const snapshot = await getDocs(
+    query(collection(db, collectionsList.coupons), orderBy("createdAt", "desc"), limit(count))
+  );
+  return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Coupon));
+};
+
 export const getPaginatedCouponsByCategory = async (pageParam: any, categoryName: string | undefined) => {
   const dataLimit = 10;
   try {
@@ -209,8 +217,10 @@ export const saveUserNewCoupon = async (coupon: Omit<Coupon, "id">, userID: stri
     coupon.createdAt = Timestamp.fromDate(new Date());
     coupon.likes = 0;
     coupon.dislikes = 0;
-    const expiryDate = new Date(coupon.expiry.toString());
-    coupon.expiry = Timestamp.fromDate(expiryDate);
+    // Accept a Timestamp (CouponForm) or a date string (older callers).
+    if (!(coupon.expiry instanceof Timestamp)) {
+      coupon.expiry = Timestamp.fromDate(new Date(String(coupon.expiry)));
+    }
 
     const userCouponsRef = collection(db, `${collectionsList.userCoupons}/${userID}/${collectionsList.coupons}/`);
     await addDoc(userCouponsRef, coupon);

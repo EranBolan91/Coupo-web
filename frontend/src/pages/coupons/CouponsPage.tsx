@@ -3,7 +3,6 @@ import { initFilters } from "../../redux/reducers/filterReducer";
 import FilterChip from "../../components/filterChip/FilterChip";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import { AnimatePresence, motion } from "motion/react";
 import { useDispatch, useSelector } from "react-redux";
 import SearchBar from "../main/components/Searchbar";
 import { useEffect, useMemo, useState } from "react";
@@ -11,7 +10,8 @@ import Filter from "../../components/filter/Filter";
 import { RootState } from "../../redux/store/store";
 import { useSearchParams } from "react-router-dom";
 import useDebounce from "../../hooks/useDebounce";
-import CouponCard from "./components/CouponCard";
+import CouponGrid from "../../components/coupons/CouponGrid";
+import PageHeader from "../../components/ui/PageHeader";
 import { Coupon } from "../../types/CouponType";
 
 const CouponsPage = () => {
@@ -25,7 +25,7 @@ const CouponsPage = () => {
 
   const handleCouponsFilter = (text: string) => setSearchQuery(text);
 
-  const { data, hasNextPage, fetchNextPage, isLoading } = useInfiniteQuery({
+  const { data, hasNextPage, fetchNextPage, isLoading, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["coupons", debounceSearch],
     queryFn: ({ pageParam = null }: { pageParam?: number[] | null }) => getPaginatedCoupons(debounceSearch, pageParam),
     initialPageParam: null,
@@ -88,74 +88,45 @@ const CouponsPage = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <div className="flex flex-col items-center justify-center bg-slate-800 w-full p-4 md:p-28">
-        <h2 className="text-2xl md:text-7xl text-primary mb-6 md:mb-20">Save upto 50% online now</h2>
+    <>
+      <PageHeader title="Coupons" description="Codes shared by the Coupo community. Copy one, then vote on whether it worked.">
         <SearchBar filter={handleCouponsFilter} />
-      </div>
+      </PageHeader>
 
-      <div className="w-3/4 flex-col md:flex-row md:w-full mx-auto mt-6 flex justify-between items-start md:px-[2%]">
-        <Filter />
-        <div className="flex">
-          <span className="flex items-center w-20">Sort by:</span>
-          <select
-            value={sortOption}
-            onChange={(e) => setSortOption(e.target.value)}
-            className="select select-bordered w-full max-w-xs"
-          >
-            <option value="date-desc">Date (Newest First)</option>
-            <option value="date-asc">Date (Oldest First)</option>
-            <option value="discount-desc">Discount (Highest First)</option>
-            <option value="discount-asc">Discount (Lowest First)</option>
-            <option value="brand-asc">Brand (A-Z)</option>
-            <option value="brand-desc">Brand (Z-A)</option>
-          </select>
+      <section className="page-container py-8">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Filter />
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <span className="shrink-0 text-base-content/70">Sort by</span>
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="select select-bordered select-sm w-full bg-base-100 py-0 sm:w-56"
+            >
+              <option value="date-desc">Expires latest</option>
+              <option value="date-asc">Expires soonest</option>
+              <option value="discount-desc">Biggest discount</option>
+              <option value="discount-asc">Smallest discount</option>
+              <option value="brand-asc">Brand (A-Z)</option>
+              <option value="brand-desc">Brand (Z-A)</option>
+            </select>
+          </label>
         </div>
-      </div>
-      <FilterChip />
-      {isLoading === true ? (
-        <span className="loading loading-spinner loading-lg ml-2"></span>
-      ) : (
-        <div className="w-full grid grid-rows-1 md:grid-cols-12 lg:grid-cols-12 gap-y-10 md:gap-10 justify-center items-center mt-11 justify-items-center">
-          <AnimatePresence>
-            {filteredItems &&
-              filteredItems.map((coupon: Coupon, index: number) => {
-                if (index === filteredItems.length - 1) {
-                  return (
-                    <div key={coupon.id} className="flex justify-center col-span-12 md:col-span-4 w-full">
-                      <motion.div
-                        key={coupon.id}
-                        initial={{ opacity: 0, y: -100 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.5 }}
-                        className="w-full"
-                      >
-                        <CouponCard innerRef={ref} coupon={coupon} key={index} />
-                      </motion.div>
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div key={coupon.id} className="flex justify-center col-span-12 md:col-span-4 w-full">
-                      <motion.div
-                        key={coupon.id}
-                        initial={{ opacity: 0, y: -100 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        transition={{ duration: 0.5 }}
-                        className="w-full"
-                      >
-                        <CouponCard coupon={coupon} key={index} />
-                      </motion.div>
-                    </div>
-                  );
-                }
-              })}
-          </AnimatePresence>
+        <FilterChip />
+        <div className="mt-6">
+          <CouponGrid
+            coupons={filteredItems}
+            isLoading={isLoading}
+            isFetchingMore={isFetchingNextPage}
+            lastItemRef={ref}
+            emptyTitle={searchQuery ? "No coupons match your search" : "No coupons yet"}
+            emptyDescription={
+              searchQuery ? "Try another brand name, or clear the filters." : "Be the first to share one."
+            }
+          />
         </div>
-      )}
-    </div>
+      </section>
+    </>
   );
 };
 

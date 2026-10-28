@@ -63,7 +63,7 @@ export const updateUserProfileDetails = async (userDocument: UserDocument) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { imageURL, ...rest } = userDocument;
-    updatePersonalDocument(rest);
+    await updatePersonalDocument(rest);
     if (userDocument.imageURL !== undefined && userDocument.imageURL !== "") {
       await saveProfileImage(userDocument.imageURL, "profile", userDocument);
     }

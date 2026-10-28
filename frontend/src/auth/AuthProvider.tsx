@@ -7,6 +7,7 @@ import {
   sendEmailVerification,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   ActionCodeSettings,
   getAuth,
 } from "firebase/auth";
@@ -28,6 +29,8 @@ interface AuthProviderProps {
   logout: () => Promise<void>;
   signinWthGoogle: () => Promise<void>;
   sendEmailVerification: (user: User, actionCodeSettings?: ActionCodeSettings | null) => Promise<void>;
+  // Sends Firebase's password-reset email.
+  resetPassword: (email: string) => Promise<void>;
   // Re-reads Users/{uid} from Firestore into Redux (call after editing the profile).
   refreshUserDocument: () => Promise<void>;
   loginUserWithEmailPassword: (email: string, password: string) => Promise<AuthMSG>;
@@ -124,6 +127,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [auth, loadUserDocument]);
 
+  const resetPassword = (email: string) => sendPasswordResetEmail(auth, email);
+
   const refreshUserDocument = async () => {
     await loadUserDocument(auth.currentUser);
   };
@@ -206,6 +211,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signinWthGoogle,
         sendEmailVerification,
         refreshUserDocument,
+        resetPassword,
         loginUserWithEmailPassword,
         createUserWithEmailPassword,
       }}

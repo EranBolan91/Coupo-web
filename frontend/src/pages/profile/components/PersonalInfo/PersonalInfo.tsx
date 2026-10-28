@@ -1,54 +1,29 @@
-import { ModalPersonalInfo } from "./ModalPersonalInfo";
 import { UserDocument } from "../../../../types/UserType";
 
+const formatDate = (date?: Date) =>
+  date ? date.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }) : "Not set";
+
+// Read-only account details. Editing happens in ModalPersonalInfo (opened from the profile header).
 const PersonalInfo = ({ currentUser }: { currentUser: UserDocument | null }) => {
-  if (currentUser === null) return;
+  if (currentUser === null) return null;
+
+  const rows = [
+    { label: "Name", value: `${currentUser.firstName} ${currentUser.lastName}`.trim() },
+    { label: "Email", value: currentUser.email },
+    { label: "Date of birth", value: formatDate(currentUser.birthday?.toDate()) },
+    { label: "Member since", value: formatDate(currentUser.creationDate?.toDate?.()) },
+  ];
+
   return (
-    <div className="h-full">
-      <div className="flex justify-end">
-        {currentUser && <ModalPersonalInfo key={currentUser?.userUID} currentUser={currentUser} />}
-      </div>
-      <div className="px-4 sm:px-0">
-        <h3 className="text-base font-semibold leading-7 text-gray-900">Applicant Information</h3>
-        <p className="mt-1 max-w-2xl text-sm leading-6 text-gray-500">Personal details and application.</p>
-      </div>
-      <div className="mt-6 border-t border-gray-100">
-        <dl className="divide-y divide-gray-100">
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium leading-6 text-primary">Profile image</dt>
-            <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">
-              <div className="avatar">
-                <div className="w-24 rounded">
-                  <img src={currentUser?.imageURL} />
-                </div>
-              </div>
-            </dd>
-          </div>
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium leading-6 text-primary">First name</dt>
-            <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">{currentUser?.firstName}</dd>
-          </div>
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium leading-6 text-primary">Last name</dt>
-            <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">{currentUser?.lastName}</dd>
-          </div>
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium leading-6 text-primary">Email address</dt>
-            <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">{currentUser?.email}</dd>
-          </div>
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium leading-6 text-primary">Birth of date</dt>
-            <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0">
-              {currentUser?.birthday?.toDate()?.toDateString()}
-            </dd>
-          </div>
-          <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
-            <dt className="text-sm font-medium leading-6 text-primary">Total likes/dislikes</dt>
-            <dd className="mt-1 text-sm leading-6 text-secondary sm:col-span-2 sm:mt-0"></dd>
-          </div>
-        </dl>
-      </div>
-    </div>
+    <dl className="overflow-hidden rounded-box bg-base-100">
+      {rows.map((row, i) => (
+        <div key={row.label} className="relative grid gap-1 px-6 py-5 sm:grid-cols-3 sm:gap-4">
+          {i > 0 && <span className="perf-x absolute inset-x-6 top-0 text-base-300" aria-hidden="true" />}
+          <dt className="text-sm font-semibold text-base-content/60">{row.label}</dt>
+          <dd className="break-words font-semibold sm:col-span-2">{row.value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 };
 

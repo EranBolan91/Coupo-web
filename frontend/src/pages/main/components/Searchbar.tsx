@@ -1,37 +1,20 @@
+import { PiMagnifyingGlassBold } from "react-icons/pi";
+
 interface Props {
   filter: (text: string) => void;
+  placeholder?: string;
 }
 
-const SearchBar = (props: Props) => {
+const SearchBar = ({ filter, placeholder = "Search by brand" }: Props) => {
   return (
-    <div className="w-full">
-      <div className="relative">
-        <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-          <svg
-            className="w-4 h-4 text-gray-500 dark:text-gray-400"
-            aria-hidden="true"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 20 20"
-          >
-            <path
-              stroke="currentColor"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-            />
-          </svg>
-        </div>
-        <input
-          type="search"
-          id="default-search"
-          className="block w-full text-sm md:text-base font-mono font-semibold tracking-wide p-4 ps-10 text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-          placeholder="Search for coupons"
-          onChange={(e) => props.filter(e.target.value)}
-        />
-      </div>
-    </div>
+    <label className="input input-bordered flex h-14 w-full items-center gap-3 border-2 bg-base-100 px-5 text-base focus-within:border-base-content">
+      <PiMagnifyingGlassBold className="size-5 shrink-0 text-base-content/60" aria-hidden />
+      <span className="sr-only">Search coupons</span>
+      <input
+        type="search"
+        className="grow border-0 bg-transparent p-0 focus:outline-none focus:ring-0"
+        placeholder={placeholder} onChange={(e) => filter(e.target.value)} />
+    </label>
   );
 };
 

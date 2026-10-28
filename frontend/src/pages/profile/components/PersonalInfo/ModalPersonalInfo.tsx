@@ -1,171 +1,144 @@
-import { UserAuth } from "../../../../auth/AuthProvider";
+import { PiArrowCounterClockwiseBold, PiImageSquareBold } from "react-icons/pi";
 import { updateUserProfileDetails } from "../../../../logic/logic";
+import { UserAuth } from "../../../../auth/AuthProvider";
 import { useForm, SubmitHandler } from "react-hook-form";
-import { MdOutlineCloudUpload } from "react-icons/md";
 import { UserDocument } from "../../../../types/UserType";
-import { GrPowerCycle } from "react-icons/gr";
+import Modal from "../../../../components/Modal/Modal";
+import Field from "../../../../components/ui/Field";
+import { Timestamp } from "firebase/firestore";
 import toast from "react-hot-toast";
 import { useState } from "react";
-import { Timestamp } from "firebase/firestore";
 
-export const ModalPersonalInfo = ({ currentUser }: { currentUser: UserDocument }) => {
-  const [displayImage, setDisplayImage] = useState<string | null>(currentUser.imageURL);
-  const [openModal, setOpenModal] = useState<boolean>(false);
+interface Props {
+  currentUser: UserDocument;
+  open: boolean;
+  onClose: () => void;
+}
+
+type ProfileForm = { firstName: string; lastName: string; birthday?: string };
+
+export const ModalPersonalInfo = ({ currentUser, open, onClose }: Props) => {
+  const [preview, setPreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const { refreshUserDocument } = UserAuth();
-  const [imagePath, setImagePath] = useState<string>("");
-  const form = useForm<UserDocument>({
-    defaultValues: {
-      userUID: currentUser.userUID,
-      firstName: currentUser.firstName,
-      lastName: currentUser.lastName,
-      birthday: currentUser.birthday?.toDate().toISOString().split("T")[0],
-      imageURL: currentUser.imageURL,
-    },
-  });
   const {
     handleSubmit,
     register,
-    formState: { errors },
-  } = form;
+    formState: { errors, isSubmitting },
+  } = useForm<ProfileForm>({
+    defaultValues: {
+      firstName: currentUser.firstName,
+      lastName: currentUser.lastName,
+      birthday: currentUser.birthday?.toDate().toISOString().split("T")[0],
+    },
+  });
 
-  const handleSubmitForm: SubmitHandler<UserDocument> = async (data) => {
-    data.imageURL = imagePath;
-    data.birthday = data?.birthday ? Timestamp.fromDate(new Date(data?.birthday?.toString())) : undefined;
-    toast
-      .promise(updateUserProfileDetails(data), {
-        success: "User details updated successfully",
-        loading: "Updating user details...",
-        error: "Error, something went wrong...",
+  const clearImage = () => {
+    setPreview(null);
+    setImageFile(null);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const save: SubmitHandler<ProfileForm> = async (form) => {
+    const update = {
+      ...currentUser,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      birthday: form.birthday ? Timestamp.fromDate(new Date(form.birthday)) : undefined,
+      // updateUserProfileDetails uploads a File passed in imageURL; "" keeps the current picture.
+      imageURL: (imageFile ?? "") as unknown as string,
+    };
+    await toast
+      .promise(updateUserProfileDetails(update), {
+        loading: "Saving your profile...",
+        success: "Profile updated",
+        error: "Couldn't save your profile",
       })
       .then(() => {
-        setDisplayImage(null);
-        setOpenModal(false);
+        clearImage();
+        onClose();
         refreshUserDocument();
-      });
+      })
+      .catch(() => {});
   };
 
-  const handleImageChange = (e: any) => {
-    const file = e.target.files?.[0];
-
-    if (file) {
-      // Read the file and convert it to a data URL
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const imageDataUrl = reader.result as string;
-        setDisplayImage(imageDataUrl);
-      };
-      setImagePath(file);
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const clearSelectedImage = () => {
-    setDisplayImage(null);
-    setImagePath("");
-  };
+  const currentImage = preview ?? currentUser.imageURL;
 
   return (
-    <>
-      <button onClick={() => setOpenModal(true)} className="btn btn-sm btn-outline">
-        Edit
-      </button>
-      <dialog id={`modal-currentUser`} className="modal" open={openModal}>
-        <div className="modal-box">
-          <h3 className="font-bold text-lg">Edit Personal Info</h3>
-          <div className="w-full my-4"></div>
-          <div className="my-4">
-            <label className="form-control w-full">
-              <div className="label">
-                <span className="label-text">First Name</span>
-              </div>
-              <input
-                id="firstName"
-                className="input input-bordered w-full"
-                type="text"
-                {...register("firstName", {
-                  required: "This field cannot be empty",
-                })}
-              />
+    <Modal isOpen={open} onClose={onClose} title="Edit profile" size="lg">
+      <form id="profile-form" onSubmit={handleSubmit(save)} className="space-y-6" noValidate>
+        <div className="flex items-center gap-5">
+          <div className="size-20 shrink-0 overflow-hidden rounded-box bg-base-200 ring-4 ring-primary">
+            {currentImage ? (
+              <img src={currentImage} alt="" className="size-full object-cover" />
+            ) : (
+              <span className="flex size-full items-center justify-center font-display text-3xl font-extrabold">
+                {currentUser.firstName?.charAt(0)}
+              </span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <label className="btn btn-ghost btn-sm h-10 min-h-10 cursor-pointer border-2 border-base-300 px-4">
+              <PiImageSquareBold className="size-4" aria-hidden />
+              {currentImage ? "Change photo" : "Upload photo"}
+              <input type="file" accept="image/*" className="sr-only" onChange={handleImageChange} />
             </label>
-            {errors.firstName && <p className="text-red-500 italic font-normal">This field cannot be empty</p>}
-          </div>
-          <div className="my-4">
-            <label className="form-control w-full">
-              <div className="label">
-                <span className="label-text">Last Name</span>
-              </div>
-              <input
-                id="lastName"
-                type="text"
-                className="input input-bordered w-full"
-                {...register("lastName", {
-                  required: "This field cannot be empty",
-                })}
-              />
-            </label>
-            {errors.lastName && <p className="text-red-500 italic font-normal">This field cannot be empty</p>}
-          </div>
-          <div className="my-4">
-            <label className="form-control w-full">
-              <div className="label">
-                <span className="label-text">Birth of Date</span>
-              </div>
-              <input
-                id="birthday"
-                type="date"
-                className="input input-bordered w-full"
-                {...register("birthday", {
-                  required: "This field cannot be empty",
-                })}
-              />
-            </label>
-            {errors.birthday && <p className="text-red-500 italic font-normal">This field cannot be empty</p>}
-          </div>
-          <div className="my-4">
-            <div className="label">
-              <span className="label-text">Profile image</span>
-            </div>
-            <div className="flex items-center justify-center w-full">
-              {displayImage && displayImage !== "" ? (
-                <div>
-                  <img src={displayImage} />
-                  <span className="flex items-center cursor-pointer" onClick={clearSelectedImage}>
-                    clear image <GrPowerCycle className="ml-2" />
-                  </span>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 dark:hover:border-gray-500">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <MdOutlineCloudUpload fontSize={"2.3rem"} />
-                    <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG, or GIF (MAX. 800x400px)</p>
-                  </div>
-                  <input
-                    id="file-upload"
-                    accept="image/*"
-                    type="file"
-                    className="hidden"
-                    {...register("imageURL")}
-                    onChange={handleImageChange}
-                  />
-                </label>
-              )}
-            </div>
-          </div>
-          <div className="modal-action">
-            <form method="dialog" onSubmit={handleSubmit(handleSubmitForm)}>
-              <button type="button" onClick={() => setOpenModal(false)} className="btn">
-                Close
+            {preview && (
+              <button type="button" className="btn btn-ghost btn-sm h-10 min-h-10 px-4" onClick={clearImage}>
+                <PiArrowCounterClockwiseBold className="size-4" aria-hidden />
+                Undo
               </button>
-              <button type="submit" className="btn ml-2">
-                Update
-              </button>
-            </form>
+            )}
           </div>
         </div>
-      </dialog>
-    </>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="First name" htmlFor="firstName" error={errors.firstName?.message}>
+            <input
+              id="firstName"
+              type="text"
+              autoComplete="given-name"
+              className="input input-bordered h-12 w-full bg-base-100"
+              {...register("firstName", { required: "First name is required" })}
+            />
+          </Field>
+          <Field label="Last name" htmlFor="lastName" error={errors.lastName?.message}>
+            <input
+              id="lastName"
+              type="text"
+              autoComplete="family-name"
+              className="input input-bordered h-12 w-full bg-base-100"
+              {...register("lastName", { required: "Last name is required" })}
+            />
+          </Field>
+        </div>
+        <Field label="Date of birth" htmlFor="birthday" error={errors.birthday?.message}>
+          <input
+            id="birthday"
+            type="date"
+            autoComplete="bday"
+            className="input input-bordered h-12 w-full bg-base-100 sm:w-1/2"
+            {...register("birthday", { required: "Date of birth is required" })}
+          />
+        </Field>
+      </form>
+      <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <button type="button" className="btn btn-ghost h-12 min-h-12" onClick={onClose}>
+          Cancel
+        </button>
+        <button type="submit" form="profile-form" className="btn btn-primary h-12 min-h-12" disabled={isSubmitting}>
+          {isSubmitting && <span className="loading loading-spinner loading-sm" aria-hidden />}
+          Save profile
+        </button>
+      </div>
+    </Modal>
   );
 };

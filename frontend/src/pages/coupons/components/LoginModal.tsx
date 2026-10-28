@@ -1,4 +1,5 @@
 import Modal from "../../../components/Modal/Modal";
+import { LogoMark } from "../../../components/logo/Logo";
 import { Link } from "react-router-dom";
 
 interface Props {
@@ -8,23 +9,19 @@ interface Props {
 
 const LoginModal = ({ open, onClose }: Props) => {
   return (
-    <Modal isOpen={open} onClose={onClose}>
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold mb-2 text-gray-800 dark:text-white">Login Required</h2>
-        <p className="text-gray-600 dark:text-gray-300">Please log in to access this feature.</p>
+    <Modal isOpen={open} onClose={onClose} label="Log in to continue">
+      <div className="flex flex-col items-center text-center">
+        <LogoMark className="size-14 -rotate-6" />
+        <h2 className="mt-5 text-3xl font-extrabold tracking-tight">Log in to continue</h2>
+        <p className="mt-2 text-base-content/70">Saving and voting on coupons need a free account.</p>
       </div>
-      <div className="space-y-4">
-        <Link to="/login">
-          <button className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold shadow-md hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105">
-            Log In
-          </button>
+      <div className="mt-8 flex flex-col gap-3">
+        <Link to="/signup" className="btn btn-primary h-12 min-h-12 w-full" onClick={onClose}>
+          Create a free account
         </Link>
-        <button
-          onClick={onClose}
-          className="w-full py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300"
-        >
-          Close
-        </button>
+        <Link to="/login" className="btn btn-ghost h-12 min-h-12 w-full" onClick={onClose}>
+          Log in
+        </Link>
       </div>
     </Modal>
   );
