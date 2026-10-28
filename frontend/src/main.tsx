@@ -16,10 +16,12 @@ import "./index.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: Infinity, // Prevent refetching by making data never stale
-      refetchOnWindowFocus: false, // Disable refetching on focus
-      refetchOnReconnect: false, // Disable refetching on network reconnect
-      refetchOnMount: false, // Disab
+      staleTime: Infinity, // Data never goes stale: refresh it yourself after a change (invalidateQueries)
+      refetchOnWindowFocus: false,
+      // Never refetch data that loaded fine, but do retry a request that failed, so one failure
+      // doesn't leave a page empty until a full reload.
+      refetchOnReconnect: (query) => query.state.status === "error",
+      refetchOnMount: (query) => query.state.status === "error",
     },
   },
 });

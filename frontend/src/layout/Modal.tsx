@@ -27,7 +27,7 @@ const Modal = ({ coupon, open, setOpen }: Props) => {
       })
       .then(() => {
         // Lists are cached forever (see main.tsx), so refresh the ones that may show this coupon.
-        ["usercoupons", "expireCoupons", "latestCoupons", "coupons", "categorycoupons"].forEach((key) =>
+        ["usercoupons", "expireCoupons", "latestCoupons", "coupons"].forEach((key) =>
           queryClient.invalidateQueries({ queryKey: [key] })
         );
       })

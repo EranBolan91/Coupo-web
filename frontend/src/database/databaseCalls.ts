@@ -1,142 +1,48 @@
 import {
   collection,
-  getDocs,
+  getDocsFromServer,
   addDoc,
   doc,
   deleteDoc,
   setDoc,
   limit,
   query,
-  QuerySnapshot,
-  DocumentData,
-  startAfter,
-  Query,
   where,
   updateDoc,
   getDoc,
   Timestamp,
+  orderBy,
 } from "firebase/firestore";
 import { ref, uploadBytesResumable } from "firebase/storage";
+
+// Lists are read with getDocsFromServer, not getDocs: when Firestore can't reach the server, getDocs
+// quietly returns an empty list instead of failing, and the app would cache "nothing here" forever.
 import { collectionsList } from "../../firebaseCollections";
 import { CouponBrand } from "../types/CouponBrandType";
-import { orderBy } from "firebase/firestore/lite";
 import { db, storage } from "./databaseConfig";
 import { Coupon } from "../types/CouponType";
 import { UserDocument } from "../types/UserType";
 
-let documentCoursor: any = {};
-
-export const getPaginatedCoupons = async (queryParam: string, pageParam: any) => {
-  const dataLimit = 10;
-  try {
-    const coupons: Coupon[] = [];
-    let fetchQuery: Query;
-
-    if (pageParam === null) {
-      if (queryParam === "") {
-        fetchQuery = query(collection(db, collectionsList.coupons), orderBy("createdAt", "desc"), limit(dataLimit));
-      } else {
-        fetchQuery = query(
-          collection(db, collectionsList.coupons),
-          orderBy("createdAt", "desc"),
-          where("name", "==", queryParam),
-          limit(dataLimit)
-        );
-      }
-    } else {
-      if (queryParam === "") {
-        fetchQuery = query(
-          collection(db, collectionsList.coupons),
-          orderBy("createdAt", "desc"),
-          startAfter(documentCoursor),
-          limit(dataLimit)
-        );
-      } else {
-        fetchQuery = query(
-          collection(db, collectionsList.coupons),
-          orderBy("createdAt", "desc"),
-          where("name", "==", queryParam),
-          startAfter(documentCoursor),
-          limit(dataLimit)
-        );
-      }
-    }
-
-    const documentSnapshots = await getDocs(fetchQuery);
-    documentCoursor = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    documentSnapshots.docs.forEach((doc) => {
-      const coupon = { id: doc.id, ...doc.data() };
-      coupons.push(coupon as Coupon);
-    });
-
-    return coupons?.length > 0 ? coupons : [];
-  } catch (err) {
-    console.log(err);
-  }
+// Every coupon in a public feed (Coupons or SocialCoupons), newest first. The pages search, filter, sort
+// and page through it in the browser, so search can match part of a word in any field.
+// Fine for hundreds of coupons; with many thousands this needs a search service instead.
+export const getCouponFeed = async (collectionName: string): Promise<Coupon[]> => {
+  const type = collectionName === collectionsList.socialCoupons ? "socialCoupon" : "coupon";
+  const snapshot = await getDocsFromServer(query(collection(db, collectionName), orderBy("createdAt", "desc")));
+  return snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id, type } as Coupon));
 };
 
-// Newest public coupons, for previews (home page). Independent of the paging cursor above.
+// Newest public coupons, for previews (home page).
 export const getLatestCoupons = async (count: number): Promise<Coupon[]> => {
-  const snapshot = await getDocs(
+  const snapshot = await getDocsFromServer(
     query(collection(db, collectionsList.coupons), orderBy("createdAt", "desc"), limit(count))
   );
   return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as Coupon));
 };
 
-export const getPaginatedCouponsByCategory = async (pageParam: any, categoryName: string | undefined) => {
-  const dataLimit = 10;
-  try {
-    const coupons: Coupon[] = [];
-    let documentSnapshots: QuerySnapshot<DocumentData>;
-    let fetchQuery: Query;
-
-    if (categoryName !== undefined) {
-      if (pageParam === null) {
-        fetchQuery = query(
-          collection(db, collectionsList.coupons),
-          orderBy("createdAt", "desc"),
-          where("category", "==", categoryName),
-          limit(dataLimit)
-        );
-      } else {
-        fetchQuery = query(
-          collection(db, collectionsList.coupons),
-          orderBy("createdAt", "desc"),
-          where("category", "==", categoryName),
-          startAfter(documentCoursor),
-          limit(dataLimit)
-        );
-      }
-
-      documentSnapshots = await getDocs(fetchQuery);
-      documentCoursor = documentSnapshots.docs[documentSnapshots.docs.length - 1];
-      documentSnapshots.docs.forEach((doc) => {
-        const coupon = { id: doc.id, ...doc.data() };
-        coupons.push(coupon as Coupon);
-      });
-    }
-
-    return coupons?.length > 0 ? coupons : [];
-  } catch (err) {
-    console.log(err);
-  }
-};
-
-export const getAllCoupons = async () => {
-  const coupons: Coupon[] = [];
-  const getCoupons = await getDocs(collection(db, collectionsList.coupons));
-  getCoupons.forEach((coupon) => {
-    coupons.push({
-      id: coupon.id,
-      ...coupon.data().coupon,
-    });
-  });
-  return coupons;
-};
-
 export const getCouponsBrands = async () => {
   const couponsBrands: CouponBrand[] = [];
-  const getCoupons = await getDocs(collection(db, collectionsList.brands));
+  const getCoupons = await getDocsFromServer(collection(db, collectionsList.brands));
   getCoupons.forEach((coupon) => {
     couponsBrands.push({
       brand: coupon.data().brand,
@@ -148,7 +54,7 @@ export const getCouponsBrands = async () => {
 
 export const getCategories = async () => {
   const categories: string[] = [];
-  const getCategories = await getDocs(collection(db, collectionsList.category));
+  const getCategories = await getDocsFromServer(collection(db, collectionsList.category));
   getCategories.forEach((category) => {
     categories.push(category.data().category);
   });
@@ -164,7 +70,7 @@ export const getUserCoupons = async (userID: string) => {
   const socialccouponsQuery = query(socialCouponsRef, where("expiry", ">=", today));
   const couponsQuery = query(couponsRef, where("expiry", ">=", today));
 
-  const [couponsSnap, socialCouponsSnap] = await Promise.all([getDocs(couponsQuery), getDocs(socialccouponsQuery)]);
+  const [couponsSnap, socialCouponsSnap] = await Promise.all([getDocsFromServer(couponsQuery), getDocsFromServer(socialccouponsQuery)]);
 
   couponsSnap.forEach((doc) => {
     const coupon = { id: doc.id, type: "coupon", ...doc.data() };
@@ -185,7 +91,7 @@ export const getExpiredCoupons = async (userID: string) => {
 
   const couponsRef = collection(db, collectionsList.userCoupons, userID, collectionsList.coupons);
   const q = query(couponsRef, where("expiry", "<", today));
-  const ref = await getDocs(q);
+  const ref = await getDocsFromServer(q);
 
   ref.forEach((doc) => {
     const coupon = { id: doc.id, ...doc.data() };
@@ -301,7 +207,7 @@ export const getUserLikesVotes = async (userID: string): Promise<Coupon[] | []> 
   try {
     const coupons: Coupon[] = [];
     const ref = collection(db, collectionsList.userVotes, userID, "likes");
-    const data = await getDocs(ref);
+    const data = await getDocsFromServer(ref);
 
     data.forEach((doc) => {
       const coupon = { id: doc.id, ...doc.data() };
@@ -317,7 +223,7 @@ export const getUserDislikesVotes = async (userID: string): Promise<Coupon[] | [
   try {
     const coupons: Coupon[] = [];
     const ref = collection(db, collectionsList.userVotes, userID, "dislikes");
-    const data = await getDocs(ref);
+    const data = await getDocsFromServer(ref);
 
     data.forEach((doc) => {
       const coupon = { id: doc.id, ...doc.data() };

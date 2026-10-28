@@ -2,11 +2,15 @@ import CouponCard, { CouponCardSkeleton } from "../../pages/coupons/components/C
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Coupon } from "../../types/CouponType";
 import EmptyState from "../ui/EmptyState";
+import LoadError from "../ui/LoadError";
 import React from "react";
 
 interface Props {
   coupons: Coupon[];
   isLoading?: boolean;
+  // Loading failed: shows a message with a "Try again" button that calls onRetry.
+  isError?: boolean;
+  onRetry?: () => void;
   isFetchingMore?: boolean;
   // Ref for the last card, used to load the next page when it scrolls into view.
   lastItemRef?: React.Ref<HTMLElement>;
@@ -18,10 +22,12 @@ interface Props {
 
 const gridClass = "grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3";
 
-// The one coupon list used by every page: loading skeletons, empty state, cards and "loading more".
+// The one coupon list used by every page: loading skeletons, error, empty state, cards and "loading more".
 const CouponGrid = ({
   coupons,
   isLoading,
+  isError,
+  onRetry,
   isFetchingMore,
   lastItemRef,
   emptyTitle = "No coupons here yet",
@@ -39,6 +45,10 @@ const CouponGrid = ({
         ))}
       </div>
     );
+  }
+
+  if (isError) {
+    return <LoadError what="coupons" onRetry={onRetry} />;
   }
 
   if (coupons.length === 0) {

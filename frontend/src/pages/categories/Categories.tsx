@@ -2,11 +2,12 @@ import { PiArrowRightBold } from "react-icons/pi";
 import { getCategories } from "../../database/databaseCalls";
 import PageHeader from "../../components/ui/PageHeader";
 import EmptyState from "../../components/ui/EmptyState";
+import LoadError from "../../components/ui/LoadError";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 const Categories = () => {
-  const { data, isLoading } = useQuery({
+  const { data, isPending: isLoading, isError, refetch } = useQuery({
     queryKey: ["categories"],
     queryFn: () => getCategories(),
   });
@@ -21,6 +22,8 @@ const Categories = () => {
               <div key={i} className="skeleton h-36 rounded-box" />
             ))}
           </div>
+        ) : isError ? (
+          <LoadError what="categories" onRetry={() => refetch()} />
         ) : !data || data.length === 0 ? (
           <EmptyState title="No categories yet" />
         ) : (
