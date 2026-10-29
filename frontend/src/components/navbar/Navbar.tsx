@@ -15,6 +15,7 @@ const navigation = [
   { name: "Coupons", href: "/coupons" },
   { name: "Categories", href: "/categories" },
   { name: "Social Coupons", href: "/social" },
+  { name: "Top sharers", href: "/top-sharers" },
 ];
 
 const desktopLinkClass = ({ isActive }: { isActive: boolean }) =>

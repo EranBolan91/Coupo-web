@@ -3,6 +3,7 @@ import WishlistButton from "../../../components/wishlistButton/WishlistButton";
 import { PiCheckBold, PiCopyBold } from "react-icons/pi";
 import { Coupon } from "../../../types/CouponType";
 import { couponPath } from "../../../logic/couponLinks";
+import { sharerPath } from "../../../logic/sharers";
 import { Link } from "react-router-dom";
 import VoteButton from "./VoteButton";
 import toast from "react-hot-toast";
@@ -89,7 +90,18 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
               </h3>
               <p className="truncate text-sm capitalize text-base-content/60">
                 {shown.category || "Category"}
-                {shown.username && <> · by {shown.username}</>}
+                {shown.username && (
+                  <>
+                    {" · by "}
+                    {!preview && shown.userID ? (
+                      <Link to={sharerPath(shown.userID)} className="relative z-[1] hover:text-base-content hover:underline">
+                        {shown.username}
+                      </Link>
+                    ) : (
+                      shown.username
+                    )}
+                  </>
+                )}
               </p>
             </div>
           </div>

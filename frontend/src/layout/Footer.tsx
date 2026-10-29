@@ -5,6 +5,7 @@ const links = [
   { name: "Coupons", href: "/coupons" },
   { name: "Categories", href: "/categories" },
   { name: "Social Coupons", href: "/social" },
+  { name: "Top sharers", href: "/top-sharers" },
   { name: "Share a coupon", href: "/addcoupon" },
 ];
 
