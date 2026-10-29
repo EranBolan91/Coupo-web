@@ -58,18 +58,12 @@ export const getUserWishlistCoupons = async (userID: string): Promise<Coupon[]> 
   }
 };
 
-// await updatePersonalUserDetailsDB(user.userUID, (({ imageURL, ...rest }: UserDocument) => rest)(user));
-export const updateUserProfileDetails = async (userDocument: UserDocument) => {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { imageURL, ...rest } = userDocument;
-    await updatePersonalDocument(rest);
-    if (userDocument.imageURL !== undefined && userDocument.imageURL !== "") {
-      await saveProfileImage(userDocument.imageURL, "profile", userDocument);
-    }
-  } catch (error: any) {
-    console.log(error);
-    throw new Error(error);
+// Saves the profile fields, then uploads the new picture if one was picked.
+// Errors are passed on unchanged so the caller can show them.
+export const updateUserProfileDetails = async (userDocument: UserDocument, imageFile?: File | null) => {
+  await updatePersonalDocument(userDocument);
+  if (imageFile) {
+    await saveProfileImage(imageFile, userDocument.userUID);
   }
 };
 

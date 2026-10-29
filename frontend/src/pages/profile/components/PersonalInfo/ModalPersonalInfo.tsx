@@ -1,5 +1,6 @@
 import { PiArrowCounterClockwiseBold, PiImageSquareBold } from "react-icons/pi";
 import { updateUserProfileDetails } from "../../../../logic/logic";
+import { maxProfileImageBytes } from "../../../../database/profile";
 import { UserAuth } from "../../../../auth/AuthProvider";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { UserDocument } from "../../../../types/UserType";
@@ -40,7 +41,16 @@ export const ModalPersonalInfo = ({ currentUser, open, onClose }: Props) => {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = ""; // so picking the same file again still triggers onChange
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please pick an image file");
+      return;
+    }
+    if (file.size >= maxProfileImageBytes) {
+      toast.error("Please pick an image under 5 MB");
+      return;
+    }
     setImageFile(file);
     const reader = new FileReader();
     reader.onloadend = () => setPreview(reader.result as string);
@@ -48,26 +58,24 @@ export const ModalPersonalInfo = ({ currentUser, open, onClose }: Props) => {
   };
 
   const save: SubmitHandler<ProfileForm> = async (form) => {
-    const update = {
+    const update: UserDocument = {
       ...currentUser,
-      firstName: form.firstName,
-      lastName: form.lastName,
-      birthday: form.birthday ? Timestamp.fromDate(new Date(form.birthday)) : undefined,
-      // updateUserProfileDetails uploads a File passed in imageURL; "" keeps the current picture.
-      imageURL: (imageFile ?? "") as unknown as string,
+      firstName: form.firstName.trim(),
+      lastName: form.lastName.trim(),
+      birthday: form.birthday ? Timestamp.fromDate(new Date(form.birthday)) : currentUser.birthday,
     };
     await toast
-      .promise(updateUserProfileDetails(update), {
+      .promise(updateUserProfileDetails(update, imageFile), {
         loading: "Saving your profile...",
         success: "Profile updated",
-        error: "Couldn't save your profile",
+        error: "Couldn't save your profile. Please try again.",
       })
-      .then(() => {
+      .then(async () => {
+        await refreshUserDocument();
         clearImage();
         onClose();
-        refreshUserDocument();
       })
-      .catch(() => {});
+      .catch((error) => console.error(error?.code ?? error?.message));
   };
 
   const currentImage = preview ?? currentUser.imageURL;
@@ -120,13 +128,16 @@ export const ModalPersonalInfo = ({ currentUser, open, onClose }: Props) => {
             />
           </Field>
         </div>
-        <Field label="Date of birth" htmlFor="birthday" error={errors.birthday?.message}>
+        <Field label="Date of birth" htmlFor="birthday" hint="Optional" error={errors.birthday?.message}>
           <input
             id="birthday"
             type="date"
             autoComplete="bday"
+            max={new Date().toISOString().split("T")[0]}
             className="input input-bordered h-12 w-full bg-base-100 sm:w-1/2"
-            {...register("birthday", { required: "Date of birth is required" })}
+            {...register("birthday", {
+              validate: (value) => !value || value <= new Date().toISOString().split("T")[0] || "That date is in the future",
+            })}
           />
         </Field>
       </form>
