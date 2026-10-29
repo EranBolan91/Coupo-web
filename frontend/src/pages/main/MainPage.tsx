@@ -1,5 +1,6 @@
 import { PiArrowRightBold, PiCopyBold, PiMagnifyingGlassBold, PiPlusBold, PiThumbsUpBold } from "react-icons/pi";
 import { getCategories, getCouponsBrands, getLatestCoupons } from "../../database/databaseCalls";
+import { isExpired } from "../../logic/couponFilters";
 import CouponCard, { CouponCardSkeleton } from "../coupons/components/CouponCard";
 import CouponGrid from "../../components/coupons/CouponGrid";
 import { motion, useReducedMotion } from "motion/react";
@@ -116,7 +117,8 @@ const HeroSearch = () => {
 const MainPage = () => {
   const { data: latest = [], isPending: latestLoading, isError: latestError, refetch: refetchLatest } = useQuery({
     queryKey: ["latestCoupons"],
-    queryFn: () => getLatestCoupons(12),
+    // Fetch extra so there are still 12 left after leaving out expired coupons.
+    queryFn: async () => (await getLatestCoupons(40)).filter((coupon) => !isExpired(coupon)).slice(0, 12),
   });
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
   const { data: brands = [] } = useQuery({ queryKey: ["brands"], queryFn: getCouponsBrands });
