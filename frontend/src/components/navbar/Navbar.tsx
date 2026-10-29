@@ -1,6 +1,7 @@
 import { PiListBold, PiPlusBold, PiXBold } from "react-icons/pi";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import ThemeToggle from "../themeToggle/ThemeToggle";
+import Notifications from "../notifications/Notifications";
 import { UserAuth } from "../../auth/AuthProvider";
 import { Link, NavLink } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
@@ -55,6 +56,7 @@ const Navbar = () => {
 
         <div className="flex items-center gap-1 lg:flex-1 lg:justify-end">
           <ThemeToggle />
+          {userDocument && <Notifications />}
           <div className="hidden items-center gap-2 lg:flex">
             {userDocument ? (
               <>
