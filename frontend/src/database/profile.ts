@@ -1,38 +1,26 @@
-import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { collectionsList } from "../../firebaseCollections";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { UserDocument } from "../types/UserType";
 import { db, storage } from "./databaseConfig";
 
-type UserDocumentWithoutImage = Omit<UserDocument, "imageURL">;
-
-export const updatePersonalDocument = async (userDocument: Partial<UserDocumentWithoutImage>) => {
-  try {
-    const userDocRef = doc(db, collectionsList.users, userDocument.userUID!);
-    await updateDoc(userDocRef, {
-      ...userDocument,
-    });
-  } catch (error: any) {
-    throw new Error(error.message);
-  }
+// Saves fields of the user's own Users/{uid} doc. Uses set + merge, not update, so it also creates the
+// doc when it's missing (some older accounts never got one). The rules require userUID in the doc.
+export const updatePersonalDocument = async (fields: Partial<UserDocument> & { userUID: string }) => {
+  // Firestore rejects undefined values; leave those fields as they are.
+  const defined = Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
+  await setDoc(doc(db, collectionsList.users, fields.userUID), defined, { merge: true });
 };
 
-export const saveProfileImage = async (imgFile: any, imageName: string, user: UserDocument) => {
-  try {
-    const storageRef = ref(storage, `ProfileImage/${user.userUID}/${imageName}.svg`);
-    const uploadTask = uploadBytesResumable(storageRef, imgFile);
-    uploadTask.on(
-      "state_changed",
-      () => {},
-      (error) => console.log(error),
-      async () => {
-        const downloadImgURL = await getDownloadURL(uploadTask.snapshot.ref);
-        updateDoc(doc(db, `Users/${user.userUID}`), { imageURL: downloadImgURL }).catch((err) => {
-          throw new Error(err);
-        });
-      }
-    );
-  } catch (error: any) {
-    throw new Error(error);
-  }
+export const maxProfileImageBytes = 5 * 1024 * 1024; // same limit as storage.rules
+
+// Uploads the profile picture to ProfileImage/{uid}/profile.svg (always this name, whatever the type)
+// and saves its URL on the user's doc. Returns the URL.
+export const saveProfileImage = async (file: File, userUID: string) => {
+  const storageRef = ref(storage, `ProfileImage/${userUID}/profile.svg`);
+  await uploadBytes(storageRef, file, { contentType: file.type });
+  // The file name never changes, so add a version to the URL or browsers keep showing the old picture.
+  const imageURL = `${await getDownloadURL(storageRef)}&v=${Date.now()}`;
+  await updatePersonalDocument({ userUID, imageURL });
+  return imageURL;
 };

@@ -120,7 +120,7 @@ The rules in this repo implement the model below. **Check whether they've been d
 - `auth/AuthProvider.tsx` listens to `onAuthStateChanged`, loads `Users/{uid}` into the Redux `profile` slice, and renders a full-screen `Loader` until the first auth check finishes, so protected routes don't bounce to `/login` while the session is being restored.
 - **Read the current user with `useCurrentUser()`** (`hooks/useCurrentUser.ts`): returns the `UserDocument`, or `null` when signed out. Don't read `state.profile` directly; an empty `userUID` there means "signed out".
 - Users whose email isn't verified are treated as signed out (email/password requires verification; Google accounts are already verified).
-- If `Users/{uid}` doesn't exist yet (the Google sign-up function may still be running), the profile is built in memory from the Firebase Auth user.
+- If `Users/{uid}` doesn't exist yet (the Google sign-up function may still be running), the profile is built in memory from the Firebase Auth user. Some older accounts have no `Users` doc at all; `updatePersonalDocument` uses `setDoc(..., { merge: true })` so the first profile save creates it. Don't switch it back to `updateDoc`, which fails on a missing doc.
 - `loginUserWithEmailPassword` and `signinWthGoogle` wait for the profile to load before returning, so callers can `navigate("/profile")` right away.
 - After editing the user's own profile, call `refreshUserDocument()` from `UserAuth()`.
 - On sign-out or account switch, `AuthProvider` calls `queryClient.clear()` so the next user never sees the previous user's cached data.

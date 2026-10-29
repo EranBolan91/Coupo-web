@@ -67,6 +67,14 @@ await check("alice can update own Users doc", () => assertSucceeds(updateDoc(doc
 await check("alice cannot read bob's Users doc", () => assertFails(getDoc(doc(alice, "Users/bob"))));
 await check("alice cannot write bob's Users doc", () => assertFails(setDoc(doc(alice, "Users/bob"), { userUID: "bob" })));
 await check("anon cannot read Users", () => assertFails(getDoc(doc(anon, "Users/alice"))));
+// Profile saves use set + merge (updatePersonalDocument), which also creates a missing Users doc.
+const carol = env.authenticatedContext("carol").firestore();
+await check("carol can create a missing Users doc with set+merge", () =>
+  assertSucceeds(setDoc(doc(carol, "Users/carol"), { userUID: "carol", firstName: "C", imageURL: "https://x/p.png" }, { merge: true })));
+await check("carol can merge just imageURL into her existing doc", () =>
+  assertSucceeds(setDoc(doc(carol, "Users/carol"), { userUID: "carol", imageURL: "https://x/new.png" }, { merge: true })));
+await check("set+merge without userUID cannot create a doc", () =>
+  assertFails(setDoc(doc(bob, "Users/bob"), { firstName: "B" }, { merge: true })));
 
 await check("alice cannot create coupon with likes>0", () => assertFails(setDoc(doc(alice, "UserCoupons/alice/Coupons/bad"), { ...coupon("alice"), likes: 99 })));
 await check("alice cannot create coupon owned by bob", () => assertFails(setDoc(doc(alice, "UserCoupons/alice/Coupons/bad"), coupon("bob"))));
