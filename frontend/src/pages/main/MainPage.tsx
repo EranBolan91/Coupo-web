@@ -6,7 +6,8 @@ import { motion, useReducedMotion } from "motion/react";
 import Reveal from "../../components/motion/Reveal";
 import { useQuery } from "@tanstack/react-query";
 import { Coupon } from "../../types/CouponType";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { FormEvent, useState } from "react";
 
 // Fan positions on large screens, back to front: [position, rotation].
 const fanLayouts: Record<number, [string, string][]> = {
@@ -81,6 +82,37 @@ const steps = [
   { icon: PiThumbsUpBold, title: "Vote", text: "Tell everyone if it worked. Good codes rise." },
 ];
 
+// Hero search: sends the text to the Coupons page (/coupons?q=...), which does the searching.
+const HeroSearch = () => {
+  const [text, setText] = useState("");
+  const navigate = useNavigate();
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    const query = text.trim();
+    navigate(query ? `/coupons?q=${encodeURIComponent(query)}` : "/coupons");
+  };
+
+  return (
+    <form role="search" onSubmit={submit} className="mt-8 flex max-w-lg gap-2">
+      <label className="input input-bordered flex h-14 grow items-center gap-3 border-2 bg-base-100 px-5 text-base focus-within:border-base-content">
+        <PiMagnifyingGlassBold className="size-5 shrink-0 text-base-content/60" aria-hidden />
+        <span className="sr-only">Search coupons</span>
+        <input
+          type="search"
+          className="w-full grow border-0 bg-transparent p-0 focus:outline-none focus:ring-0"
+          placeholder="Search brands and codes"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+      </label>
+      <button type="submit" className="btn btn-secondary h-14 min-h-14 px-6 text-base">
+        Search
+      </button>
+    </form>
+  );
+};
+
 const MainPage = () => {
   const { data: latest = [], isPending: latestLoading, isError: latestError, refetch: refetchLatest } = useQuery({
     queryKey: ["latestCoupons"],
@@ -116,7 +148,8 @@ const MainPage = () => {
             <p className="mt-6 max-w-md text-lg text-base-content/75 md:text-xl">
               Coupon codes shared by real shoppers and checked by votes. Free for everyone.
             </p>
-            <div className="mt-9 flex flex-wrap gap-3">
+            <HeroSearch />
+            <div className="mt-5 flex flex-wrap gap-3">
               <Link to="/coupons" className="btn btn-primary btn-lg h-14 min-h-14 px-7 text-base">
                 Browse coupons
                 <PiArrowRightBold aria-hidden />

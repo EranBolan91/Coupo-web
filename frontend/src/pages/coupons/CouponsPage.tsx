@@ -1,62 +1,42 @@
-import { CouponSort, couponSortOptions, matchesSearch, sortCoupons } from "../../logic/couponFilters";
-import { initFilters } from "../../redux/reducers/filterReducer";
+import { brandsInFeed, couponSortOptions, CouponSort, matchesFilters, matchesSearch, sortCoupons } from "../../logic/couponFilters";
 import { collectionsList } from "../../../firebaseCollections";
 import FilterChip from "../../components/filterChip/FilterChip";
 import CouponGrid from "../../components/coupons/CouponGrid";
+import useCouponSearch from "../../hooks/useCouponSearch";
 import PageHeader from "../../components/ui/PageHeader";
-import { useDispatch, useSelector } from "react-redux";
 import useCouponFeed from "../../hooks/useCouponFeed";
 import SearchBar from "../main/components/Searchbar";
 import useShowMore from "../../hooks/useShowMore";
 import Filter from "../../components/filter/Filter";
-import { RootState } from "../../redux/store/store";
-import { useSearchParams } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 const CouponsPage = () => {
-  const filters = useSelector((state: RootState) => state.filters);
-  const [search, setSearch] = useState<string>("");
-  const [sort, setSort] = useState<CouponSort>("newest");
-  const [searchParams] = useSearchParams();
-  const dispatch = useDispatch();
+  const couponSearch = useCouponSearch();
+  const { search, sort, filters, activeFilterCount, resultsKey, setSearch, setSort } = couponSearch;
 
   const { data: coupons = [], isPending: isLoading, isError, refetch } = useCouponFeed(collectionsList.coupons);
+  const brands = useMemo(() => brandsInFeed(coupons), [coupons]);
 
-  // Search, category filters and sort apply to every coupon, not only the ones on screen.
+  // Search, filters and sort apply to every coupon, not only the ones on screen.
   const results = useMemo(() => {
-    const matching = coupons.filter(
-      (coupon) =>
-        matchesSearch(coupon, search) &&
-        Object.values(filters).every((values) => values.length === 0 || values.includes(coupon.category))
-    );
+    const now = Date.now();
+    const matching = coupons.filter((coupon) => matchesSearch(coupon, search) && matchesFilters(coupon, filters, now));
     return sortCoupons(matching, sort);
   }, [coupons, search, filters, sort]);
 
-  const { visible, lastItemRef } = useShowMore(results, `${search}|${sort}|${JSON.stringify(filters)}`);
+  const { visible, lastItemRef } = useShowMore(results, resultsKey);
 
-  // Category filters can come from the URL (?category=sport).
-  useEffect(() => {
-    const filters: { [key: string]: string[] } = {};
-    searchParams.forEach((value, key) => {
-      if (!filters[key]) {
-        filters[key] = [];
-      }
-      filters[key].push(value);
-    });
-    dispatch(initFilters(filters));
-  }, []);
-
-  const filtering = search.trim() !== "" || Object.values(filters).some((values) => values.length > 0);
+  const filtering = search.trim() !== "" || activeFilterCount > 0;
 
   return (
     <>
       <PageHeader title="Coupons" description="Codes shared by the Coupo community. Copy one, then vote on whether it worked.">
-        <SearchBar filter={setSearch} placeholder="Search by brand, code or category" />
+        <SearchBar filter={setSearch} value={search} placeholder="Search by brand, code or category" />
       </PageHeader>
 
       <section className="page-container py-8">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <Filter />
+          <Filter search={couponSearch} brands={brands} />
           <label className="flex items-center gap-2 text-sm font-medium">
             <span className="shrink-0 text-base-content/70">Sort by</span>
             <select
@@ -72,7 +52,7 @@ const CouponsPage = () => {
             </select>
           </label>
         </div>
-        <FilterChip />
+        <FilterChip search={couponSearch} />
         {!isLoading && !isError && filtering && results.length > 0 && (
           <p className="mt-4 text-sm text-base-content/70" aria-live="polite">
             {results.length === 1 ? "1 coupon" : `${results.length} coupons`}

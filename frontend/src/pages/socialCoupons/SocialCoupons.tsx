@@ -5,11 +5,13 @@ import PageHeader from "../../components/ui/PageHeader";
 import useCouponFeed from "../../hooks/useCouponFeed";
 import SearchBar from "../main/components/Searchbar";
 import useShowMore from "../../hooks/useShowMore";
-import { useMemo, useState } from "react";
+import useCouponSearch from "../../hooks/useCouponSearch";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
 const SocialCoupons = () => {
-  const [search, setSearch] = useState<string>("");
+  // The search text is kept in the URL (?q=...), like on the Coupons page.
+  const { search, setSearch } = useCouponSearch();
   const { data: coupons = [], isPending: isLoading, isError, refetch } = useCouponFeed(collectionsList.socialCoupons);
 
   const results = useMemo(() => coupons.filter((coupon) => matchesSearch(coupon, search)), [coupons, search]);
@@ -22,7 +24,7 @@ const SocialCoupons = () => {
         title="Social Coupons"
         description="Deals people found on social media and shared here, newest first."
       >
-        <SearchBar filter={setSearch} placeholder="Search by brand, code or category" />
+        <SearchBar filter={setSearch} value={search} placeholder="Search by brand, code or category" />
       </PageHeader>
       <section className="page-container py-8">
         <CouponGrid

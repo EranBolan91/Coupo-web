@@ -1,32 +1,22 @@
-import { addFilter, removeFilter } from "../../redux/reducers/filterReducer";
 import { getCategories } from "../../database/databaseCalls";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../redux/store/store";
-import useURLParams from "../../hooks/useURLParams";
-import { useQuery } from "@tanstack/react-query";
+import { discountOptions } from "../../logic/couponFilters";
+import { CouponSearch } from "../../hooks/useCouponSearch";
 import { PiSlidersHorizontalBold, PiXBold } from "react-icons/pi";
+import { useQuery } from "@tanstack/react-query";
 
-const Filter = () => {
-  const { setParam, removeParam } = useURLParams();
-  const filters = useSelector((state: RootState) => state.filters);
-  const dispatch = useDispatch();
+interface Props {
+  search: CouponSearch;
+  // Brand names in the current feed (see brandsInFeed).
+  brands: string[];
+}
 
-  const { data: categories } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-  });
+const optionClass = "label cursor-pointer justify-start gap-3 rounded-btn px-2 hover:bg-base-200";
+const legendClass = "mb-2 text-sm font-semibold text-base-content/70";
 
-  const handleFilter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked === true) {
-      setParam(e.target.name, e.target.value);
-      dispatch(addFilter({ [e.target.name]: e.target.value }));
-    } else {
-      removeParam(`${e.target.name}=${e.target.value}`);
-      dispatch(removeFilter({ [e.target.name]: e.target.value }));
-    }
-  };
-
-  const activeCount = Object.values(filters).reduce((sum, values) => sum + values.length, 0);
+// Filters drawer: category, brand, minimum discount and "expires this week". All state lives in the URL.
+const Filter = ({ search, brands }: Props) => {
+  const { filters, activeFilterCount, toggleFilter, setMinDiscount, setExpiringSoon, clearFilters } = search;
+  const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
 
   return (
     <div className="drawer z-40 w-auto">
@@ -35,7 +25,7 @@ const Filter = () => {
         <label htmlFor="filter-drawer" className="btn btn-sm h-10 min-h-10 border-base-300 bg-base-100 font-semibold">
           <PiSlidersHorizontalBold className="size-4" aria-hidden />
           Filters
-          {activeCount > 0 && <span className="badge badge-primary badge-sm">{activeCount}</span>}
+          {activeFilterCount > 0 && <span className="badge badge-primary badge-sm">{activeFilterCount}</span>}
         </label>
       </div>
       <div className="drawer-side">
@@ -47,24 +37,75 @@ const Filter = () => {
               <PiXBold className="size-5" aria-hidden />
             </label>
           </div>
+
           <fieldset className="mt-6">
-            <legend className="mb-2 text-sm font-semibold text-base-content/70">Categories</legend>
-            <div className="flex flex-col">
-              {categories?.map((category) => (
-                <label key={category} className="label cursor-pointer justify-start gap-3 rounded-btn px-2 hover:bg-base-200">
+            <legend className={legendClass}>Expiry</legend>
+            <label className={optionClass}>
+              <input
+                type="checkbox"
+                className="checkbox checkbox-primary checkbox-sm"
+                checked={filters.expiringSoon}
+                onChange={(e) => setExpiringSoon(e.target.checked)}
+              />
+              <span className="label-text">Expires within 7 days</span>
+            </label>
+          </fieldset>
+
+          <fieldset className="mt-6">
+            <legend className={legendClass}>Discount</legend>
+            {[{ value: 0, label: "Any discount" }, ...discountOptions].map((option) => (
+              <label key={option.value} className={optionClass}>
+                <input
+                  type="radio"
+                  name="min-discount"
+                  className="radio radio-primary radio-sm"
+                  checked={filters.minDiscount === option.value}
+                  onChange={() => setMinDiscount(option.value)}
+                />
+                <span className="label-text">{option.label}</span>
+              </label>
+            ))}
+          </fieldset>
+
+          {categories.length > 0 && (
+            <fieldset className="mt-6">
+              <legend className={legendClass}>Categories</legend>
+              {categories.map((category) => (
+                <label key={category} className={optionClass}>
                   <input
-                    onChange={handleFilter}
-                    name="category"
                     type="checkbox"
-                    value={category}
                     className="checkbox checkbox-primary checkbox-sm"
-                    checked={filters["category"]?.includes(category) ?? false}
+                    checked={filters.categories.includes(category)}
+                    onChange={() => toggleFilter("category", category)}
                   />
                   <span className="label-text capitalize">{category}</span>
                 </label>
               ))}
-            </div>
-          </fieldset>
+            </fieldset>
+          )}
+
+          {brands.length > 0 && (
+            <fieldset className="mt-6">
+              <legend className={legendClass}>Brands</legend>
+              {brands.map((brand) => (
+                <label key={brand} className={optionClass}>
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-primary checkbox-sm"
+                    checked={filters.brands.includes(brand)}
+                    onChange={() => toggleFilter("brand", brand)}
+                  />
+                  <span className="label-text">{brand}</span>
+                </label>
+              ))}
+            </fieldset>
+          )}
+
+          {activeFilterCount > 0 && (
+            <button type="button" className="btn btn-ghost btn-sm mt-6 self-start" onClick={clearFilters}>
+              Clear filters
+            </button>
+          )}
         </div>
       </div>
     </div>
