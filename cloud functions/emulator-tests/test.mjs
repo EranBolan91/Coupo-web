@@ -1,6 +1,6 @@
 // Rules + Cloud Function trigger tests. Run with `npm test` in this folder (starts the emulators on a fake project).
 import { initializeTestEnvironment, assertSucceeds, assertFails } from "@firebase/rules-unit-testing";
-import { doc, setDoc, getDoc, getDocs, collection, updateDoc, deleteDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { doc, setDoc, getDoc, getDocs, collection, updateDoc, deleteDoc, serverTimestamp, Timestamp, getCountFromServer } from "firebase/firestore";
 import { ref, uploadBytes } from "firebase/storage";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
@@ -67,6 +67,10 @@ await check("alice can update own Users doc", () => assertSucceeds(updateDoc(doc
 await check("alice cannot read bob's Users doc", () => assertFails(getDoc(doc(alice, "Users/bob"))));
 await check("alice cannot write bob's Users doc", () => assertFails(setDoc(doc(alice, "Users/bob"), { userUID: "bob" })));
 await check("anon cannot read Users", () => assertFails(getDoc(doc(anon, "Users/alice"))));
+// Admin dashboard counts users (getUserCounts); nobody else can list Users.
+await check("admin can count Users", () => assertSucceeds(getCountFromServer(collection(admin, "Users"))));
+await check("user cannot count Users", () => assertFails(getCountFromServer(collection(alice, "Users"))));
+await check("user cannot list Users", () => assertFails(getDocs(collection(alice, "Users"))));
 // Profile saves use set + merge (updatePersonalDocument), which also creates a missing Users doc.
 const carol = env.authenticatedContext("carol").firestore();
 await check("carol can create a missing Users doc with set+merge", () =>

@@ -7,6 +7,8 @@ import AdminRoute from "./auth/components/AdminRoute";
 import Categories from "./pages/categories/Categories";
 import CouponsPage from "./pages/coupons/CouponsPage";
 import CouponPage from "./pages/coupon/CouponPage";
+import TopSharers from "./pages/sharers/TopSharers";
+import SharerProfile from "./pages/sharers/SharerProfile";
 import Brand from "./pages/admin/components/Brand";
 import Category from "./pages/category/Category";
 import Navbar from "./components/navbar/Navbar";
@@ -15,6 +17,7 @@ import SignUp from "./auth/components/SignUp";
 import MainPage from "./pages/main/MainPage";
 import Login from "./auth/components/Login";
 import AdminPage from "./pages/admin/Admin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminCategories from "./pages/admin/AdminCategories";
@@ -35,6 +38,8 @@ const App = () => {
             <Route path="/coupons" element={<CouponsPage />} />
             <Route path="/coupons/:couponId" element={<CouponPage type="coupon" />} />
             <Route path="/social/:couponId" element={<CouponPage type="socialCoupon" />} />
+            <Route path="/top-sharers" element={<TopSharers />} />
+            <Route path="/users/:userId" element={<SharerProfile />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
 
@@ -58,12 +63,13 @@ const App = () => {
               path="/admin"
               element={
                 <AdminRoute>
-                  <AdminPage />
+                  <AdminDashboard />
                 </AdminRoute>
               }
             />
             {(
               [
+                ["/admin/add", <AdminPage />],
                 ["/admin/coupons", <AdminCoupons />],
                 ["/admin/reports", <AdminReports />],
                 ["/admin/categories", <AdminCategories />],

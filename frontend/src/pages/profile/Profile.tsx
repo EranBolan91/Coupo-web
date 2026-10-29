@@ -1,4 +1,5 @@
-import { PiPencilSimpleBold, PiPlusBold, PiUserCircleFill } from "react-icons/pi";
+import { PiArrowRightBold, PiPencilSimpleBold, PiPlusBold, PiUserCircleFill } from "react-icons/pi";
+import { sharerPath } from "../../logic/sharers";
 import { ModalPersonalInfo } from "./components/PersonalInfo/ModalPersonalInfo";
 import { getUserCoupons } from "../../database/databaseCalls";
 import PersonalInfo from "./components/PersonalInfo/PersonalInfo";
@@ -76,6 +77,15 @@ const Profile = () => {
           <Stat value={myCoupons.length} label="Coupons shared" />
           <Stat value={likesReceived} label="Likes received" />
           <Stat value={wishlists.length} label="Saved" />
+          {myCoupons.length > 0 && (
+            <Link
+              to={sharerPath(userDocument.userUID)}
+              className="flex min-w-[10rem] shrink-0 items-center gap-2 self-stretch rounded-box border-2 border-dashed border-base-300 px-5 text-sm font-bold transition-colors hover:border-base-content"
+            >
+              Your public page
+              <PiArrowRightBold aria-hidden />
+            </Link>
+          )}
         </div>
         <div className="perf-x w-full text-base-300" aria-hidden="true" />
       </header>
