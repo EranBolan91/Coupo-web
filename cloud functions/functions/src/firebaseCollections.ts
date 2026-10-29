@@ -8,4 +8,5 @@ export const collectionsList = {
   socialCoupons: "SocialCoupons",
   wishList: "WishList",
   notifications: "notifications",
+  reports: "Reports",
 };

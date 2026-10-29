@@ -6,6 +6,7 @@ import ProtectedRoute from "./auth/components/ProtectedRoute";
 import AdminRoute from "./auth/components/AdminRoute";
 import Categories from "./pages/categories/Categories";
 import CouponsPage from "./pages/coupons/CouponsPage";
+import CouponPage from "./pages/coupon/CouponPage";
 import Brand from "./pages/admin/components/Brand";
 import Category from "./pages/category/Category";
 import Navbar from "./components/navbar/Navbar";
@@ -14,6 +15,9 @@ import SignUp from "./auth/components/SignUp";
 import MainPage from "./pages/main/MainPage";
 import Login from "./auth/components/Login";
 import AdminPage from "./pages/admin/Admin";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminCategories from "./pages/admin/AdminCategories";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
 
@@ -29,6 +33,8 @@ const App = () => {
             <Route path="/categories/:categoryName" element={<Category />} />
             <Route path="/social" element={<SocialCoupons />} />
             <Route path="/coupons" element={<CouponsPage />} />
+            <Route path="/coupons/:couponId" element={<CouponPage type="coupon" />} />
+            <Route path="/social/:couponId" element={<CouponPage type="socialCoupon" />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
 
@@ -56,6 +62,15 @@ const App = () => {
                 </AdminRoute>
               }
             />
+            {(
+              [
+                ["/admin/coupons", <AdminCoupons />],
+                ["/admin/reports", <AdminReports />],
+                ["/admin/categories", <AdminCategories />],
+              ] as const
+            ).map(([path, page]) => (
+              <Route key={path} path={path} element={<AdminRoute>{page}</AdminRoute>} />
+            ))}
             <Route
               path="/admin/addBrand"
               element={

@@ -2,6 +2,8 @@ import { motion, useAnimationControls, useReducedMotion } from "motion/react";
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
 import { PiCheckBold, PiCopyBold } from "react-icons/pi";
 import { Coupon } from "../../../types/CouponType";
+import { couponPath } from "../../../logic/couponLinks";
+import { Link } from "react-router-dom";
 import VoteButton from "./VoteButton";
 import toast from "react-hot-toast";
 import { useState } from "react";
@@ -76,7 +78,15 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
           <div className="flex items-start gap-3">
             <BrandImage name={shown.name} src={shown.imgUrl} />
             <div className="min-w-0">
-              <h3 className="truncate text-xl font-extrabold leading-tight tracking-tight">{shown.name || "Brand"}</h3>
+              <h3 className="truncate text-xl font-extrabold leading-tight tracking-tight">
+                {preview ? (
+                  shown.name || "Brand"
+                ) : (
+                  <Link to={couponPath(shown)} className="hover:underline hover:decoration-primary hover:decoration-[3px] hover:underline-offset-4">
+                    {shown.name || "Brand"}
+                  </Link>
+                )}
+              </h3>
               <p className="truncate text-sm capitalize text-base-content/60">
                 {shown.category || "Category"}
                 {shown.username && <> · by {shown.username}</>}
