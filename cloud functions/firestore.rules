@@ -24,17 +24,18 @@ service cloud.firestore {
     }
 
     // The owner's copy of each coupon. Cloud Functions mirror these to Coupons / SocialCoupons.
+    // Admins can also read, edit and delete it (admin coupon tools); the edit is mirrored the same way.
     match /UserCoupons/{uid}/{couponType}/{couponId} {
-      allow read: if isOwner(uid);
+      allow read: if isOwner(uid) || isAdmin();
       allow create: if isOwner(uid)
         && couponType in ['Coupons', 'SocialCoupons']
         && request.resource.data.userID == uid
         && request.resource.data.likes == 0
         && request.resource.data.dislikes == 0;
-      // Owners can edit their coupon but not its counters or owner.
-      allow update: if isOwner(uid)
+      // Owners (and admins) can edit a coupon but not its counters or owner.
+      allow update: if (isOwner(uid) || isAdmin())
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['likes', 'dislikes', 'userID']);
-      allow delete: if isOwner(uid);
+      allow delete: if isOwner(uid) || isAdmin();
     }
 
     match /Coupons/{couponId} {
@@ -44,7 +45,7 @@ service cloud.firestore {
 
     match /SocialCoupons/{couponId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isAdmin();
     }
 
     match /UserVotes/{uid}/{voteType}/{couponId} {
@@ -66,9 +67,32 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Which notifications the user has already seen: { seen: { [notificationKey]: true } }.
+    // The notifications themselves are worked out in the browser (saved coupons expiring soon, open reports).
     match /notifications/{uid} {
       allow read: if isOwner(uid);
-      allow write: if false;
+      allow write: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['seen'])
+        && request.resource.data.seen is map
+        && request.resource.data.seen.size() <= 200;
+    }
+
+    // Reports/{couponId}_{reporterUid}: one report per user per coupon. Only admins can list or
+    // delete them; a user can only check whether their own report exists.
+    match /Reports/{reportId} {
+      allow get: if isAdmin()
+        || (signedIn() && reportId.matches('^[A-Za-z0-9]+_' + request.auth.uid + '$'));
+      allow list, delete: if isAdmin();
+      allow create: if signedIn()
+        && reportId == request.resource.data.couponID + '_' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['couponID', 'couponType', 'reason', 'details', 'reporterUID', 'createdAt'])
+        && request.resource.data.reporterUID == request.auth.uid
+        && request.resource.data.couponType in ['coupon', 'socialCoupon']
+        && request.resource.data.reason in ['not-working', 'expired', 'spam', 'other']
+        && request.resource.data.details is string
+        && request.resource.data.details.size() <= 500
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
     }
   }
 }
