@@ -1,5 +1,6 @@
 import { motion, useAnimationControls, useReducedMotion } from "motion/react";
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
+import ShareCouponButton from "../../../components/coupons/ShareCouponButton";
 import { PiArrowSquareOutBold, PiCheckBold, PiCheckCircleFill, PiCopyBold, PiWarningCircleFill, PiXBold } from "react-icons/pi";
 import { VotingCouponsContext } from "../../../context/VotingContext";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
@@ -194,6 +195,7 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
             <div className="-mx-2 -mb-2 flex items-center justify-between">
               <div className="flex items-center">
                 <WishlistButton couponID={shown.id} />
+                <ShareCouponButton coupon={shown} compact />
                 {shopUrl && (
                   <a
                     href={shopUrl}

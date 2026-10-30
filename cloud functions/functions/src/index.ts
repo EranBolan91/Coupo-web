@@ -8,6 +8,7 @@ import { UserRecord } from "firebase-admin/auth";
 import { Storage } from "@google-cloud/storage";
 import * as functions from "firebase-functions";
 import { Coupon, CurrentUser } from "./types";
+import { SITE_URL, injectPreview, isPreviewBot, parseCouponPath, previewTags } from "./couponPreview";
 
 import * as admin from "firebase-admin";
 
@@ -199,3 +200,67 @@ async function handleBrands(filePath: string, bucketName: string) {
     return null;
   }
 }
+
+// Coupon pages (/coupons/{id}, /social/{id}) come here through the Hosting rewrites in firebase.json.
+// It sends the normal index.html with this coupon's title, description and image in the preview tags,
+// so a link pasted in WhatsApp shows the coupon. The page then loads the React app as usual.
+let template: { html: string; fetchedAt: number } | null = null;
+const TEMPLATE_TTL_MS = 5 * 60 * 1000;
+
+// index.html is fetched from Hosting (it's a real file, so the rewrites don't apply) and kept for a few
+// minutes. It has to come from Hosting because its script names change with every frontend deploy.
+async function getTemplate() {
+  if (template && Date.now() - template.fetchedAt < TEMPLATE_TTL_MS) return template.html;
+  try {
+    const response = await fetch(`${SITE_URL}/index.html`);
+    if (!response.ok) throw new Error(`index.html returned ${response.status}`);
+    template = { html: await response.text(), fetchedAt: Date.now() };
+  } catch (error) {
+    console.error("couponPreview: couldn't fetch index.html", (error as Error).message);
+    if (!template) throw error;
+    // Keep serving the last good copy rather than failing the page.
+  }
+  return template.html;
+}
+
+export const couponPreview = functions.https.onRequest(async (req, res) => {
+  const route = parseCouponPath(req.path);
+
+  let html: string;
+  try {
+    html = await getTemplate();
+  } catch {
+    // Only when Hosting can't be reached and there is no earlier copy (e.g. right after a cold start).
+    res.status(503).set("Retry-After", "5").send("Coupo is busy. Please try again in a moment.");
+    return;
+  }
+
+  // Count visits from shared links (?ref=whatsapp, ?ref=share). Preview bots are logged separately.
+  const ref = typeof req.query.ref === "string" ? req.query.ref.slice(0, 32) : "";
+  if (ref) {
+    console.log(JSON.stringify({ event: "shared_link_visit", ref, path: route?.path ?? req.path, bot: isPreviewBot(req.get("user-agent")) }));
+  }
+
+  let missing = false;
+  if (route) {
+    try {
+      const collectionName = route.collection === "socialCoupons" ? collectionsList.socialCoupons : collectionsList.coupons;
+      const snapshot = await admin.firestore().collection(collectionName).doc(route.id).get();
+      if (snapshot.exists) {
+        html = injectPreview(html, previewTags(snapshot.data() as Coupon, route.path)) ?? html;
+      } else {
+        missing = true;
+      }
+    } catch (error) {
+      console.error("couponPreview: couldn't read the coupon", (error as Error).message);
+    }
+  }
+
+  // Hosting's CDN keeps the page for 10 minutes, browsers revalidate every time like the other HTML pages.
+  // A coupon that isn't found still gets the app, which shows its own "not found" page.
+  res
+    .status(missing ? 404 : 200)
+    .set("Cache-Control", missing ? "public, max-age=0, s-maxage=60" : "public, max-age=0, s-maxage=600")
+    .type("html")
+    .send(html);
+});
