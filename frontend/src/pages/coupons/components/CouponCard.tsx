@@ -1,6 +1,7 @@
 import { motion, useAnimationControls, useReducedMotion } from "motion/react";
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
-import { PiCheckBold, PiCopyBold } from "react-icons/pi";
+import { PiArrowSquareOutBold, PiCheckBold, PiCopyBold } from "react-icons/pi";
+import { shopHost, shopLink, termLabels } from "../../../logic/couponTerms";
 import { Coupon } from "../../../types/CouponType";
 import { couponPath } from "../../../logic/couponLinks";
 import { sharerPath } from "../../../logic/sharers";
@@ -52,6 +53,8 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
   const reduceMotion = useReducedMotion();
   const shown = preview ? coupon : currentCoupon;
   const isExpired = (shown.expiry?.toMillis?.() ?? Infinity) < Date.now();
+  const shopUrl = shopLink(shown);
+  const terms = termLabels(shown);
 
   const copyCode = async () => {
     try {
@@ -108,6 +111,16 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
 
           {shown.description && <p className="line-clamp-2 text-sm text-base-content/75">{shown.description}</p>}
 
+          {terms.length > 0 && (
+            <ul className="flex flex-wrap gap-1.5" aria-label="Conditions">
+              {terms.map((term) => (
+                <li key={term} className="rounded-badge bg-base-200 px-2.5 py-1 text-xs font-semibold text-base-content/75">
+                  {term}
+                </li>
+              ))}
+            </ul>
+          )}
+
           <div className="mt-auto flex items-center gap-2">
             <code className="min-w-0 flex-1 truncate rounded-btn border-2 border-dashed border-base-300 bg-base-200/70 px-3.5 py-1.5 font-mono text-[0.95rem] font-bold uppercase tracking-wider">
               {shown.code || "CODE"}
@@ -123,11 +136,26 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
                 {copied ? "Copied" : "Copy"}
               </button>
             )}
+
           </div>
 
           {!preview && (
             <div className="-mx-2 -mb-2 flex items-center justify-between">
-              <WishlistButton couponID={shown.id} />
+              <div className="flex items-center">
+                <WishlistButton couponID={shown.id} />
+                {shopUrl && (
+                  <a
+                    href={shopUrl}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                    className="btn btn-ghost btn-sm btn-square h-10 min-h-10 w-10"
+                    aria-label={`Shop at ${shopHost(shopUrl)} (opens in a new tab)`}
+                    title={`Shop at ${shopHost(shopUrl)}`}
+                  >
+                    <PiArrowSquareOutBold className="size-5" aria-hidden />
+                  </a>
+                )}
+              </div>
               <div className="flex items-center">
                 <VoteButton kind="likes" coupon={currentCoupon} setCoupon={setCurrentCoupon} />
                 <VoteButton kind="dislikes" coupon={currentCoupon} setCoupon={setCurrentCoupon} />

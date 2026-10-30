@@ -17,6 +17,11 @@ export const couponSchema = z.object({
   createdAt: z.instanceof(Timestamp),
   updatedAt: z.instanceof(Timestamp),
   type: z.enum(["coupon", "socialCoupon"]),
+  // Optional terms (see logic/couponTerms.ts). Older coupons don't have them.
+  storeUrl: z.string().optional(),
+  minOrder: z.string().optional(),
+  usableAt: z.enum(["online", "in-store", "both", ""]).optional(),
+  firstOrderOnly: z.boolean().optional(),
 });
 
 export type Coupon = z.infer<typeof couponSchema>;

@@ -8,7 +8,9 @@ import { CouponBrand } from "../../types/CouponBrandType";
 import { Coupon } from "../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 import { Timestamp } from "firebase/firestore";
-import { Fragment, useEffect } from "react";
+import { CouponTerms, cleanTerms, emptyTerms, termsError } from "../../logic/couponTerms";
+import CouponTermsFields from "../coupons/CouponTermsFields";
+import { Fragment, useEffect, useState } from "react";
 import Field from "../ui/Field";
 
 export type CouponFormValues = {
@@ -19,6 +21,7 @@ export type CouponFormValues = {
   discount: number;
   expiry: string; // yyyy-mm-dd from the date input
   description: string;
+  terms: CouponTerms; // store link and conditions (not a react-hook-form field)
 };
 
 interface Props {
@@ -100,6 +103,8 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   const userDocument = useCurrentUser();
   const brandsQuery = useQuery({ queryKey: ["brands"], queryFn: getCouponsBrands, enabled: brandMode === "store" });
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: getCategories });
+  const [terms, setTerms] = useState<CouponTerms>(emptyTerms);
+  const [triedSubmit, setTriedSubmit] = useState(false);
   const brands = brandsQuery.data ?? [];
   const categories = categoriesQuery.data ?? [];
 
@@ -111,7 +116,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<CouponFormValues>({
-    defaultValues: { name: "", imgUrl: "", category: "", code: "", expiry: "", description: "" },
+    defaultValues: { name: "", imgUrl: "", category: "", code: "", expiry: "", description: "", terms: emptyTerms },
   });
 
   // Brand and category are required; register them so react-hook-form validates them.
@@ -138,12 +143,16 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
     type: brandMode === "social" ? "socialCoupon" : "coupon",
+    ...cleanTerms(terms),
   };
 
   const submit: SubmitHandler<CouponFormValues> = async (form) => {
+    if (termsError(terms)) return;
     try {
-      await onSubmit({ ...form, code: form.code.trim().toUpperCase() });
+      await onSubmit({ ...form, code: form.code.trim().toUpperCase(), terms: cleanTerms(terms) });
       reset();
+      setTerms(emptyTerms);
+      setTriedSubmit(false);
     } catch {
       // The caller shows the error toast; keep what the user typed.
     }
@@ -151,7 +160,14 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_minmax(0,26rem)] lg:gap-14">
-      <form onSubmit={handleSubmit(submit)} className="space-y-6" noValidate>
+      <form
+        onSubmit={(e) => {
+          setTriedSubmit(true);
+          return handleSubmit(submit)(e);
+        }}
+        className="space-y-6"
+        noValidate
+      >
         <div className="grid gap-6 sm:grid-cols-2">
           <Field
             label="Brand"
@@ -251,7 +267,9 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
           />
         </Field>
 
-        <Field label="Details" htmlFor="description" hint="Optional. Any conditions, like a minimum order or first purchase only.">
+        <CouponTermsFields idPrefix="new" value={terms} onChange={setTerms} showErrors={triedSubmit} />
+
+        <Field label="Details" htmlFor="description" hint="Optional. Anything else people should know.">
           <textarea
             id="description"
             rows={3}

@@ -1,3 +1,4 @@
+import { CouponTerms } from "../logic/couponTerms";
 import {
   collection,
   getDocsFromServer,
@@ -171,13 +172,15 @@ export const updateCoupon = async (
   description: string,
   couponID: string,
   userID: string,
-  type?: Coupon["type"]
+  type?: Coupon["type"],
+  terms?: CouponTerms
 ) => {
   const docRef = doc(db, collectionsList.userCoupons, userID, userCouponsSubcollection(type), couponID);
   await updateDoc(docRef, {
     category: category,
     discount: discount,
     description: description,
+    ...terms,
   });
 };
 

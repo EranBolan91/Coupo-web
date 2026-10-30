@@ -10,6 +10,8 @@ import Modal from "../Modal/Modal";
 import Field from "../ui/Field";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import CouponTermsFields from "../coupons/CouponTermsFields";
+import { cleanTerms, termsError, termsOf } from "../../logic/couponTerms";
 
 const toDateInput = (expiry?: Timestamp) => {
   const date = expiry?.toDate?.();
@@ -36,6 +38,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
   const [discount, setDiscount] = useState(String(coupon.discount));
   const [expiry, setExpiry] = useState(toDateInput(coupon.expiry));
   const [description, setDescription] = useState(coupon.description ?? "");
+  const [terms, setTerms] = useState(() => termsOf(coupon));
 
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: getCategories, enabled: editOpen });
 
@@ -45,6 +48,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
     setDiscount(String(coupon.discount));
     setExpiry(toDateInput(coupon.expiry));
     setDescription(coupon.description ?? "");
+    setTerms(termsOf(coupon));
     setEditOpen(true);
   };
 
@@ -53,6 +57,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
     code: code.trim() ? undefined : "Code is required",
     discount: Number.isInteger(discountNumber) && discountNumber >= 1 && discountNumber <= 100 ? undefined : "Enter a whole number from 1 to 100",
     expiry: expiry ? undefined : "Expiry date is required",
+    terms: termsError(terms),
   };
   const invalid = Object.values(errors).some(Boolean);
 
@@ -67,6 +72,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
         discount: discountNumber,
         expiry: Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)),
         description: description.trim(),
+        ...cleanTerms(terms),
       });
       toast.success("Coupon updated");
       setEditOpen(false);
@@ -181,6 +187,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
               />
             </Field>
           </div>
+          <CouponTermsFields idPrefix={`admin-${coupon.id}`} value={terms} onChange={setTerms} />
           <Field label="Details" htmlFor={`admin-description-${coupon.id}`} hint="Optional">
             <textarea
               id={`admin-description-${coupon.id}`}
