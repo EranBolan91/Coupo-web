@@ -8,6 +8,9 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
   ActionCodeSettings,
   getAuth,
 } from "firebase/auth";
@@ -31,6 +34,10 @@ interface AuthProviderProps {
   sendEmailVerification: (user: User, actionCodeSettings?: ActionCodeSettings | null) => Promise<void>;
   // Sends Firebase's password-reset email.
   resetPassword: (email: string) => Promise<void>;
+  // True when the signed-in user can sign in with email + password (Google-only accounts can't).
+  hasPassword: () => boolean;
+  // Checks the current password, then sets the new one. Throws a FirebaseError (e.g. auth/invalid-credential).
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   // Re-reads Users/{uid} from Firestore into Redux (call after editing the profile).
   refreshUserDocument: () => Promise<void>;
   loginUserWithEmailPassword: (email: string, password: string) => Promise<AuthMSG>;
@@ -127,7 +134,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [auth, loadUserDocument]);
 
-  const resetPassword = (email: string) => sendPasswordResetEmail(auth, email);
+  // After setting a new password, Firebase's page shows a "Continue" button back to the login page.
+  const resetPassword = (email: string) =>
+    sendPasswordResetEmail(auth, email, { url: `${window.location.origin}/login` });
+
+  const hasPassword = () =>
+    auth.currentUser?.providerData.some((provider) => provider.providerId === EmailAuthProvider.PROVIDER_ID) ?? false;
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    const user = auth.currentUser;
+    if (!user?.email) throw new Error("Not signed in");
+    // Firebase only allows a password change right after signing in, so confirm the current password first.
+    await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, currentPassword));
+    await updatePassword(user, newPassword);
+  };
 
   const refreshUserDocument = async () => {
     await loadUserDocument(auth.currentUser);
@@ -212,6 +232,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         sendEmailVerification,
         refreshUserDocument,
         resetPassword,
+        hasPassword,
+        changePassword,
         loginUserWithEmailPassword,
         createUserWithEmailPassword,
       }}

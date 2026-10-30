@@ -5,6 +5,7 @@ import { getUserCoupons } from "../../database/databaseCalls";
 import PersonalInfo from "./components/PersonalInfo/PersonalInfo";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import ExpireCoupons from "./components/ExpireCoupons";
+import ChangePassword from "./components/ChangePassword";
 import useWishlist from "../../hooks/useWishlist";
 import { useQuery } from "@tanstack/react-query";
 import { Coupon } from "../../types/CouponType";
@@ -40,7 +41,15 @@ const Profile = () => {
     { label: "My coupons", count: myCoupons.length, content: <MyCoupons /> },
     { label: "Saved", count: wishlists.length, content: <Wishlist /> },
     { label: "Expired", content: <ExpireCoupons /> },
-    { label: "Account", content: <PersonalInfo currentUser={userDocument} /> },
+    {
+      label: "Account",
+      content: (
+        <>
+          <PersonalInfo currentUser={userDocument} />
+          <ChangePassword email={userDocument.email} />
+        </>
+      ),
+    },
   ];
 
   return (
