@@ -21,6 +21,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminImport from "./pages/admin/AdminImport";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
 
@@ -70,6 +71,7 @@ const App = () => {
             {(
               [
                 ["/admin/add", <AdminPage />],
+                ["/admin/import", <AdminImport />],
                 ["/admin/coupons", <AdminCoupons />],
                 ["/admin/reports", <AdminReports />],
                 ["/admin/categories", <AdminCategories />],

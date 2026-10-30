@@ -1,4 +1,4 @@
-import { PiChartBarBold, PiFlagBold, PiFoldersBold, PiListBulletsBold, PiPlusBold, PiTagBold } from "react-icons/pi";
+import { PiChartBarBold, PiFlagBold, PiFoldersBold, PiListBulletsBold, PiPlusBold, PiTagBold, PiUploadSimpleBold } from "react-icons/pi";
 import useReports from "../../../hooks/useReports";
 import { NavLink } from "react-router-dom";
 import React from "react";
@@ -6,10 +6,11 @@ import React from "react";
 const links = [
   { to: "/admin", label: "Dashboard", icon: PiChartBarBold },
   { to: "/admin/add", label: "Add coupon", icon: PiPlusBold },
+  { to: "/admin/import", label: "Import coupons", icon: PiUploadSimpleBold },
   { to: "/admin/coupons", label: "Coupons", icon: PiListBulletsBold },
   { to: "/admin/reports", label: "Reports", icon: PiFlagBold },
   { to: "/admin/categories", label: "Categories", icon: PiFoldersBold },
-  { to: "/admin/addBrand", label: "Add brands", icon: PiTagBold },
+  { to: "/admin/addBrand", label: "Add brands", icon: PiTagBold, PiUploadSimpleBold },
 ];
 
 // Admin pages: side menu on large screens, pill row on small ones, page content on the right.
