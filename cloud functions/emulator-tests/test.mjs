@@ -150,6 +150,23 @@ await check("non-admin cannot upload brand", () =>
 await check("admin can upload brand", () =>
   assertSucceeds(uploadBytes(ref(adminCtx.storage(), "Brands/Nike.png"), png, { contentType: "image/png" })));
 
+// ---------- Copies and sharer points ----------
+await check("alice can record copying a code once", () =>
+  assertSucceeds(setDoc(doc(alice, "UserCopies/alice/coupons/k1"), { copiedAt: serverTimestamp() })));
+await check("alice cannot record the same copy twice", () =>
+  assertFails(setDoc(doc(alice, "UserCopies/alice/coupons/k1"), { copiedAt: serverTimestamp() })));
+await check("alice cannot delete a copy record", () => assertFails(deleteDoc(doc(alice, "UserCopies/alice/coupons/k1"))));
+await check("alice cannot record a copy for bob", () =>
+  assertFails(setDoc(doc(alice, "UserCopies/bob/coupons/k2"), { copiedAt: serverTimestamp() })));
+await check("copy record needs only copiedAt = server time", () =>
+  assertFails(setDoc(doc(alice, "UserCopies/alice/coupons/k3"), { copiedAt: Timestamp.fromDate(new Date(2020, 1, 1)) })));
+await check("anon cannot record a copy", () => assertFails(setDoc(doc(anon, "UserCopies/x/coupons/k1"), { copiedAt: serverTimestamp() })));
+await check("anyone can read SharerStats", () => assertSucceeds(getDoc(doc(anon, "SharerStats/alice"))));
+await check("users cannot write SharerStats", () => assertFails(setDoc(doc(alice, "SharerStats/alice"), { points: 999 })));
+await check("admins cannot write SharerStats from the client", () => assertFails(setDoc(doc(admin, "SharerStats/alice"), { points: 1 })));
+await check("alice cannot create a coupon with copies", () =>
+  assertFails(setDoc(doc(alice, "UserCoupons/alice/Coupons/fakecopies"), { ...coupon("alice"), copies: 50 })));
+
 // ---------- Cloud Function triggers ----------
 await check("alice creates coupon -> mirrored to Coupons", async () => {
   await assertSucceeds(setDoc(doc(alice, "UserCoupons/alice/Coupons/c1"), coupon("alice")));
@@ -232,6 +249,48 @@ await check("social coupon create/vote/delete", async () => {
   await assertSucceeds(deleteDoc(doc(alice, "UserCoupons/alice/SocialCoupons/s1")));
   await waitFor(async () => (await readRaw("SocialCoupons/s1")) === null);
 });
+await check("bob copies alice's code -> copies=1, alice gets 1 point", async () => {
+  await assertSucceeds(setDoc(doc(alice, "UserCoupons/alice/Coupons/p1"), coupon("alice")));
+  await waitFor(async () => (await readRaw("Coupons/p1")) !== null);
+  await assertSucceeds(setDoc(doc(bob, "UserCopies/bob/coupons/p1"), { copiedAt: serverTimestamp() }));
+  await waitFor(async () => {
+    const s = await readRaw("SharerStats/alice");
+    return (await readRaw("Coupons/p1"))?.copies === 1 && (await readRaw("UserCoupons/alice/Coupons/p1"))?.copies === 1
+      && s?.points === 1 && s?.monthPoints === 1 && s?.copies === 1 && s?.name === "Alice A";
+  });
+});
+await check("alice copying her own code doesn't count", async () => {
+  await assertSucceeds(setDoc(doc(alice, "UserCopies/alice/coupons/p1"), { copiedAt: serverTimestamp() }));
+  await new Promise((r) => setTimeout(r, 2500));
+  if ((await readRaw("Coupons/p1")).copies !== 1) throw new Error("copies changed");
+});
+await check("alice cannot edit copies on her coupon", () => assertFails(updateDoc(doc(alice, "UserCoupons/alice/Coupons/p1"), { copies: 99 })));
+await check("bob says it worked -> +5 points; removing the vote takes them back", async () => {
+  await assertSucceeds(setDoc(doc(bob, "UserVotes/bob/likes/p1"), { votedAt: serverTimestamp() }));
+  await waitFor(async () => (await readRaw("SharerStats/alice"))?.points === 6 && (await readRaw("SharerStats/alice"))?.worked === 1);
+  await assertSucceeds(deleteDoc(doc(bob, "UserVotes/bob/likes/p1")));
+  await waitFor(async () => (await readRaw("SharerStats/alice"))?.points === 1 && (await readRaw("SharerStats/alice"))?.monthWorked === 0);
+});
+await check("alice liking her own coupon gives no points", async () => {
+  await assertSucceeds(setDoc(doc(alice, "UserVotes/alice/likes/p1"), { votedAt: serverTimestamp() }));
+  await waitFor(async () => (await readRaw("Coupons/p1"))?.likes === 1);
+  await new Promise((r) => setTimeout(r, 1500));
+  if ((await readRaw("SharerStats/alice")).points !== 1) throw new Error("self-vote counted");
+  await assertSucceeds(deleteDoc(doc(alice, "UserVotes/alice/likes/p1")));
+  await waitFor(async () => (await readRaw("Coupons/p1"))?.likes === 0);
+});
+await check("a dislike gives no points", async () => {
+  await assertSucceeds(setDoc(doc(bob, "UserVotes/bob/dislikes/p1"), { votedAt: serverTimestamp() }));
+  await waitFor(async () => (await readRaw("Coupons/p1"))?.dislikes === 1);
+  await new Promise((r) => setTimeout(r, 1500));
+  if ((await readRaw("SharerStats/alice")).points !== 1) throw new Error("dislike changed points");
+  await assertSucceeds(deleteDoc(doc(bob, "UserVotes/bob/dislikes/p1")));
+});
+await check("copying a Coupo coupon (no userID) counts copies but gives nobody points", async () => {
+  await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), "Coupons/coupo1"), { ...coupon(""), username: "Coupo" }));
+  await assertSucceeds(setDoc(doc(bob, "UserCopies/bob/coupons/coupo1"), { copiedAt: serverTimestamp() }));
+  await waitFor(async () => (await readRaw("Coupons/coupo1"))?.copies === 1);
+});
 await check("alice deletes coupon -> removed from Coupons", async () => {
   await assertSucceeds(deleteDoc(doc(alice, "UserCoupons/alice/Coupons/c1")));
   await waitFor(async () => (await readRaw("Coupons/c1")) === null);
@@ -277,6 +336,33 @@ await check("recountVotes reports, then fixes inflated counters", async () => {
     throw new Error(`after write: public ${pub.likes}/${pub.dislikes}, owner ${own.likes}/${own.dislikes}`);
   }
   if (run().includes("Coupons/r1")) throw new Error("still reports r1 after write");
+});
+
+// ---------- scripts/recountPoints.js ----------
+await check("recountPoints rebuilds SharerStats from copies and votes", async () => {
+  const month = new Date().toISOString().slice(0, 7);
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, "Coupons/q1"), { ...coupon("dana"), username: "Dana D" });
+    await setDoc(doc(db, "UserCopies/erin/coupons/q1"), { copiedAt: Timestamp.now() });
+    await setDoc(doc(db, "UserCopies/dana/coupons/q1"), { copiedAt: Timestamp.now() }); // own copy: ignored
+    await setDoc(doc(db, "UserVotes/erin/likes/q1"), { votedAt: Timestamp.now() });
+    await setDoc(doc(db, "UserVotes/frank/likes/q1"), { a: 1 }); // old vote without votedAt: all time only
+    await setDoc(doc(db, "UserVotes/dana/likes/q1"), { votedAt: Timestamp.now() }); // own vote: ignored
+  });
+  const script = fileURLToPath(new URL("../functions/scripts/recountPoints.js", import.meta.url));
+  const run = (...args) =>
+    execFileSync("node", [script, ...args], { env: { ...process.env, GCLOUD_PROJECT: "demo-coupo" } }).toString();
+
+  const report = run();
+  if (!report.includes("SharerStats/dana (Dana D): 11 points (6 this month), 1 copies, 2 worked")) throw new Error("report: " + report);
+  if (await readRaw("SharerStats/dana")) throw new Error("report mode wrote data");
+  run("--write");
+  const s = await readRaw("SharerStats/dana");
+  if (s?.points !== 11 || s.monthPoints !== 6 || s.month !== month || s.monthCopies !== 1 || s.monthWorked !== 1) {
+    throw new Error("after write: " + JSON.stringify(s));
+  }
+  if (run().includes("SharerStats/dana")) throw new Error("still reports dana after write");
 });
 
 await env.cleanup();
