@@ -49,6 +49,48 @@
         }
       },
       {
+        "source": "/store/*",
+        "function": {
+          "functionId": "couponPreview",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/stores",
+        "function": {
+          "functionId": "couponPreview",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/categories",
+        "function": {
+          "functionId": "couponPreview",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/categories/*",
+        "function": {
+          "functionId": "couponPreview",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/sitemap.xml",
+        "function": {
+          "functionId": "couponPreview",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/robots.txt",
+        "function": {
+          "functionId": "couponPreview",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

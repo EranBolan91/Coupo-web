@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 const links = [
   { name: "Coupons", href: "/coupons" },
+  { name: "Stores", href: "/stores" },
   { name: "Categories", href: "/categories" },
   { name: "Social Coupons", href: "/social" },
   { name: "Top sharers", href: "/top-sharers" },
