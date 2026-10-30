@@ -7,6 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import { PiPencilSimpleBold } from "react-icons/pi";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import CouponTermsFields from "../../../components/coupons/CouponTermsFields";
+import { cleanTerms, termsError, termsOf } from "../../../logic/couponTerms";
 
 interface Props {
   coupon: Coupon;
@@ -19,6 +21,7 @@ const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
   const [discount, setDiscount] = useState<string>(String(coupon.discount));
   const [description, setDescription] = useState<string>(coupon.description ?? "");
   const [category, setCategory] = useState<string>(coupon.category);
+  const [terms, setTerms] = useState(() => termsOf(coupon));
   const [open, setOpen] = useState<boolean>(false);
   const userDocument = useCurrentUser();
 
@@ -31,10 +34,10 @@ const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
       : undefined;
 
   const save = () => {
-    if (discountError) return;
+    if (discountError || termsError(terms)) return;
     setOpen(false);
     toast
-      .promise(updateCoupon(category, discountNumber, description, coupon.id, userDocument?.userUID ?? "", coupon.type), {
+      .promise(updateCoupon(category, discountNumber, description, coupon.id, userDocument?.userUID ?? "", coupon.type, cleanTerms(terms)), {
         loading: "Saving changes...",
         success: "Coupon updated",
         error: "Couldn't update the coupon",
@@ -63,7 +66,7 @@ const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
             <button type="button" className="btn btn-ghost h-12 min-h-12" onClick={() => setOpen(false)}>
               Cancel
             </button>
-            <button type="button" className="btn btn-primary h-12 min-h-12" onClick={save} disabled={!!discountError}>
+            <button type="button" className="btn btn-primary h-12 min-h-12" onClick={save} disabled={!!discountError || !!termsError(terms)}>
               Save changes
             </button>
           </>
@@ -100,7 +103,8 @@ const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
               />
             </Field>
           </div>
-          <Field label="Description" htmlFor={`description-${coupon.id}`} hint="Optional. Any conditions, like a minimum order.">
+          <CouponTermsFields idPrefix={`edit-${coupon.id}`} value={terms} onChange={setTerms} />
+          <Field label="Description" htmlFor={`description-${coupon.id}`} hint="Optional. Anything else people should know.">
             <textarea
               id={`description-${coupon.id}`}
               rows={3}

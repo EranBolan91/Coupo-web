@@ -24,5 +24,6 @@ export const toCoupon = (
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
     type,
+    ...values.terms,
   };
 };

@@ -8,7 +8,8 @@ import { collectionsList } from "../../../firebaseCollections";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadError from "../../components/ui/LoadError";
 import useCouponFeed from "../../hooks/useCouponFeed";
-import { PiArrowLeftBold } from "react-icons/pi";
+import { PiArrowLeftBold, PiArrowSquareOutBold } from "react-icons/pi";
+import { shopHost, shopLink, termLabels } from "../../logic/couponTerms";
 import { getCoupon } from "../../database/coupons";
 import { Coupon } from "../../types/CouponType";
 import { UserAuth } from "../../auth/AuthProvider";
@@ -82,6 +83,7 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
   }
 
   const expired = (coupon.expiry?.toMillis?.() ?? Infinity) < now;
+  const shopUrl = shopLink(coupon);
   const facts: [string, React.ReactNode][] = [
     ["Expires", expired ? <span className="text-error">Expired {longDate(coupon.expiry)}</span> : longDate(coupon.expiry) ?? "No expiry"],
     [
@@ -94,6 +96,7 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
         "None"
       ),
     ],
+    ...(termLabels(coupon).length > 0 ? ([["Conditions", termLabels(coupon).join(", ")]] as [string, React.ReactNode][]) : []),
     ["Shared by", coupon.username || "Coupo"],
     ["Added", longDate(coupon.createdAt) ?? "Unknown"],
     ["Votes", `${coupon.likes ?? 0} worked, ${coupon.dislikes ?? 0} didn't`],
@@ -123,6 +126,12 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
               ))}
             </dl>
             <div className="mt-8 flex flex-wrap items-center gap-2">
+              {shopUrl && (
+                <a href={shopUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-secondary h-12 min-h-12 px-5">
+                  Shop at {shopHost(shopUrl)}
+                  <PiArrowSquareOutBold className="size-4" aria-hidden />
+                </a>
+              )}
               <ShareCouponButton coupon={coupon} />
               <ReportCouponButton coupon={coupon} />
             </div>
