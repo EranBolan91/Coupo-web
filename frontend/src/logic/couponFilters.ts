@@ -63,14 +63,20 @@ export interface CouponFilters {
   brands: string[];
   minDiscount: number;
   expiringSoon: boolean;
+  // Expired coupons are hidden unless this is on.
+  showExpired: boolean;
 }
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 const lower = (value?: string) => (value ?? "").toLowerCase();
 
+// A coupon with no expiry date never expires.
+export const isExpired = (coupon: Coupon, now = Date.now()) => (coupon.expiry?.toMillis?.() ?? Infinity) < now;
+
 // True when the coupon passes every active filter. An empty list or 0 means "no filter".
 // "Expiring soon" means it hasn't expired yet and expires within the next 7 days.
 export const matchesFilters = (coupon: Coupon, filters: CouponFilters, now = Date.now()) => {
+  if (!filters.showExpired && isExpired(coupon, now)) return false;
   if (filters.categories.length > 0 && !filters.categories.map(lower).includes(lower(coupon.category))) return false;
   if (filters.brands.length > 0 && !filters.brands.map(lower).includes(lower(coupon.name))) return false;
   if (filters.minDiscount > 0 && Number(coupon.discount) < filters.minDiscount) return false;
@@ -79,6 +85,16 @@ export const matchesFilters = (coupon: Coupon, filters: CouponFilters, now = Dat
     if (expiry < now || expiry > now + WEEK_MS) return false;
   }
   return true;
+};
+
+// Applies search and filters, and also counts the matching coupons that are expired, for the
+// "Show expired" switch. Expired coupons are only in `results` when filters.showExpired is on.
+export const filterCoupons = (coupons: Coupon[], search: string, filters: CouponFilters, now = Date.now()) => {
+  const matching = coupons.filter(
+    (coupon) => matchesSearch(coupon, search) && matchesFilters(coupon, { ...filters, showExpired: true }, now)
+  );
+  const results = filters.showExpired ? matching : matching.filter((coupon) => !isExpired(coupon, now));
+  return { results, expiredCount: matching.filter((coupon) => isExpired(coupon, now)).length };
 };
 
 // Brand names that appear in a feed, once each (ignoring case), A-Z. Used for the brand filter,

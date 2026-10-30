@@ -3,8 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import { useCallback, useMemo } from "react";
 
 // Search, sort and filters for a coupon list, kept in the URL so a refreshed or shared link shows
-// the same results: /coupons?q=nike&sort=likes-desc&category=sport&brand=Nike&discount=25&expiring=week
-// category and brand can repeat. Defaults (no search, "newest", no filters) are left out of the URL.
+// the same results: /coupons?q=nike&sort=likes-desc&category=sport&brand=Nike&discount=25&expiring=week&expired=show
+// category and brand can repeat. Defaults (no search, "newest", no filters, expired hidden) are left out of the URL.
 export type FilterKey = "category" | "brand";
 
 const validDiscounts: number[] = discountOptions.map((option) => option.value);
@@ -22,6 +22,7 @@ const useCouponSearch = () => {
       brands: params.getAll("brand"),
       minDiscount: validDiscounts.includes(discountParam) ? discountParam : 0,
       expiringSoon: params.get("expiring") === "week",
+      showExpired: params.get("expired") === "show",
     }),
     [params, discountParam]
   );
@@ -75,7 +76,12 @@ const useCouponSearch = () => {
     [update]
   );
 
-  // Clears the filters but keeps the search text and sort.
+  const setShowExpired = useCallback(
+    (on: boolean) => update((next) => setSingle(next, "expired", on ? "show" : "")),
+    [update]
+  );
+
+  // Clears the filters but keeps the search text, sort and the "Show expired" switch.
   const clearFilters = useCallback(
     () =>
       update((next) => {
@@ -102,6 +108,7 @@ const useCouponSearch = () => {
     toggleFilter,
     setMinDiscount,
     setExpiringSoon,
+    setShowExpired,
     clearFilters,
   };
 };
