@@ -35,6 +35,20 @@
     ],
     "rewrites": [
       {
+        "source": "/coupons/*",
+        "function": {
+          "functionId": "couponPreview",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/social/*",
+        "function": {
+          "functionId": "couponPreview",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
