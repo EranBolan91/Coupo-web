@@ -45,7 +45,7 @@ npm test          # builds functions, starts firestore/storage/functions/auth em
 
 The emulators need Java 21+. The machine's default `java` is 11, so prefix the command: `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64 PATH=/usr/lib/jvm/java-21-openjdk-amd64/bin:$PATH npm test`. A log line `Property admin is undefined on object` is expected (it's a denied non-admin request).
 
-Deploy (from `"cloud functions"`): `firebase deploy --only functions`, `--only firestore:rules`, `--only storage`, `--only firestore:indexes`. Nothing in this folder takes effect until it's deployed. Firebase Hosting is not configured here.
+Deploy (from `"cloud functions"`): `firebase deploy --only functions`, `--only firestore:rules`, `--only storage`, `--only firestore:indexes`. Nothing in this folder takes effect until it's deployed. The frontend is deployed with `firebase deploy --only hosting` (site `https://coupo-e03c4.web.app`): its predeploy step builds `frontend/` into `cloud functions/public/` (git-ignored; Firebase can't serve files outside this folder) using the local `frontend/.env`, and every path falls back to `index.html` for client-side routing. It deploys whatever is checked out, so deploy from an up-to-date `main`.
 
 ### Verifying changes
 

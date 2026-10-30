@@ -67,3 +67,6 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# Built frontend for Firebase Hosting (made by the hosting predeploy step)
+public/
