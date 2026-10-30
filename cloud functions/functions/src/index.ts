@@ -58,17 +58,20 @@ export const addUserSocialCouponToSocialCouponsCollection = functions.firestore
   });
 
 // Copies the owner's edits (category, discount, description, ...) to the public copy.
-// likes/dislikes are left alone: the vote triggers keep both copies' counters in sync.
+// Fields kept by the vote trigger (counters and "last worked" times) are left alone: that trigger
+// writes both copies itself.
+const voteFields = ["likes", "dislikes", "lastWorkedAt", "lastFailedAt"];
+const withoutVoteFields = (data: FirebaseFirestore.DocumentData) =>
+  Object.fromEntries(Object.entries(data).filter(([key]) => !voteFields.includes(key)));
+
 const mirrorCouponUpdate = (collectionName: string) =>
   functions.firestore
     .document(`${collectionsList.userCoupons}/{userID}/${collectionName}/{docID}`)
     .onUpdate(async (change, context) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { likes: _l1, dislikes: _d1, ...before } = change.before.data();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { likes: _l2, dislikes: _d2, ...after } = change.after.data();
+      const before = withoutVoteFields(change.before.data());
+      const after = withoutVoteFields(change.after.data());
 
-      // Only the counters changed (a vote) - nothing to mirror.
+      // Only the vote fields changed - nothing to mirror.
       if (JSON.stringify(before) === JSON.stringify(after)) return null;
 
       const publicRef = admin.firestore().collection(collectionName).doc(context.params.docID);
@@ -101,7 +104,9 @@ export const removeSocialCouponFromSocialCouponsCollection = functions.firestore
   });
 
 // UserVotes/{voterID}/likes|dislikes/{couponID}: a new vote doc adds 1, a deleted one subtracts 1.
-// The counter is updated on the public coupon and on the coupon owner's copy
+// A like means "the code worked" and a dislike "it didn't", so every saved vote (new or re-saved,
+// e.g. "Did it work? Yes" again) also stamps lastWorkedAt / lastFailedAt.
+// Both are updated on the public coupon and on the coupon owner's copy
 // (the owner comes from the coupon's userID field, not from the voter's ID in the path).
 const countVote = (field: "likes" | "dislikes") =>
   functions.firestore
@@ -110,11 +115,14 @@ const countVote = (field: "likes" | "dislikes") =>
       let delta = 0;
       if (!change.before.exists && change.after.exists) delta = 1;
       if (change.before.exists && !change.after.exists) delta = -1;
-      if (delta === 0) return null;
+      const saved = change.after.exists;
 
       const db = admin.firestore();
       const couponID = context.params.couponID;
-      const increment = FieldValue.increment(delta);
+      const update: Record<string, FieldValue> = {};
+      if (delta !== 0) update[field] = FieldValue.increment(delta);
+      if (saved) update[field === "likes" ? "lastWorkedAt" : "lastFailedAt"] = FieldValue.serverTimestamp();
+      if (Object.keys(update).length === 0) return null;
 
       // One vote per user per coupon: a new like removes the user's dislike and vice versa.
       // Deleting it fires this trigger for the other field, which subtracts 1 there.
@@ -129,13 +137,13 @@ const countVote = (field: "likes" | "dislikes") =>
         if (!publicSnap.exists) continue;
 
         const batch = db.batch();
-        batch.update(publicRef, { [field]: increment });
+        batch.update(publicRef, update);
 
         const ownerID = publicSnap.get("userID");
         if (typeof ownerID === "string" && ownerID !== "") {
           const ownerRef = db.doc(`${collectionsList.userCoupons}/${ownerID}/${collectionName}/${couponID}`);
           const ownerSnap = await ownerRef.get();
-          if (ownerSnap.exists) batch.update(ownerRef, { [field]: increment });
+          if (ownerSnap.exists) batch.update(ownerRef, update);
         }
 
         await batch.commit();

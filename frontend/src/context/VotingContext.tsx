@@ -7,6 +7,7 @@ import { getUserVotes } from "../logic/logic";
 import { useSelector } from "react-redux";
 import { Vote } from "../types/VoteType";
 import { createContext } from "react";
+import { Timestamp } from "firebase/firestore";
 
 export type VoteKind = "likes" | "dislikes";
 
@@ -17,6 +18,9 @@ type VotingContextType = {
   // Adds the vote, or removes it if it's already there. Voting one way removes the other vote
   // (the countVote Cloud Function enforces the same thing). Returns the coupon with updated counts.
   toggleVote: (coupon: Coupon, kind: VoteKind) => Promise<Coupon>;
+  // Answer to "Did it work?": yes = like, no = dislike. Unlike toggleVote it never removes a vote;
+  // giving the same answer again re-saves it, which refreshes "last worked" on the coupon.
+  reportResult: (coupon: Coupon, worked: boolean) => Promise<Coupon>;
 };
 
 export const VotingCouponsContext = createContext<VotingContextType | null>(null);
@@ -71,7 +75,18 @@ export const VotingContextProvider = ({ children }: { children: ReactNode }) => 
     return updated;
   };
 
+  const reportResult = async (coupon: Coupon, worked: boolean): Promise<Coupon> => {
+    const kind: VoteKind = worked ? "likes" : "dislikes";
+    let updated: Coupon = coupon;
+    if (getUserVote(coupon.id) === kind) {
+      await saveUserVote(coupon, userProfile.userUID, worked);
+    } else {
+      updated = await toggleVote(coupon, kind);
+    }
+    return { ...updated, [worked ? "lastWorkedAt" : "lastFailedAt"]: Timestamp.now() };
+  };
+
   return (
-    <VotingCouponsContext.Provider value={{ userVotes, getUserVote, toggleVote }}>{children}</VotingCouponsContext.Provider>
+    <VotingCouponsContext.Provider value={{ userVotes, getUserVote, toggleVote, reportResult }}>{children}</VotingCouponsContext.Provider>
   );
 };

@@ -1,6 +1,9 @@
 import { motion, useAnimationControls, useReducedMotion } from "motion/react";
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
-import { PiArrowSquareOutBold, PiCheckBold, PiCopyBold } from "react-icons/pi";
+import { PiArrowSquareOutBold, PiCheckBold, PiCheckCircleFill, PiCopyBold, PiWarningCircleFill, PiXBold } from "react-icons/pi";
+import { VotingCouponsContext } from "../../../context/VotingContext";
+import { useCurrentUser } from "../../../hooks/useCurrentUser";
+import { latestResult, resultLabel } from "../../../logic/couponResults";
 import { shopHost, shopLink, termLabels } from "../../../logic/couponTerms";
 import { Coupon } from "../../../types/CouponType";
 import { couponPath } from "../../../logic/couponLinks";
@@ -8,7 +11,7 @@ import { sharerPath } from "../../../logic/sharers";
 import { Link } from "react-router-dom";
 import VoteButton from "./VoteButton";
 import toast from "react-hot-toast";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import type React from "react";
 
 interface Props {
@@ -49,17 +52,38 @@ export const BrandImage = ({ name, src, className = "size-11" }: { name: string;
 export default function CouponCard({ coupon, innerRef, preview = false }: Props) {
   const [currentCoupon, setCurrentCoupon] = useState<Coupon>(coupon);
   const [copied, setCopied] = useState(false);
+  // "Did it work?" shows after a signed-in user copies the code, until they answer or close it.
+  const [askResult, setAskResult] = useState(false);
+  const [savingResult, setSavingResult] = useState(false);
+  const voting = useContext(VotingCouponsContext);
+  const userDocument = useCurrentUser();
   const stub = useAnimationControls();
   const reduceMotion = useReducedMotion();
   const shown = preview ? coupon : currentCoupon;
   const isExpired = (shown.expiry?.toMillis?.() ?? Infinity) < Date.now();
   const shopUrl = shopLink(shown);
   const terms = termLabels(shown);
+  const result = latestResult(shown);
+
+  const answer = async (worked: boolean) => {
+    if (!voting || savingResult) return;
+    setSavingResult(true);
+    try {
+      setCurrentCoupon(await voting.reportResult(currentCoupon, worked));
+      setAskResult(false);
+      toast.success(worked ? "Thanks! Others will see it worked." : "Thanks for letting others know.");
+    } catch {
+      toast.error("Couldn't save your answer");
+    } finally {
+      setSavingResult(false);
+    }
+  };
 
   const copyCode = async () => {
     try {
       await navigator.clipboard.writeText(shown.code);
       setCopied(true);
+      if (userDocument && !preview) setAskResult(true);
       toast.success(`Copied ${shown.code}`);
       if (!reduceMotion) {
         await stub.start({ rotate: 7, x: 6, y: -2, transition: { duration: 0.12, ease: "easeOut" } });
@@ -121,6 +145,13 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
             </ul>
           )}
 
+          {result && (
+            <p className={`flex items-center gap-1.5 text-xs font-semibold ${result.worked ? "text-accent" : "text-error"}`}>
+              {result.worked ? <PiCheckCircleFill className="size-4" aria-hidden /> : <PiWarningCircleFill className="size-4" aria-hidden />}
+              {resultLabel(result)}
+            </p>
+          )}
+
           <div className="mt-auto flex items-center gap-2">
             <code className="min-w-0 flex-1 truncate rounded-btn border-2 border-dashed border-base-300 bg-base-200/70 px-3.5 py-1.5 font-mono text-[0.95rem] font-bold uppercase tracking-wider">
               {shown.code || "CODE"}
@@ -138,6 +169,26 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
             )}
 
           </div>
+
+          {askResult && (
+            <div className="flex items-center gap-2 rounded-btn bg-base-200 py-1 pl-4 pr-1" role="group" aria-label="Did the code work?">
+              <span className="flex-1 whitespace-nowrap text-sm font-bold">Did it work?</span>
+              <button type="button" className="btn btn-primary btn-sm h-9 min-h-9 px-3" disabled={savingResult} onClick={() => answer(true)}>
+                Yes
+              </button>
+              <button type="button" className="btn btn-ghost btn-sm h-9 min-h-9 px-3" disabled={savingResult} onClick={() => answer(false)}>
+                No
+              </button>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm btn-circle h-9 min-h-9 w-9"
+                aria-label="Not now"
+                onClick={() => setAskResult(false)}
+              >
+                <PiXBold className="size-4" aria-hidden />
+              </button>
+            </div>
+          )}
 
           {!preview && (
             <div className="-mx-2 -mb-2 flex items-center justify-between">
