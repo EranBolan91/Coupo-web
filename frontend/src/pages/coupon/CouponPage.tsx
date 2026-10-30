@@ -10,6 +10,7 @@ import LoadError from "../../components/ui/LoadError";
 import useCouponFeed from "../../hooks/useCouponFeed";
 import { PiArrowLeftBold, PiArrowSquareOutBold } from "react-icons/pi";
 import { shopHost, shopLink, termLabels } from "../../logic/couponTerms";
+import { latestResult, resultLabel } from "../../logic/couponResults";
 import { getCoupon } from "../../database/coupons";
 import { Coupon } from "../../types/CouponType";
 import { UserAuth } from "../../auth/AuthProvider";
@@ -100,6 +101,9 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
     ["Shared by", coupon.username || "Coupo"],
     ["Added", longDate(coupon.createdAt) ?? "Unknown"],
     ["Votes", `${coupon.likes ?? 0} worked, ${coupon.dislikes ?? 0} didn't`],
+    ...(latestResult(coupon)
+      ? ([["Latest", resultLabel(latestResult(coupon)!)]] as [string, React.ReactNode][])
+      : []),
   ];
 
   return (

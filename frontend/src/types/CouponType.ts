@@ -22,6 +22,9 @@ export const couponSchema = z.object({
   minOrder: z.string().optional(),
   usableAt: z.enum(["online", "in-store", "both", ""]).optional(),
   firstOrderOnly: z.boolean().optional(),
+  // Set by the vote Cloud Function: last time someone said the code worked (like) or didn't (dislike).
+  lastWorkedAt: z.instanceof(Timestamp).optional(),
+  lastFailedAt: z.instanceof(Timestamp).optional(),
 });
 
 export type Coupon = z.infer<typeof couponSchema>;

@@ -183,6 +183,36 @@ await check("bob switches dislike -> like: dislike removed, likes=1 dislikes=0",
   });
 });
 await check("alice cannot edit own likes", () => assertFails(updateDoc(doc(alice, "UserCoupons/alice/Coupons/c1"), { likes: 50 })));
+await check("a like stamps lastWorkedAt on public and owner copy", async () => {
+  await waitFor(async () => {
+    const p = await readRaw("Coupons/c1");
+    const o = await readRaw("UserCoupons/alice/Coupons/c1");
+    return p?.lastWorkedAt instanceof Timestamp && o?.lastWorkedAt instanceof Timestamp;
+  });
+});
+await check("re-saving a like refreshes lastWorkedAt without counting again", async () => {
+  const before = (await readRaw("Coupons/c1")).lastWorkedAt.toMillis();
+  await new Promise((r) => setTimeout(r, 1100));
+  await assertSucceeds(setDoc(doc(bob, "UserVotes/bob/likes/c1"), { ...coupon("alice"), votedAt: serverTimestamp() }));
+  await waitFor(async () => {
+    const p = await readRaw("Coupons/c1");
+    return p?.lastWorkedAt?.toMillis() > before && p?.likes === 1;
+  });
+});
+await check("a dislike stamps lastFailedAt", async () => {
+  const carolDb = env.authenticatedContext("carol").firestore();
+  await assertSucceeds(setDoc(doc(carolDb, "UserVotes/carol/dislikes/c1"), { a: 1 }));
+  await waitFor(async () => {
+    const p = await readRaw("Coupons/c1");
+    return p?.lastFailedAt instanceof Timestamp && p?.dislikes === 1;
+  });
+  await assertSucceeds(deleteDoc(doc(carolDb, "UserVotes/carol/dislikes/c1")));
+  await waitFor(async () => (await readRaw("Coupons/c1"))?.dislikes === 0);
+});
+await check("alice cannot fake lastWorkedAt on her coupon", () =>
+  assertFails(updateDoc(doc(alice, "UserCoupons/alice/Coupons/c1"), { lastWorkedAt: Timestamp.now() })));
+await check("alice cannot create a coupon with lastWorkedAt", () =>
+  assertFails(setDoc(doc(alice, "UserCoupons/alice/Coupons/fake"), { ...coupon("alice"), lastWorkedAt: Timestamp.now() })));
 await check("alice edits description -> mirrored, counters kept", async () => {
   await assertSucceeds(updateDoc(doc(alice, "UserCoupons/alice/Coupons/c1"), { description: "new", discount: 20 }));
   await waitFor(async () => {

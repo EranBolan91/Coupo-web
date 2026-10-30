@@ -13,6 +13,7 @@ import {
   getDoc,
   Timestamp,
   orderBy,
+  serverTimestamp,
 } from "firebase/firestore";
 import { ref, uploadBytesResumable } from "firebase/storage";
 
@@ -159,7 +160,8 @@ export const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean
     }
 
     const docRef = doc(db, collectionsList.userVotes, userID, subCollectionName, coupon.id);
-    await setDoc(docRef, coupon);
+    // votedAt makes a re-saved vote a real change, so the vote trigger refreshes "last worked".
+    await setDoc(docRef, { ...coupon, votedAt: serverTimestamp() });
   } catch (err: any) {
     console.log(err);
     throw new Error(err);

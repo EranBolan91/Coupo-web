@@ -31,10 +31,11 @@ service cloud.firestore {
         && couponType in ['Coupons', 'SocialCoupons']
         && request.resource.data.userID == uid
         && request.resource.data.likes == 0
-        && request.resource.data.dislikes == 0;
-      // Owners (and admins) can edit a coupon but not its counters or owner.
+        && request.resource.data.dislikes == 0
+        && !request.resource.data.keys().hasAny(['lastWorkedAt', 'lastFailedAt']);
+      // Owners (and admins) can edit a coupon but not its counters, "last worked" times or owner.
       allow update: if (isOwner(uid) || isAdmin())
-        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['likes', 'dislikes', 'userID']);
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['likes', 'dislikes', 'lastWorkedAt', 'lastFailedAt', 'userID']);
       allow delete: if isOwner(uid) || isAdmin();
     }
 
