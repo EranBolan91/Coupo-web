@@ -121,6 +121,28 @@ await check("admin can list and delete reports", async () => {
   await assertSucceeds(deleteDoc(doc(admin, "Reports/c9_alice")));
 });
 
+// ---------- Searches (analytics log) ----------
+const search = (extra = {}) => ({ term: "nike", results: 3, page: "coupons", createdAt: serverTimestamp(), ...extra });
+await check("anon can log a search", () => assertSucceeds(setDoc(doc(anon, "Searches/s1"), search())));
+await check("alice can log a search", () => assertSucceeds(setDoc(doc(alice, "Searches/s2"), search({ results: 0, page: "social" }))));
+await check("anon cannot read a search", () => assertFails(getDoc(doc(anon, "Searches/s1"))));
+await check("users cannot list searches", () => assertFails(getDocs(collection(alice, "Searches"))));
+await check("users cannot edit a search", () => assertFails(updateDoc(doc(alice, "Searches/s2"), { results: 9 })));
+await check("users cannot delete a search", () => assertFails(deleteDoc(doc(alice, "Searches/s2"))));
+await check("search has no extra fields", () => assertFails(setDoc(doc(anon, "Searches/s3"), search({ uid: "x" }))));
+await check("search needs every field", () => assertFails(setDoc(doc(anon, "Searches/s3"), { term: "nike", createdAt: serverTimestamp() })));
+await check("search term max 60", () => assertFails(setDoc(doc(anon, "Searches/s3"), search({ term: "x".repeat(61) }))));
+await check("search term min 2", () => assertFails(setDoc(doc(anon, "Searches/s3"), search({ term: "x" }))));
+await check("search results must be a whole number", () => assertFails(setDoc(doc(anon, "Searches/s3"), search({ results: "3" }))));
+await check("search results can't be negative", () => assertFails(setDoc(doc(anon, "Searches/s3"), search({ results: -1 }))));
+await check("search page must be known", () => assertFails(setDoc(doc(anon, "Searches/s3"), search({ page: "admin" }))));
+await check("search time must be the server time", () =>
+  assertFails(setDoc(doc(anon, "Searches/s3"), search({ createdAt: Timestamp.fromDate(new Date(2020, 0, 1)) }))));
+await check("admin can list and delete searches", async () => {
+  await assertSucceeds(getDocs(collection(admin, "Searches")));
+  await assertSucceeds(deleteDoc(doc(admin, "Searches/s1")));
+});
+
 // ---------- notifications (seen markers) ----------
 await check("alice can save her seen notifications", () =>
   assertSucceeds(setDoc(doc(alice, "notifications/alice"), { seen: { "expiring-c1": true } })));
