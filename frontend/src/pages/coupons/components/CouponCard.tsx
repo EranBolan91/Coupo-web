@@ -9,6 +9,7 @@ import { shopHost, shopLink, termLabels } from "../../../logic/couponTerms";
 import { Coupon } from "../../../types/CouponType";
 import { couponPath } from "../../../logic/couponLinks";
 import { sharerPath } from "../../../logic/sharers";
+import { recordCopy } from "../../../database/sharerStats";
 import { Link } from "react-router-dom";
 import VoteButton from "./VoteButton";
 import toast from "react-hot-toast";
@@ -84,7 +85,11 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
     try {
       await navigator.clipboard.writeText(shown.code);
       setCopied(true);
-      if (userDocument && !preview) setAskResult(true);
+      if (userDocument && !preview) {
+        setAskResult(true);
+        // Counts toward the sharer's "copied" number and points (once per person, not for their own code).
+        if (shown.id && shown.userID !== userDocument.userUID) recordCopy(userDocument.userUID, shown.id);
+      }
       toast.success(`Copied ${shown.code}`);
       if (!reduceMotion) {
         await stub.start({ rotate: 7, x: 6, y: -2, transition: { duration: 0.12, ease: "easeOut" } });

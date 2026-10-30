@@ -10,6 +10,9 @@ import useWishlist from "../../hooks/useWishlist";
 import { useQuery } from "@tanstack/react-query";
 import { Coupon } from "../../types/CouponType";
 import MyCoupons from "./components/MyCoupons";
+import Impact from "./components/Impact";
+import { useSharerStats } from "../../hooks/useSharerStats";
+import { thisMonth } from "../../logic/points";
 import Wishlist from "./components/Wishlist";
 import { Link } from "react-router-dom";
 import Tabs from "./components/Tabs";
@@ -34,11 +37,14 @@ const Profile = () => {
   });
   const { wishlists = [] } = useWishlist(userDocument?.userUID);
   const likesReceived = myCoupons.reduce((sum, coupon) => sum + (coupon.likes ?? 0), 0);
+  const timesCopied = myCoupons.reduce((sum, coupon) => sum + (coupon.copies ?? 0), 0);
+  const { data: stats } = useSharerStats(userDocument?.userUID);
 
   if (!userDocument) return null;
 
   const tabs = [
     { label: "My coupons", count: myCoupons.length, content: <MyCoupons /> },
+    { label: "Impact", content: <Impact /> },
     { label: "Saved", count: wishlists.length, content: <Wishlist /> },
     { label: "Expired", content: <ExpireCoupons /> },
     {
@@ -84,7 +90,9 @@ const Profile = () => {
         </div>
         <div className="page-container flex gap-3 overflow-x-auto pb-10">
           <Stat value={myCoupons.length} label="Coupons shared" />
-          <Stat value={likesReceived} label="Likes received" />
+          <Stat value={timesCopied} label="Times copied" />
+          <Stat value={likesReceived} label="Said it worked" />
+          <Stat value={thisMonth(stats).points} label="Points this month" />
           <Stat value={wishlists.length} label="Saved" />
           {myCoupons.length > 0 && (
             <Link
