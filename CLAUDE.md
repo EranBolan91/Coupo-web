@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Coupo is a coupon-sharing web app. Users sign up, post coupons (regular and "social"), vote on them (like/dislike), keep a wishlist, and browse by category/brand. Admins add brands and coupons. The backend is entirely Firebase (Auth, Firestore, Storage, Cloud Functions); there is no custom API server.
+Coupo is a coupon-sharing web app, live at https://coupo-e03c4.web.app (Firebase Hosting). Users sign up, post coupons (regular and "social"), vote on them (like/dislike), keep a wishlist, browse by category/brand, report bad coupons, and appear on a top-sharers leaderboard with a public page. Admins have a dashboard, add brands, coupons and categories, edit or delete any coupon, and handle reports. The backend is entirely Firebase (Auth, Firestore, Storage, Cloud Functions); there is no custom API server.
 
 The repo has separate npm projects (no workspace setup, no root `package.json`):
 
@@ -95,7 +95,7 @@ Exported function names are what Firebase deploys under; renaming one deletes th
 
 ## Security
 
-The rules in this repo implement the model below. **Check whether they've been deployed** (`firebase deploy --only firestore:rules,storage`) before assuming production is protected. Before this change the deployed Firestore rules allowed everything and the Storage rules blocked all uploads.
+The rules in this repo implement the model below. They only protect production once deployed (`firebase deploy --only firestore:rules,storage`); after changing them, deploy them and don't assume an earlier deploy covers the new rules. Features that need new rules (e.g. reports, admin edits of users' coupons) are refused on the live site until then.
 
 - **Ownership:** a signed-in user can read and write only under their own uid (`Users/{uid}`, `UserCoupons/{uid}/**`, `UserVotes/{uid}/**`, `WishList/{uid}`). `Users` docs are private (owner or admin). New coupons must have `userID == uid` and `likes == dislikes == 0`; owners can't change `likes`, `dislikes` or `userID` afterwards.
 - **Public collections** (`Coupons`, `SocialCoupons`, `Brands`, `Category`) are world-readable. Only admins can write them from the client. Cloud Functions use the Admin SDK and bypass rules.
