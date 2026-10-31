@@ -1,7 +1,7 @@
-import { PiSignOutBold, PiTicketBold, PiUserBold, PiUserCircleFill } from "react-icons/pi";
+import { PiChatCircleTextBold, PiSignOutBold, PiTicketBold, PiUserBold, PiUserCircleFill } from "react-icons/pi";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { UserAuth } from "../../../auth/AuthProvider";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 
 type Props = {
@@ -12,6 +12,7 @@ type Props = {
 const Avatar = ({ imgURL }: Props) => {
   const { logout } = UserAuth();
   const userDocument = useCurrentUser();
+  const { pathname } = useLocation();
 
   const handleLogout = async () => {
     if (userDocument) {
@@ -48,6 +49,11 @@ const Avatar = ({ imgURL }: Props) => {
         <li>
           <Link to="/addcoupon">
             <PiTicketBold aria-hidden /> Share a coupon
+          </Link>
+        </li>
+        <li>
+          <Link to="/feedback" state={{ from: pathname }}>
+            <PiChatCircleTextBold aria-hidden /> Send feedback
           </Link>
         </li>
         <li>

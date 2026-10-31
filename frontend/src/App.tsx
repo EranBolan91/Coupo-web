@@ -22,6 +22,8 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminImport from "./pages/admin/AdminImport";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminFeedback from "./pages/admin/AdminFeedback";
+import FeedbackPage from "./pages/feedback/FeedbackPage";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
 
@@ -44,6 +46,7 @@ const App = () => {
             <Route path="/social/:couponId" element={<CouponPage type="socialCoupon" />} />
             <Route path="/top-sharers" element={<TopSharers />} />
             <Route path="/users/:userId" element={<SharerProfile />} />
+            <Route path="/feedback" element={<FeedbackPage />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
 
@@ -79,6 +82,7 @@ const App = () => {
                 ["/admin/import", <AdminImport />],
                 ["/admin/coupons", <AdminCoupons />],
                 ["/admin/reports", <AdminReports />],
+                ["/admin/feedback", <AdminFeedback />],
                 ["/admin/categories", <AdminCategories />],
               ] as const
             ).map(([path, page]) => (
