@@ -9,6 +9,7 @@ import { Storage } from "@google-cloud/storage";
 import * as functions from "firebase-functions";
 import { Coupon, CurrentUser } from "./types";
 import { SITE_URL, injectPreview, isPreviewBot, parseCouponPath, previewTags } from "./couponPreview";
+import { StatsChange, applyChange } from "./sharerPoints";
 
 import * as admin from "firebase-admin";
 import { renderListingPage, getFeed, toFeedCoupon } from "./seoServer";
@@ -62,9 +63,9 @@ export const addUserSocialCouponToSocialCouponsCollection = functions.firestore
   });
 
 // Copies the owner's edits (category, discount, description, ...) to the public copy.
-// Fields kept by the vote trigger (counters and "last worked" times) are left alone: that trigger
-// writes both copies itself.
-const voteFields = ["likes", "dislikes", "lastWorkedAt", "lastFailedAt"];
+// Fields kept by the vote and copy triggers (counters and "last worked" times) are left alone: those
+// triggers write both copies themselves.
+const voteFields = ["likes", "dislikes", "lastWorkedAt", "lastFailedAt", "copies"];
 const withoutVoteFields = (data: FirebaseFirestore.DocumentData) =>
   Object.fromEntries(Object.entries(data).filter(([key]) => !voteFields.includes(key)));
 
@@ -135,31 +136,86 @@ const countVote = (field: "likes" | "dislikes") =>
         await db.doc(`${collectionsList.userVotes}/${context.params.userID}/${otherField}/${couponID}`).delete();
       }
 
-      for (const collectionName of couponCollections) {
-        const publicRef = db.collection(collectionName).doc(couponID);
-        const publicSnap = await publicRef.get();
-        if (!publicSnap.exists) continue;
-
-        const batch = db.batch();
-        batch.update(publicRef, update);
-
-        const ownerID = publicSnap.get("userID");
-        if (typeof ownerID === "string" && ownerID !== "") {
-          const ownerRef = db.doc(`${collectionsList.userCoupons}/${ownerID}/${collectionName}/${couponID}`);
-          const ownerSnap = await ownerRef.get();
-          if (ownerSnap.exists) batch.update(ownerRef, update);
-        }
-
-        await batch.commit();
+      const coupon = await updateBothCopies(couponID, update);
+      if (!coupon) {
+        console.log(`Vote on unknown coupon ${couponID}`);
         return null;
       }
 
-      console.log(`Vote on unknown coupon ${couponID}`);
+      // "It worked" votes from other people give the sharer points.
+      if (field === "likes" && delta !== 0 && coupon.ownerID && coupon.ownerID !== context.params.userID) {
+        await addSharerStats(coupon.ownerID, { worked: delta }, coupon.username);
+      }
       return null;
     });
 
 export const addLikeVoteToCoupon = countVote("likes");
 export const addDislikeVoteToCoupon = countVote("dislikes");
+
+// Applies `update` to the public coupon (Coupons, then SocialCoupons) and to the owner's copy.
+// Returns the owner and sharer name, or null when the coupon doesn't exist.
+async function updateBothCopies(couponID: string, update: Record<string, FieldValue>) {
+  const db = admin.firestore();
+  for (const collectionName of couponCollections) {
+    const publicRef = db.collection(collectionName).doc(couponID);
+    const publicSnap = await publicRef.get();
+    if (!publicSnap.exists) continue;
+
+    const batch = db.batch();
+    batch.update(publicRef, update);
+
+    const ownerID = publicSnap.get("userID");
+    const hasOwner = typeof ownerID === "string" && ownerID !== "";
+    if (hasOwner) {
+      const ownerRef = db.doc(`${collectionsList.userCoupons}/${ownerID}/${collectionName}/${couponID}`);
+      const ownerSnap = await ownerRef.get();
+      if (ownerSnap.exists) batch.update(ownerRef, update);
+    }
+
+    await batch.commit();
+    const username = publicSnap.get("username");
+    return { ownerID: hasOwner ? (ownerID as string) : "", username: typeof username === "string" ? username : "" };
+  }
+  return null;
+}
+
+// SharerStats/{uid}: points, copies and "worked" votes, all time and this month (see sharerPoints.ts).
+async function addSharerStats(uid: string, change: StatsChange, name: string) {
+  const db = admin.firestore();
+  const ref = db.collection(collectionsList.sharerStats).doc(uid);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    tx.set(ref, { ...applyChange(snap.data(), change, new Date(), name), updatedAt: FieldValue.serverTimestamp() });
+  });
+}
+
+// UserCopies/{uid}/coupons/{couponID}: written by the browser the first time a signed-in user copies a
+// code (the rules allow one per person per coupon). Counts `copies` on the coupon and gives the sharer
+// a point. Copying your own code doesn't count.
+export const countCopy = functions.firestore
+  .document(`${collectionsList.userCopies}/{userID}/coupons/{couponID}`)
+  .onCreate(async (snap, context) => {
+    const db = admin.firestore();
+    const couponID = context.params.couponID;
+    const copierID = context.params.userID;
+
+    let ownerID = "";
+    for (const collectionName of couponCollections) {
+      const publicSnap = await db.collection(collectionName).doc(couponID).get();
+      if (!publicSnap.exists) continue;
+      ownerID = publicSnap.get("userID") ?? "";
+      break;
+    }
+    if (ownerID === copierID) return null;
+
+    const coupon = await updateBothCopies(couponID, { copies: FieldValue.increment(1) });
+    if (!coupon) {
+      console.log(`Copy of unknown coupon ${couponID}`);
+      return null;
+    }
+    if (coupon.ownerID) await addSharerStats(coupon.ownerID, { copies: 1 }, coupon.username);
+    return null;
+  });
 
 // Only Brands/ uploads are handled here. Profile images (ProfileImage/{uid}/...) are handled by
 // the client, which saves a working download URL on Users/{uid}.imageURL itself.

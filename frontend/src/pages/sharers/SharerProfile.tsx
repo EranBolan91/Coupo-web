@@ -7,6 +7,9 @@ import { PiArrowLeftBold } from "react-icons/pi";
 import useSharers from "../../hooks/useSharers";
 import { workedRate } from "../../logic/sharers";
 import SharerAvatar from "./SharerAvatar";
+import Badges from "../../components/sharers/Badges";
+import { useMonthLeaderboard, useSharerStats } from "../../hooks/useSharerStats";
+import { badges, thisMonth } from "../../logic/points";
 
 const Stat = ({ value, label }: { value: string | number; label: string }) => (
   <div className="flex min-w-[7.5rem] flex-col rounded-box bg-base-200 px-5 py-4">
@@ -21,6 +24,9 @@ const SharerProfile = () => {
   const { sharers, isPending, isError, refetch } = useSharers();
   const myID = useCurrentUser()?.userUID;
   const sharer = sharers.find((s) => s.userID === userId);
+  const { data: stats } = useSharerStats(userId);
+  const { data: month = [] } = useMonthLeaderboard();
+  const monthRank = month.findIndex((s) => s.userID === userId) + 1 || undefined;
 
   const backLink = (
     <Link to="/top-sharers" className="btn btn-ghost btn-sm -ml-3 h-10 min-h-10 px-3 text-base-content/70">
@@ -58,6 +64,8 @@ const SharerProfile = () => {
   const active = sharer.coupons.filter((c) => (c.expiry?.toMillis?.() ?? Infinity) >= now);
   const expired = sharer.coupons.filter((c) => (c.expiry?.toMillis?.() ?? Infinity) < now);
   const rate = workedRate(sharer);
+  const copies = Math.max(stats?.copies ?? 0, sharer.coupons.reduce((sum, c) => sum + (c.copies ?? 0), 0));
+  const earned = badges({ couponsShared: sharer.coupons.length, copies, worked: Math.max(stats?.worked ?? 0, sharer.likes), failed: sharer.dislikes, monthRank });
   const since = new Date(sharer.firstSharedAt).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
   return (
@@ -77,8 +85,15 @@ const SharerProfile = () => {
         <div className="page-container flex gap-3 overflow-x-auto pb-10">
           <Stat value={sharer.coupons.length} label="Coupons shared" />
           <Stat value={sharer.likes} label="Likes received" />
+          <Stat value={copies} label="Times copied" />
           <Stat value={rate === null ? "-" : `${rate}%`} label="Said it worked" />
+          <Stat value={thisMonth(stats).points} label="Points this month" />
         </div>
+        {earned.some((b) => b.earned) && (
+          <div className="page-container pb-10">
+            <Badges badges={earned} />
+          </div>
+        )}
         <div className="perf-x w-full text-base-300" aria-hidden="true" />
       </header>
 

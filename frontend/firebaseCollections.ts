@@ -10,4 +10,6 @@ export const collectionsList = {
   wishList: "WishList",
   notifications: "notifications",
   reports: "Reports",
+  userCopies: "UserCopies",
+  sharerStats: "SharerStats",
 };
