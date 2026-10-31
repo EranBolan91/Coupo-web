@@ -203,17 +203,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signinWthGoogle = async () => {
-    const res = await signInWithPopup(auth, provider)
-      .then(async (result) => {
-        const user = result.user;
-        await loadUserDocument(user);
-        return user;
-      })
-      .catch((error) => {
-        console.error("Google sign-in failed:", error.code);
-        return error;
-      });
-    return res;
+    try {
+      const result = await signInWithPopup(auth, provider);
+      await loadUserDocument(result.user);
+    } catch (error: any) {
+      // Log the code (e.g. auth/unauthorized-domain) and let the caller show it.
+      console.error("Google sign-in failed:", error?.code, error);
+      throw error;
+    }
   };
 
   const logout = async () => {

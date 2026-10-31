@@ -33,8 +33,13 @@ const SignUp = () => {
   } = useForm<SignUpForm>();
 
   const handleSigninWithGoogle = async () => {
-    await signinWthGoogle();
-    navigate("/profile");
+    try {
+      await signinWthGoogle();
+      navigate("/profile");
+    } catch (error: any) {
+      if (error?.code === "auth/popup-closed-by-user" || error?.code === "auth/cancelled-popup-request") return;
+      toast.error(authErrorMessage(error, authErrors));
+    }
   };
 
   const handleSignUp: SubmitHandler<SignUpForm> = async (data) => {
