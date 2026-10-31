@@ -26,8 +26,14 @@ export type CouponSort = (typeof couponSortOptions)[number]["value"];
 
 const time = (value?: { toMillis: () => number }) => value?.toMillis?.() ?? 0;
 
-// Returns a sorted copy. "newest" keeps the feed's order (newest first).
-export const sortCoupons = (coupons: Coupon[], sort: CouponSort) => {
+// Returns a sorted copy, with expired coupons always after the active ones.
+export const sortCoupons = (coupons: Coupon[], sort: CouponSort, now = Date.now()) => {
+  const sorted = sortBy(coupons, sort);
+  return [...sorted.filter((coupon) => !isExpired(coupon, now)), ...sorted.filter((coupon) => isExpired(coupon, now))];
+};
+
+// "newest" keeps the feed's order (newest first).
+const sortBy = (coupons: Coupon[], sort: CouponSort) => {
   const sorted = [...coupons];
   switch (sort) {
     case "likes-desc":
@@ -93,7 +99,9 @@ export const filterCoupons = (coupons: Coupon[], search: string, filters: Coupon
   const matching = coupons.filter(
     (coupon) => matchesSearch(coupon, search) && matchesFilters(coupon, { ...filters, showExpired: true }, now)
   );
-  const results = filters.showExpired ? matching : matching.filter((coupon) => !isExpired(coupon, now));
+  // When expired coupons are shown, they go after the active ones (keeping the chosen order within each).
+  const active = matching.filter((coupon) => !isExpired(coupon, now));
+  const results = filters.showExpired ? [...active, ...matching.filter((coupon) => isExpired(coupon, now))] : active;
   return { results, expiredCount: matching.filter((coupon) => isExpired(coupon, now)).length };
 };
 

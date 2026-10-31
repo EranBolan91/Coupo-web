@@ -9,6 +9,7 @@ import useCouponFeed from "../../hooks/useCouponFeed";
 import SearchBar from "../main/components/Searchbar";
 import useShowMore from "../../hooks/useShowMore";
 import Filter from "../../components/filter/Filter";
+import useSearchLogging from "../../hooks/useSearchLogging";
 import { useMemo } from "react";
 
 const CouponsPage = () => {
@@ -17,6 +18,7 @@ const CouponsPage = () => {
 
   const { data: coupons = [], isPending: isLoading, isError, refetch } = useCouponFeed(collectionsList.coupons);
   const brands = useMemo(() => brandsInFeed(coupons), [coupons]);
+  useSearchLogging("coupons", search, coupons, !isLoading && !isError);
 
   // Search, filters and sort apply to every coupon, not only the ones on screen.
   // Expired coupons are hidden unless "Show expired" is on.

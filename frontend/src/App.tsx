@@ -1,4 +1,4 @@
-import AddCouponPage from "./components/addCoupon/AddCouponPage";
+import { AddCouponPage, Brand, Profile, SignUp } from "./pages/lazyPages";
 import SocialCoupons from "./pages/socialCoupons/SocialCoupons";
 import { Routes, Route } from "react-router-dom";
 import NotFound from "./pages/NotFound";
@@ -9,18 +9,17 @@ import CouponsPage from "./pages/coupons/CouponsPage";
 import CouponPage from "./pages/coupon/CouponPage";
 import TopSharers from "./pages/sharers/TopSharers";
 import SharerProfile from "./pages/sharers/SharerProfile";
-import Brand from "./pages/admin/components/Brand";
 import Category from "./pages/category/Category";
+import StorePage from "./pages/store/StorePage";
+import Stores from "./pages/stores/Stores";
+import RouteMeta from "./components/seo/RouteMeta";
 import Navbar from "./components/navbar/Navbar";
-import Profile from "./pages/profile/Profile";
-import SignUp from "./auth/components/SignUp";
 import MainPage from "./pages/main/MainPage";
-import Login from "./auth/components/Login";
-import AdminPage from "./pages/admin/Admin";
-import AdminDashboard from "./pages/admin/AdminDashboard";
+import { AdminDashboard, AdminPage, Login } from "./pages/lazyPages";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
 
@@ -28,6 +27,7 @@ const App = () => {
   return (
     <>
       <div className="flex min-h-[100dvh] flex-col">
+        <RouteMeta />
         <Navbar />
         <main className="grow">
           <Routes>
@@ -36,6 +36,8 @@ const App = () => {
             <Route path="/categories/:categoryName" element={<Category />} />
             <Route path="/social" element={<SocialCoupons />} />
             <Route path="/coupons" element={<CouponsPage />} />
+            <Route path="/stores" element={<Stores />} />
+            <Route path="/store/:storeSlug" element={<StorePage />} />
             <Route path="/coupons/:couponId" element={<CouponPage type="coupon" />} />
             <Route path="/social/:couponId" element={<CouponPage type="socialCoupon" />} />
             <Route path="/top-sharers" element={<TopSharers />} />
@@ -69,6 +71,7 @@ const App = () => {
             />
             {(
               [
+                ["/admin/analytics", <AdminAnalytics />],
                 ["/admin/add", <AdminPage />],
                 ["/admin/coupons", <AdminCoupons />],
                 ["/admin/reports", <AdminReports />],

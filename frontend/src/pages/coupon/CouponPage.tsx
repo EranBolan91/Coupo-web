@@ -15,6 +15,8 @@ import { getCoupon } from "../../database/coupons";
 import { Coupon } from "../../types/CouponType";
 import { UserAuth } from "../../auth/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
+import { storePath } from "../../logic/stores";
+import usePageMeta from "../../hooks/usePageMeta";
 
 const longDate = (value?: { toDate?: () => Date }) =>
   value?.toDate?.().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
@@ -41,6 +43,26 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
         .filter((c) => (c.expiry?.toMillis?.() ?? Infinity) >= now)
         .slice(0, 3)
     : [];
+
+  // Same wording as the link preview the couponPreview Cloud Function sends.
+  usePageMeta(
+    coupon
+      ? {
+          title: Number(coupon.discount) > 0 ? `${coupon.discount}% off at ${coupon.name}` : `Coupon for ${coupon.name}`,
+          description: [
+            coupon.description
+              ? coupon.description.replace(/\s+/g, " ").trim().slice(0, 160)
+              : `Get the ${coupon.name} coupon code on Coupo.`,
+            (coupon.expiry?.toMillis?.() ?? Infinity) < now ? "This coupon has expired." : "",
+          ]
+            .filter(Boolean)
+            .join(" "),
+          image: coupon.imgUrl || undefined,
+        }
+      : isPending
+        ? null
+        : { title: "Coupon not found" }
+  );
 
   const backLink = (
     <Link to={back.to} className="btn btn-ghost btn-sm -ml-3 h-10 min-h-10 px-3 text-base-content/70">
@@ -87,6 +109,12 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
   const shopUrl = shopLink(coupon);
   const facts: [string, React.ReactNode][] = [
     ["Expires", expired ? <span className="text-error">Expired {longDate(coupon.expiry)}</span> : longDate(coupon.expiry) ?? "No expiry"],
+    [
+      "Store",
+      <Link to={storePath(coupon.name)} className="underline decoration-primary decoration-2 underline-offset-4">
+        All {coupon.name} coupons
+      </Link>,
+    ],
     [
       "Category",
       coupon.category ? (
@@ -156,6 +184,9 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
             More from <span className="capitalize">{coupon.name}</span>
           </h2>
           <CouponGrid coupons={moreFromBrand} />
+          <Link to={storePath(coupon.name)} className="btn btn-secondary mt-8">
+            All {coupon.name} coupon codes
+          </Link>
         </section>
       )}
     </>

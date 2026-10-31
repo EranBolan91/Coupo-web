@@ -1,6 +1,7 @@
 export const collectionsList = {
   brands: "Brands",
   category: "Category",
+  searches: "Searches",
   coupons: "Coupons",
   userVotes: "UserVotes",
   users: "Users",

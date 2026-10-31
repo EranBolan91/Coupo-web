@@ -12,6 +12,9 @@ import { SITE_URL, injectPreview, isPreviewBot, parseCouponPath, previewTags } f
 import { StatsChange, applyChange } from "./sharerPoints";
 
 import * as admin from "firebase-admin";
+import { renderListingPage, getFeed, toFeedCoupon } from "./seoServer";
+import { couponBody, couponJsonLd, robotsTxt, sitemapXml } from "./seoPages";
+import { injectBody, pageTags } from "./couponPreview";
 
 admin.initializeApp();
 const storage = new Storage();
@@ -257,9 +260,14 @@ async function handleBrands(filePath: string, bucketName: string) {
   }
 }
 
-// Coupon pages (/coupons/{id}, /social/{id}) come here through the Hosting rewrites in firebase.json.
-// It sends the normal index.html with this coupon's title, description and image in the preview tags,
-// so a link pasted in WhatsApp shows the coupon. The page then loads the React app as usual.
+// Pages that search engines and link-preview bots read come here through the Hosting rewrites in
+// firebase.json: coupon pages (/coupons/{id}, /social/{id}), store pages (/stores, /store/{slug}),
+// category pages (/categories, /categories/{name}), /sitemap.xml and /robots.txt.
+// HTML pages get the normal index.html with the page's title, description, preview image and
+// structured data in the head, and a readable copy of the content (heading, codes, links) in the body,
+// so a link pasted in WhatsApp shows the coupon and Google sees the page without running JavaScript.
+// The page then loads the React app as usual, which replaces that copy.
+// (The function keeps its first name, couponPreview: renaming it would delete and recreate it.)
 let template: { html: string; fetchedAt: number } | null = null;
 const TEMPLATE_TTL_MS = 5 * 60 * 1000;
 
@@ -280,6 +288,20 @@ async function getTemplate() {
 }
 
 export const couponPreview = functions.https.onRequest(async (req, res) => {
+  if (req.path === "/robots.txt") {
+    res.set("Cache-Control", "public, max-age=3600, s-maxage=3600").type("text/plain").send(robotsTxt());
+    return;
+  }
+  if (req.path === "/sitemap.xml") {
+    try {
+      const xml = sitemapXml(await getFeed(), Date.now());
+      res.set("Cache-Control", "public, max-age=3600, s-maxage=3600").type("application/xml").send(xml);
+    } catch {
+      res.status(503).set("Retry-After", "60").send("Sitemap is not available right now.");
+    }
+    return;
+  }
+
   const route = parseCouponPath(req.path);
 
   let html: string;
@@ -303,17 +325,32 @@ export const couponPreview = functions.https.onRequest(async (req, res) => {
       const collectionName = route.collection === "socialCoupons" ? collectionsList.socialCoupons : collectionsList.coupons;
       const snapshot = await admin.firestore().collection(collectionName).doc(route.id).get();
       if (snapshot.exists) {
-        html = injectPreview(html, previewTags(snapshot.data() as Coupon, route.path)) ?? html;
+        const data = snapshot.data() as Coupon;
+        const coupon = toFeedCoupon(snapshot.id, route.collection === "socialCoupons" ? "socialCoupon" : "coupon", data);
+        const now = Date.now();
+        const withHead = injectPreview(html, previewTags(data, route.path, couponJsonLd(coupon, now)));
+        html = withHead ? injectBody(withHead, couponBody(coupon, now)) : html;
       } else {
         missing = true;
       }
     } catch (error) {
       console.error("couponPreview: couldn't read the coupon", (error as Error).message);
     }
+  } else {
+    try {
+      const page = await renderListingPage(req.path);
+      if (page) {
+        const withHead = injectPreview(html, pageTags(page.page));
+        html = withHead ? injectBody(withHead, page.body) : html;
+        missing = page.status === 404;
+      }
+    } catch (error) {
+      console.error("seo: couldn't build the page", (error as Error).message);
+    }
   }
 
   // Hosting's CDN keeps the page for 10 minutes, browsers revalidate every time like the other HTML pages.
-  // A coupon that isn't found still gets the app, which shows its own "not found" page.
+  // A page that isn't found still gets the app, which shows its own "not found" page.
   res
     .status(missing ? 404 : 200)
     .set("Cache-Control", missing ? "public, max-age=0, s-maxage=60" : "public, max-age=0, s-maxage=600")
