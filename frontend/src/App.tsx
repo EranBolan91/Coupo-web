@@ -19,6 +19,7 @@ import { AdminDashboard, AdminPage, Login } from "./pages/lazyPages";
 import AdminCoupons from "./pages/admin/AdminCoupons";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminImport from "./pages/admin/AdminImport";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
@@ -73,6 +74,7 @@ const App = () => {
               [
                 ["/admin/analytics", <AdminAnalytics />],
                 ["/admin/add", <AdminPage />],
+                ["/admin/import", <AdminImport />],
                 ["/admin/coupons", <AdminCoupons />],
                 ["/admin/reports", <AdminReports />],
                 ["/admin/categories", <AdminCategories />],
