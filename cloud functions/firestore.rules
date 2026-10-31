@@ -64,6 +64,13 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Stores/{slug}: a summary of each store (name, logo, categories, each coupon's discount and expiry)
+    // for the store list and "Similar stores". Written only by Cloud Functions (syncStore).
+    match /Stores/{slug} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // SharerStats/{uid}: points and impact numbers for the leaderboard. Written only by Cloud Functions.
     match /SharerStats/{uid} {
       allow read: if true;

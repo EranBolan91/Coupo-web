@@ -12,7 +12,8 @@ import { SITE_URL, injectPreview, isPreviewBot, parseCouponPath, previewTags } f
 import { StatsChange, applyChange } from "./sharerPoints";
 
 import * as admin from "firebase-admin";
-import { renderListingPage, getFeed, toFeedCoupon } from "./seoServer";
+import { renderListingPage, getFeed, getStores, toFeedCoupon } from "./seoServer";
+import { rebuildStore, slugOf, storesToRebuild } from "./stores";
 import { couponBody, couponJsonLd, robotsTxt, sitemapXml } from "./seoPages";
 import { injectBody, pageTags } from "./couponPreview";
 
@@ -217,6 +218,27 @@ export const countCopy = functions.firestore
     return null;
   });
 
+// Keeps `storeSlug` on every public coupon and the Stores/{slug} summaries up to date, whoever wrote
+// the coupon (the owner mirror above, admin tools, bulk import). Setting the slug writes the coupon
+// again, and that second run rebuilds the store(s), so a rename updates both the old and new store.
+const syncStore = (collectionName: string) =>
+  functions.firestore
+    .document(`${collectionName}/{couponID}`)
+    .onWrite(async (change) => {
+      const before = change.before.exists ? change.before.data() : undefined;
+      const after = change.after.exists ? change.after.data() : undefined;
+
+      if (after && after.storeSlug !== slugOf(after)) {
+        await change.after.ref.update({ storeSlug: slugOf(after) });
+        return null;
+      }
+      for (const slug of storesToRebuild(before, after)) await rebuildStore(slug);
+      return null;
+    });
+
+export const syncStoreFromCoupons = syncStore(collectionsList.coupons);
+export const syncStoreFromSocialCoupons = syncStore(collectionsList.socialCoupons);
+
 // Only Brands/ uploads are handled here. Profile images (ProfileImage/{uid}/...) are handled by
 // the client, which saves a working download URL on Users/{uid}.imageURL itself.
 export const uploadImage = functions.storage.object().onFinalize(async (object) => {
@@ -294,7 +316,8 @@ export const couponPreview = functions.https.onRequest(async (req, res) => {
   }
   if (req.path === "/sitemap.xml") {
     try {
-      const xml = sitemapXml(await getFeed(), Date.now());
+      const [coupons, stores] = await Promise.all([getFeed(), getStores()]);
+      const xml = sitemapXml(coupons, stores, Date.now());
       res.set("Cache-Control", "public, max-age=3600, s-maxage=3600").type("application/xml").send(xml);
     } catch {
       res.status(503).set("Retry-After", "60").send("Sitemap is not available right now.");

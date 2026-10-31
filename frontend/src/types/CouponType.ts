@@ -25,6 +25,9 @@ export const couponSchema = z.object({
   // Set by the vote Cloud Function: last time someone said the code worked (like) or didn't (dislike).
   lastWorkedAt: z.instanceof(Timestamp).optional(),
   lastFailedAt: z.instanceof(Timestamp).optional(),
+  // Set by the syncStore Cloud Function on the public copies: the store this coupon belongs to
+  // (storeSlug in logic/stores.ts). Store pages query by it.
+  storeSlug: z.string().optional(),
   // Set by the copy Cloud Function: how many signed-in people (other than the sharer) copied the code.
   copies: z.number().min(0).optional(),
 });
