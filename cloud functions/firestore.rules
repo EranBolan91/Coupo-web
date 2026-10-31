@@ -119,6 +119,30 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // Feedback/{autoId}: messages from the Feedback page (ideas, missing features, bugs, contact).
+    // Anyone (signed out too) can send one with exactly these fields; `uid` is null or the sender's
+    // own uid. Only admins can read or delete them, and the only edit is an admin toggling `handled`.
+    match /Feedback/{feedbackId} {
+      allow read, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['type', 'message', 'email', 'page', 'uid', 'handled', 'createdAt'])
+        && request.resource.data.keys().hasAll(['type', 'message', 'email', 'page', 'uid', 'handled', 'createdAt'])
+        && request.resource.data.type in ['idea', 'missing', 'bug', 'contact']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 5
+        && request.resource.data.message.size() <= 2000
+        && request.resource.data.email is string
+        && request.resource.data.email.size() <= 200
+        && (request.resource.data.email == '' || request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+[.][^@\\s]+$'))
+        && request.resource.data.page is string
+        && request.resource.data.page.size() <= 200
+        && (request.resource.data.uid == null || (signedIn() && request.resource.data.uid == request.auth.uid))
+        && request.resource.data.handled == false
+        && request.resource.data.createdAt == request.time;
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['handled'])
+        && request.resource.data.handled is bool;
+    }
+
     // Reports/{couponId}_{reporterUid}: one report per user per coupon. Only admins can list or
     // delete them; a user can only check whether their own report exists.
     match /Reports/{reportId} {

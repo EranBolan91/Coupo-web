@@ -11,6 +11,7 @@ const staticPages: [RegExp, PageMeta][] = [
   [/^\/categories$/, { title: "Coupon categories", description: "Browse coupon codes by category." }],
   [/^\/top-sharers$/, { title: "Top sharers", description: "The people sharing the coupon codes that work best on Coupo." }],
   [/^\/users\/[^/]+$/, { title: "Sharer", description: "Coupon codes shared by this Coupo member." }],
+  [/^\/feedback$/, { title: "Feedback and contact", description: "Share an idea, tell us what's missing, report a bug or get in touch with the Coupo team." }],
   [/^\/login$/, { title: "Log in" }],
   [/^\/signup$/, { title: "Sign up" }],
   [/^\/profile$/, { title: "Your profile" }],

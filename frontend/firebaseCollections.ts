@@ -13,4 +13,5 @@ export const collectionsList = {
   userCopies: "UserCopies",
   sharerStats: "SharerStats",
   stores: "Stores",
+  feedback: "Feedback",
 };

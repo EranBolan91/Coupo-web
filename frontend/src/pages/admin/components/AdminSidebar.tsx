@@ -1,5 +1,6 @@
-import { PiChartBarBold, PiChartLineUpBold, PiFlagBold, PiFoldersBold, PiListBulletsBold, PiPlusBold, PiTagBold, PiUploadSimpleBold, PiUsersBold } from "react-icons/pi";
+import { PiChatCircleTextBold, PiChartBarBold, PiChartLineUpBold, PiFlagBold, PiFoldersBold, PiListBulletsBold, PiPlusBold, PiTagBold, PiUploadSimpleBold, PiUsersBold } from "react-icons/pi";
 import useReports from "../../../hooks/useReports";
+import useFeedback from "../../../hooks/useFeedback";
 import { NavLink } from "react-router-dom";
 import React from "react";
 
@@ -8,9 +9,10 @@ const links = [
   { to: "/admin/analytics", label: "Analytics", icon: PiChartLineUpBold },
   { to: "/admin/users", label: "Users", icon: PiUsersBold },
   { to: "/admin/add", label: "Add coupon", icon: PiPlusBold },
-  { to: "/admin/import", label: "Import coupons", icon: PiUploadSimpleBold, PiUsersBold },
+  { to: "/admin/import", label: "Import coupons", icon: PiUploadSimpleBold },
   { to: "/admin/coupons", label: "Coupons", icon: PiListBulletsBold },
   { to: "/admin/reports", label: "Reports", icon: PiFlagBold },
+  { to: "/admin/feedback", label: "Feedback", icon: PiChatCircleTextBold },
   { to: "/admin/categories", label: "Categories", icon: PiFoldersBold },
   { to: "/admin/addBrand", label: "Add brands", icon: PiTagBold },
 ];
@@ -27,6 +29,8 @@ export const AdminLayout = ({
 }) => {
   const { data: reports } = useReports();
   const openReports = new Set(reports?.map((report) => report.couponID)).size;
+  const { data: feedback } = useFeedback();
+  const newFeedback = feedback?.filter((item) => !item.handled).length ?? 0;
 
   return (
     <div className="page-container grid grid-cols-[minmax(0,1fr)] gap-8 py-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
@@ -52,6 +56,12 @@ export const AdminLayout = ({
                   <span className="ml-auto rounded-full bg-error px-2 py-0.5 text-xs font-bold text-error-content">
                     {openReports}
                     <span className="sr-only"> coupons reported</span>
+                  </span>
+                )}
+                {to === "/admin/feedback" && newFeedback > 0 && (
+                  <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-xs font-bold text-secondary-content">
+                    {newFeedback}
+                    <span className="sr-only"> new messages</span>
                   </span>
                 )}
               </NavLink>

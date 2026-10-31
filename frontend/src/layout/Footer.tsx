@@ -1,5 +1,5 @@
 import { LogoMark } from "../components/logo/Logo";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const links = [
   { name: "Coupons", href: "/coupons" },
@@ -8,10 +8,12 @@ const links = [
   { name: "Social Coupons", href: "/social" },
   { name: "Top sharers", href: "/top-sharers" },
   { name: "Share a coupon", href: "/addcoupon" },
+  { name: "Feedback", href: "/feedback" },
 ];
 
 // Ink block in light mode (raised surface in dark mode) with a giant wordmark.
 const Footer = () => {
+  const { pathname } = useLocation();
   return (
     <footer className="overflow-hidden bg-neutral text-neutral-content dark:bg-base-100 dark:text-base-content">
       <div className="page-container pt-14">
@@ -26,6 +28,7 @@ const Footer = () => {
               <Link
                 key={link.href}
                 to={link.href}
+                state={link.href === "/feedback" ? { from: pathname } : undefined}
                 className="text-sm font-bold opacity-80 transition-opacity hover:opacity-100"
               >
                 {link.name}

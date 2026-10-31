@@ -3,7 +3,7 @@ import { useCurrentUser } from "../../hooks/useCurrentUser";
 import ThemeToggle from "../themeToggle/ThemeToggle";
 import Notifications from "../notifications/Notifications";
 import { UserAuth } from "../../auth/AuthProvider";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { Dialog } from "@headlessui/react";
 import Avatar from "./components/Avatar";
 import Logo from "../logo/Logo";
@@ -34,6 +34,7 @@ const Navbar = () => {
   const { logout } = UserAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeMenu = () => setMobileMenuOpen(false);
+  const { pathname } = useLocation();
 
   const handleLogout = async () => {
     closeMenu();
@@ -111,6 +112,9 @@ const Navbar = () => {
                 {item.name}
               </NavLink>
             ))}
+            <NavLink to="/feedback" state={{ from: pathname }} className={mobileLinkClass} onClick={closeMenu}>
+              Feedback
+            </NavLink>
           </div>
           <div className="perf-x mt-6 w-full text-base-300" aria-hidden="true" />
           <div className="mt-6 space-y-1">

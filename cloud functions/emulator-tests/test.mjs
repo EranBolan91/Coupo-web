@@ -143,6 +143,34 @@ await check("admin can list and delete searches", async () => {
   await assertSucceeds(deleteDoc(doc(admin, "Searches/s1")));
 });
 
+// ---------- Feedback (Feedback page) ----------
+const feedback = (extra = {}) => ({ type: "idea", message: "Add a dark mode", email: "", page: "/coupons", uid: null, handled: false, createdAt: serverTimestamp(), ...extra });
+await check("anon can send feedback", () => assertSucceeds(setDoc(doc(anon, "Feedback/f1"), feedback())));
+await check("alice can send feedback with her uid and email", () =>
+  assertSucceeds(setDoc(doc(alice, "Feedback/f2"), feedback({ type: "contact", uid: "alice", email: "alice@example.com" }))));
+await check("feedback uid must be the sender's", () => assertFails(setDoc(doc(alice, "Feedback/f3"), feedback({ uid: "bob" }))));
+await check("anon can't claim a uid", () => assertFails(setDoc(doc(anon, "Feedback/f3"), feedback({ uid: "alice" }))));
+await check("feedback type must be known", () => assertFails(setDoc(doc(anon, "Feedback/f3"), feedback({ type: "spam" }))));
+await check("feedback message min 5", () => assertFails(setDoc(doc(anon, "Feedback/f3"), feedback({ message: "hi" }))));
+await check("feedback message max 2000", () => assertFails(setDoc(doc(anon, "Feedback/f3"), feedback({ message: "x".repeat(2001) }))));
+await check("feedback email must look like an email", () => assertFails(setDoc(doc(anon, "Feedback/f3"), feedback({ email: "not an email" }))));
+await check("feedback can't start as handled", () => assertFails(setDoc(doc(anon, "Feedback/f3"), feedback({ handled: true }))));
+await check("feedback has no extra fields", () => assertFails(setDoc(doc(anon, "Feedback/f3"), feedback({ admin: true }))));
+await check("feedback needs every field", () => assertFails(setDoc(doc(anon, "Feedback/f3"), { type: "idea", message: "hello there", createdAt: serverTimestamp() })));
+await check("feedback time must be the server time", () =>
+  assertFails(setDoc(doc(anon, "Feedback/f3"), feedback({ createdAt: Timestamp.fromDate(new Date(2020, 0, 1)) }))));
+await check("users cannot read feedback", () => assertFails(getDoc(doc(alice, "Feedback/f2"))));
+await check("users cannot list feedback", () => assertFails(getDocs(collection(anon, "Feedback"))));
+await check("users cannot edit feedback", () => assertFails(updateDoc(doc(alice, "Feedback/f2"), { handled: true })));
+await check("users cannot delete feedback", () => assertFails(deleteDoc(doc(alice, "Feedback/f2"))));
+await check("admin can list feedback and mark it handled", async () => {
+  await assertSucceeds(getDocs(collection(admin, "Feedback")));
+  await assertSucceeds(updateDoc(doc(admin, "Feedback/f1"), { handled: true }));
+  await assertSucceeds(updateDoc(doc(admin, "Feedback/f1"), { handled: false }));
+});
+await check("admin can only change handled", () => assertFails(updateDoc(doc(admin, "Feedback/f1"), { message: "edited" })));
+await check("admin can delete feedback", () => assertSucceeds(deleteDoc(doc(admin, "Feedback/f1"))));
+
 // ---------- notifications (seen markers) ----------
 await check("alice can save her seen notifications", () =>
   assertSucceeds(setDoc(doc(alice, "notifications/alice"), { seen: { "expiring-c1": true } })));
