@@ -78,6 +78,24 @@ service cloud.firestore {
         && request.resource.data.seen.size() <= 200;
     }
 
+    // Searches/{autoId}: one doc per search on the Coupons / Social Coupons pages, for the admin
+    // analytics page. Anyone (signed out too) can add one with exactly these fields; only admins
+    // can read or delete them, and nobody can edit one.
+    match /Searches/{searchId} {
+      allow read, delete: if isAdmin();
+      allow create: if request.resource.data.keys().hasOnly(['term', 'results', 'page', 'createdAt'])
+        && request.resource.data.keys().hasAll(['term', 'results', 'page', 'createdAt'])
+        && request.resource.data.term is string
+        && request.resource.data.term.size() >= 2
+        && request.resource.data.term.size() <= 60
+        && request.resource.data.results is int
+        && request.resource.data.results >= 0
+        && request.resource.data.results <= 100000
+        && request.resource.data.page in ['coupons', 'social']
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+    }
+
     // Reports/{couponId}_{reporterUid}: one report per user per coupon. Only admins can list or
     // delete them; a user can only check whether their own report exists.
     match /Reports/{reportId} {

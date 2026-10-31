@@ -7,6 +7,7 @@ import useCouponFeed from "../../hooks/useCouponFeed";
 import SearchBar from "../main/components/Searchbar";
 import useShowMore from "../../hooks/useShowMore";
 import useCouponSearch from "../../hooks/useCouponSearch";
+import useSearchLogging from "../../hooks/useSearchLogging";
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 
@@ -14,6 +15,7 @@ const SocialCoupons = () => {
   // The search text and "Show expired" are kept in the URL (?q=...&expired=show), like on the Coupons page.
   const { search, filters, resultsKey, setSearch, setShowExpired } = useCouponSearch();
   const { data: coupons = [], isPending: isLoading, isError, refetch } = useCouponFeed(collectionsList.socialCoupons);
+  useSearchLogging("social", search, coupons, !isLoading && !isError);
 
   const { results, expiredCount } = useMemo(() => filterCoupons(coupons, search, filters), [coupons, search, filters]);
   const { visible, lastItemRef } = useShowMore(results, resultsKey);
