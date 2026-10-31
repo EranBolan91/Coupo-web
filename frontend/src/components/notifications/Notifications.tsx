@@ -1,4 +1,4 @@
-import { PiBellBold, PiClockCountdownBold, PiFlagBold } from "react-icons/pi";
+import { PiBellBold, PiClockCountdownBold, PiFlagBold, PiHandHeartBold } from "react-icons/pi";
 import useNotifications from "../../hooks/useNotifications";
 import { Link } from "react-router-dom";
 import { useState } from "react";
@@ -41,12 +41,12 @@ const Notifications = () => {
         {items.length === 0 ? (
           <div className="px-3 pb-4 text-sm text-base-content/70">
             <p className="font-semibold text-base-content">You're all caught up</p>
-            <p className="mt-1">We'll let you know here when a coupon you saved is about to expire.</p>
+            <p className="mt-1">We'll let you know here when a coupon you saved is about to expire, or when your codes help people.</p>
           </div>
         ) : (
           <ul className="max-h-[60vh] space-y-1 overflow-y-auto">
             {items.map((item) => {
-              const Icon = item.kind === "reports" ? PiFlagBold : PiClockCountdownBold;
+              const Icon = item.kind === "reports" ? PiFlagBold : item.kind === "impact" ? PiHandHeartBold : PiClockCountdownBold;
               const isNew = newWhenOpened.has(item.key);
               return (
                 <li key={item.key}>

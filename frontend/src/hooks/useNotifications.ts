@@ -1,6 +1,8 @@
 import { getSeenNotifications, saveSeenNotifications } from "../database/notification";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUserWishlistCoupons } from "../logic/logic";
+import { getUserCoupons } from "../database/databaseCalls";
+import { impactSentence } from "../logic/points";
 import { couponPath } from "../logic/couponLinks";
 import { UserAuth } from "../auth/AuthProvider";
 import { useCurrentUser } from "./useCurrentUser";
@@ -13,7 +15,7 @@ export type AppNotification = {
   title: string;
   text: string;
   href: string;
-  kind: "expiring" | "reports";
+  kind: "expiring" | "reports" | "impact";
 };
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -24,6 +26,12 @@ const daysLeft = (expiry: Date, now: Date) => {
   const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
   return Math.round((startOfDay(expiry) - startOfDay(now)) / DAY);
 };
+
+// A sharer hears about a coupon's impact each time it passes one of these numbers.
+const COPY_MILESTONES = [5, 10, 25, 50, 100, 250, 500, 1000];
+const WORKED_MILESTONES = [1, 5, 10, 25, 50, 100, 250, 500];
+const level = (value: number, milestones: number[]) => milestones.filter((m) => value >= m).length;
+const MAX_IMPACT_NOTES = 5;
 
 const brand = (name: string) => (name ? name.charAt(0).toUpperCase() + name.slice(1) : "");
 
@@ -41,6 +49,12 @@ const useNotifications = () => {
   const saved = useQuery<Coupon[]>({
     queryKey: ["userWishlist"],
     queryFn: () => getUserWishlistCoupons(uid ?? ""),
+    enabled: !!uid,
+  });
+  // Same key and function as the My coupons tab.
+  const mine = useQuery<Coupon[]>({
+    queryKey: ["usercoupons"],
+    queryFn: () => getUserCoupons(uid ?? ""),
     enabled: !!uid,
   });
   const reports = useReports(!!uid && isAdmin);
@@ -81,8 +95,25 @@ const useNotifications = () => {
         })
       );
 
+    // "Your Zara code was copied 34 times and worked for 12 people." The key changes when a coupon
+    // passes the next milestone, so the note comes back as unseen.
+    (mine.data ?? [])
+      .map((coupon) => ({ coupon, copies: level(coupon.copies ?? 0, COPY_MILESTONES), worked: level(coupon.likes ?? 0, WORKED_MILESTONES) }))
+      .filter(({ copies, worked }) => copies + worked > 0)
+      .sort((a, b) => b.copies + b.worked - (a.copies + a.worked))
+      .slice(0, MAX_IMPACT_NOTES)
+      .forEach(({ coupon, copies, worked }) =>
+        list.push({
+          key: `impact-${coupon.id}-${copies}-${worked}`,
+          kind: "impact",
+          title: `Your ${brand(coupon.name)} code is helping people`,
+          text: impactSentence(coupon),
+          href: "/profile",
+        })
+      );
+
     return list;
-  }, [uid, isAdmin, reports.data, saved.data]);
+  }, [uid, isAdmin, reports.data, saved.data, mine.data]);
 
   const seenKeys = useMemo(() => new Set(seen.data ?? []), [seen.data]);
   const unseenCount = items.filter((item) => !seenKeys.has(item.key)).length;

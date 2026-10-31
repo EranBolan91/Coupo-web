@@ -7,6 +7,8 @@ import PageHeader from "../../components/ui/PageHeader";
 import useCouponFeed from "../../hooks/useCouponFeed";
 import useShowMore from "../../hooks/useShowMore";
 import { Link, useParams } from "react-router-dom";
+import { groupStores, monthLabel, storePath } from "../../logic/stores";
+import usePageMeta from "../../hooks/usePageMeta";
 import { useMemo } from "react";
 
 const Category = () => {
@@ -24,12 +26,43 @@ const Category = () => {
       ),
     [coupons, categoryName, filters.showExpired]
   );
+  const name = categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+  const stores = useMemo(
+    () => groupStores(coupons.filter((coupon) => coupon.category?.toLowerCase() === categoryName.toLowerCase())),
+    [coupons, categoryName]
+  );
+  const activeCount = stores.reduce((sum, store) => sum + store.activeCount, 0);
+  // Same wording as the server-rendered page (categoryPage in seoPages.ts).
+  usePageMeta(
+    isLoading
+      ? null
+      : {
+          title: `${name} coupon codes, ${monthLabel()}`,
+          description:
+            `${activeCount} working coupon code${activeCount === 1 ? "" : "s"} in ${categoryName.toLowerCase()} from ` +
+            `${stores.length} store${stores.length === 1 ? "" : "s"}` +
+            `${stores.length ? `, including ${stores.slice(0, 3).map((s) => s.name).join(", ")}` : ""}.`,
+        }
+  );
   const { visible, lastItemRef } = useShowMore(results, `${categoryName}|${filters.showExpired}`);
   const onlyExpired = results.length === 0 && expiredCount > 0 && !filters.showExpired;
 
   return (
     <>
-      <PageHeader title={categoryName || "Category"} description={`Coupons in ${categoryName || "this category"}.`} />
+      <PageHeader
+        title={categoryName ? `${name} coupon codes` : "Category"}
+        description={`Coupons in ${categoryName || "this category"}, checked by Coupo shoppers.`}
+      >
+        {stores.length > 0 && (
+          <nav aria-label="Stores in this category" className="flex flex-wrap gap-2">
+            {stores.map((store) => (
+              <Link key={store.slug} to={storePath(store.name)} className="btn btn-sm h-10 min-h-10 rounded-btn border-base-300 bg-base-200">
+                {store.name}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </PageHeader>
       <section className="page-container py-8">
         <div className="mb-6 empty:hidden">
           <ExpiredToggle checked={filters.showExpired} onChange={setShowExpired} expiredCount={expiredCount} />

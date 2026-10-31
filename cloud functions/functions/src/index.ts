@@ -9,8 +9,12 @@ import { Storage } from "@google-cloud/storage";
 import * as functions from "firebase-functions";
 import { Coupon, CurrentUser } from "./types";
 import { SITE_URL, injectPreview, isPreviewBot, parseCouponPath, previewTags } from "./couponPreview";
+import { StatsChange, applyChange } from "./sharerPoints";
 
 import * as admin from "firebase-admin";
+import { renderListingPage, getFeed, toFeedCoupon } from "./seoServer";
+import { couponBody, couponJsonLd, robotsTxt, sitemapXml } from "./seoPages";
+import { injectBody, pageTags } from "./couponPreview";
 
 admin.initializeApp();
 const storage = new Storage();
@@ -59,9 +63,9 @@ export const addUserSocialCouponToSocialCouponsCollection = functions.firestore
   });
 
 // Copies the owner's edits (category, discount, description, ...) to the public copy.
-// Fields kept by the vote trigger (counters and "last worked" times) are left alone: that trigger
-// writes both copies itself.
-const voteFields = ["likes", "dislikes", "lastWorkedAt", "lastFailedAt"];
+// Fields kept by the vote and copy triggers (counters and "last worked" times) are left alone: those
+// triggers write both copies themselves.
+const voteFields = ["likes", "dislikes", "lastWorkedAt", "lastFailedAt", "copies"];
 const withoutVoteFields = (data: FirebaseFirestore.DocumentData) =>
   Object.fromEntries(Object.entries(data).filter(([key]) => !voteFields.includes(key)));
 
@@ -132,31 +136,86 @@ const countVote = (field: "likes" | "dislikes") =>
         await db.doc(`${collectionsList.userVotes}/${context.params.userID}/${otherField}/${couponID}`).delete();
       }
 
-      for (const collectionName of couponCollections) {
-        const publicRef = db.collection(collectionName).doc(couponID);
-        const publicSnap = await publicRef.get();
-        if (!publicSnap.exists) continue;
-
-        const batch = db.batch();
-        batch.update(publicRef, update);
-
-        const ownerID = publicSnap.get("userID");
-        if (typeof ownerID === "string" && ownerID !== "") {
-          const ownerRef = db.doc(`${collectionsList.userCoupons}/${ownerID}/${collectionName}/${couponID}`);
-          const ownerSnap = await ownerRef.get();
-          if (ownerSnap.exists) batch.update(ownerRef, update);
-        }
-
-        await batch.commit();
+      const coupon = await updateBothCopies(couponID, update);
+      if (!coupon) {
+        console.log(`Vote on unknown coupon ${couponID}`);
         return null;
       }
 
-      console.log(`Vote on unknown coupon ${couponID}`);
+      // "It worked" votes from other people give the sharer points.
+      if (field === "likes" && delta !== 0 && coupon.ownerID && coupon.ownerID !== context.params.userID) {
+        await addSharerStats(coupon.ownerID, { worked: delta }, coupon.username);
+      }
       return null;
     });
 
 export const addLikeVoteToCoupon = countVote("likes");
 export const addDislikeVoteToCoupon = countVote("dislikes");
+
+// Applies `update` to the public coupon (Coupons, then SocialCoupons) and to the owner's copy.
+// Returns the owner and sharer name, or null when the coupon doesn't exist.
+async function updateBothCopies(couponID: string, update: Record<string, FieldValue>) {
+  const db = admin.firestore();
+  for (const collectionName of couponCollections) {
+    const publicRef = db.collection(collectionName).doc(couponID);
+    const publicSnap = await publicRef.get();
+    if (!publicSnap.exists) continue;
+
+    const batch = db.batch();
+    batch.update(publicRef, update);
+
+    const ownerID = publicSnap.get("userID");
+    const hasOwner = typeof ownerID === "string" && ownerID !== "";
+    if (hasOwner) {
+      const ownerRef = db.doc(`${collectionsList.userCoupons}/${ownerID}/${collectionName}/${couponID}`);
+      const ownerSnap = await ownerRef.get();
+      if (ownerSnap.exists) batch.update(ownerRef, update);
+    }
+
+    await batch.commit();
+    const username = publicSnap.get("username");
+    return { ownerID: hasOwner ? (ownerID as string) : "", username: typeof username === "string" ? username : "" };
+  }
+  return null;
+}
+
+// SharerStats/{uid}: points, copies and "worked" votes, all time and this month (see sharerPoints.ts).
+async function addSharerStats(uid: string, change: StatsChange, name: string) {
+  const db = admin.firestore();
+  const ref = db.collection(collectionsList.sharerStats).doc(uid);
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    tx.set(ref, { ...applyChange(snap.data(), change, new Date(), name), updatedAt: FieldValue.serverTimestamp() });
+  });
+}
+
+// UserCopies/{uid}/coupons/{couponID}: written by the browser the first time a signed-in user copies a
+// code (the rules allow one per person per coupon). Counts `copies` on the coupon and gives the sharer
+// a point. Copying your own code doesn't count.
+export const countCopy = functions.firestore
+  .document(`${collectionsList.userCopies}/{userID}/coupons/{couponID}`)
+  .onCreate(async (snap, context) => {
+    const db = admin.firestore();
+    const couponID = context.params.couponID;
+    const copierID = context.params.userID;
+
+    let ownerID = "";
+    for (const collectionName of couponCollections) {
+      const publicSnap = await db.collection(collectionName).doc(couponID).get();
+      if (!publicSnap.exists) continue;
+      ownerID = publicSnap.get("userID") ?? "";
+      break;
+    }
+    if (ownerID === copierID) return null;
+
+    const coupon = await updateBothCopies(couponID, { copies: FieldValue.increment(1) });
+    if (!coupon) {
+      console.log(`Copy of unknown coupon ${couponID}`);
+      return null;
+    }
+    if (coupon.ownerID) await addSharerStats(coupon.ownerID, { copies: 1 }, coupon.username);
+    return null;
+  });
 
 // Only Brands/ uploads are handled here. Profile images (ProfileImage/{uid}/...) are handled by
 // the client, which saves a working download URL on Users/{uid}.imageURL itself.
@@ -201,9 +260,14 @@ async function handleBrands(filePath: string, bucketName: string) {
   }
 }
 
-// Coupon pages (/coupons/{id}, /social/{id}) come here through the Hosting rewrites in firebase.json.
-// It sends the normal index.html with this coupon's title, description and image in the preview tags,
-// so a link pasted in WhatsApp shows the coupon. The page then loads the React app as usual.
+// Pages that search engines and link-preview bots read come here through the Hosting rewrites in
+// firebase.json: coupon pages (/coupons/{id}, /social/{id}), store pages (/stores, /store/{slug}),
+// category pages (/categories, /categories/{name}), /sitemap.xml and /robots.txt.
+// HTML pages get the normal index.html with the page's title, description, preview image and
+// structured data in the head, and a readable copy of the content (heading, codes, links) in the body,
+// so a link pasted in WhatsApp shows the coupon and Google sees the page without running JavaScript.
+// The page then loads the React app as usual, which replaces that copy.
+// (The function keeps its first name, couponPreview: renaming it would delete and recreate it.)
 let template: { html: string; fetchedAt: number } | null = null;
 const TEMPLATE_TTL_MS = 5 * 60 * 1000;
 
@@ -224,6 +288,20 @@ async function getTemplate() {
 }
 
 export const couponPreview = functions.https.onRequest(async (req, res) => {
+  if (req.path === "/robots.txt") {
+    res.set("Cache-Control", "public, max-age=3600, s-maxage=3600").type("text/plain").send(robotsTxt());
+    return;
+  }
+  if (req.path === "/sitemap.xml") {
+    try {
+      const xml = sitemapXml(await getFeed(), Date.now());
+      res.set("Cache-Control", "public, max-age=3600, s-maxage=3600").type("application/xml").send(xml);
+    } catch {
+      res.status(503).set("Retry-After", "60").send("Sitemap is not available right now.");
+    }
+    return;
+  }
+
   const route = parseCouponPath(req.path);
 
   let html: string;
@@ -247,17 +325,32 @@ export const couponPreview = functions.https.onRequest(async (req, res) => {
       const collectionName = route.collection === "socialCoupons" ? collectionsList.socialCoupons : collectionsList.coupons;
       const snapshot = await admin.firestore().collection(collectionName).doc(route.id).get();
       if (snapshot.exists) {
-        html = injectPreview(html, previewTags(snapshot.data() as Coupon, route.path)) ?? html;
+        const data = snapshot.data() as Coupon;
+        const coupon = toFeedCoupon(snapshot.id, route.collection === "socialCoupons" ? "socialCoupon" : "coupon", data);
+        const now = Date.now();
+        const withHead = injectPreview(html, previewTags(data, route.path, couponJsonLd(coupon, now)));
+        html = withHead ? injectBody(withHead, couponBody(coupon, now)) : html;
       } else {
         missing = true;
       }
     } catch (error) {
       console.error("couponPreview: couldn't read the coupon", (error as Error).message);
     }
+  } else {
+    try {
+      const page = await renderListingPage(req.path);
+      if (page) {
+        const withHead = injectPreview(html, pageTags(page.page));
+        html = withHead ? injectBody(withHead, page.body) : html;
+        missing = page.status === 404;
+      }
+    } catch (error) {
+      console.error("seo: couldn't build the page", (error as Error).message);
+    }
   }
 
   // Hosting's CDN keeps the page for 10 minutes, browsers revalidate every time like the other HTML pages.
-  // A coupon that isn't found still gets the app, which shows its own "not found" page.
+  // A page that isn't found still gets the app, which shows its own "not found" page.
   res
     .status(missing ? 404 : 200)
     .set("Cache-Control", missing ? "public, max-age=0, s-maxage=60" : "public, max-age=0, s-maxage=600")

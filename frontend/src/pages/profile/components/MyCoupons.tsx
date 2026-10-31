@@ -1,4 +1,4 @@
-import { PiThumbsDownBold, PiThumbsUpBold } from "react-icons/pi";
+import { PiCopyBold, PiThumbsDownBold, PiThumbsUpBold } from "react-icons/pi";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { getUserCoupons } from "../../../database/databaseCalls";
 import CouponCard, { CouponCardSkeleton } from "../../coupons/components/CouponCard";
@@ -47,6 +47,10 @@ const MyCoupons = () => {
           <CouponCard coupon={coupon} preview />
           <div className="flex items-center justify-between rounded-btn bg-base-100 px-2 py-1">
             <span className="flex items-center gap-3 px-2 text-sm font-semibold text-base-content/70">
+              <span className="inline-flex items-center gap-1" title="Copied">
+                <PiCopyBold aria-hidden /> {coupon.copies ?? 0}
+                <span className="sr-only">copies</span>
+              </span>
               <span className="inline-flex items-center gap-1" title="Likes">
                 <PiThumbsUpBold aria-hidden /> {coupon.likes}
                 <span className="sr-only">likes</span>

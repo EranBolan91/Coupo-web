@@ -1,6 +1,7 @@
 export const collectionsList = {
   brands: "Brands",
   category: "Category",
+  searches: "Searches",
   coupons: "Coupons",
   userVotes: "UserVotes",
   users: "Users",
@@ -9,4 +10,6 @@ export const collectionsList = {
   wishList: "WishList",
   notifications: "notifications",
   reports: "Reports",
+  userCopies: "UserCopies",
+  sharerStats: "SharerStats",
 };

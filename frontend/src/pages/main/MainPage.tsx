@@ -9,6 +9,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Coupon } from "../../types/CouponType";
 import { Link, useNavigate } from "react-router-dom";
 import { FormEvent, useState } from "react";
+import { useMonthLeaderboard } from "../../hooks/useSharerStats";
+import SharerAvatar from "../sharers/SharerAvatar";
+import { sharerPath } from "../../logic/sharers";
+import { monthName } from "../../logic/points";
 
 // Fan positions on large screens, back to front: [position, rotation].
 const fanLayouts: Record<number, [string, string][]> = {
@@ -111,6 +115,59 @@ const HeroSearch = () => {
         Search
       </button>
     </form>
+  );
+};
+
+// Home page: the top 5 sharers by points this month.
+const MonthTopSharers = () => {
+  const { data = [], isPending, isError } = useMonthLeaderboard();
+  if (isError) return null;
+  const top = data.slice(0, 5);
+  return (
+    <section className="page-container pb-20">
+      <Reveal className="mb-8 flex items-end justify-between gap-4">
+        <h2 className="text-4xl font-extrabold leading-[1] tracking-tight md:text-5xl">Top sharers this month</h2>
+        <Link to="/top-sharers" className="btn btn-ghost btn-sm h-10 min-h-10 shrink-0 px-4">
+          See all
+          <PiArrowRightBold aria-hidden />
+        </Link>
+      </Reveal>
+      {isPending ? (
+        <div className="skeleton h-40 rounded-box" role="status" aria-label="Loading top sharers" />
+      ) : top.length === 0 ? (
+        <div className="flex flex-col items-start gap-4 rounded-box border-2 border-dashed border-base-300 bg-base-100 p-7 md:flex-row md:items-center md:justify-between">
+          <p className="max-w-xl text-base-content/70">
+            Nobody has points in {monthName()} yet. Share a code: you get a point each time someone copies it and 5 when it works for them.
+          </p>
+          <Link to="/addcoupon" className="btn btn-primary shrink-0">
+            <PiPlusBold aria-hidden />
+            Share a coupon
+          </Link>
+        </div>
+      ) : (
+        <ol className="grid gap-3 md:grid-cols-5">
+          {top.map((sharer, i) => (
+            <li key={sharer.userID}>
+              <Link
+                to={sharerPath(sharer.userID)}
+                className={`flex h-full items-center gap-3 rounded-box border-2 p-4 transition-colors hover:border-base-content md:flex-col md:items-start ${
+                  i === 0 ? "border-base-content bg-primary text-primary-content" : "border-base-300 bg-base-100"
+                }`}
+              >
+                <span className="font-display text-2xl font-extrabold tracking-tight">#{i + 1}</span>
+                <SharerAvatar name={sharer.name} className="size-11 text-base" inverted={i === 0} />
+                <span className="min-w-0">
+                  <span className="block truncate font-bold">{sharer.name}</span>
+                  <span className={`block text-sm ${i === 0 ? "" : "text-base-content/70"}`}>
+                    {sharer.monthPoints} {sharer.monthPoints === 1 ? "point" : "points"}
+                  </span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
   );
 };
 
@@ -232,6 +289,8 @@ const MainPage = () => {
           emptyDescription="Be the first to share one."
         />
       </section>
+
+      <MonthTopSharers />
 
       {/* Categories */}
       {categories.length > 0 && (
