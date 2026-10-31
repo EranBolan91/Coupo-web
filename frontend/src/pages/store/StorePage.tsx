@@ -66,8 +66,8 @@ const StorePage = () => {
         {store && store.categories.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {store.categories.map((category) => (
-              <Link key={category} to={categoryPath(category)} className="btn btn-sm h-10 min-h-10 rounded-btn border-base-300 bg-base-200">
-                More {category} coupons
+              <Link key={category} to={categoryPath(category)} className="btn btn-sm h-10 min-h-10 max-w-full rounded-btn border-base-300 bg-base-200">
+                <span className="truncate">More {category} coupons</span>
               </Link>
             ))}
           </div>

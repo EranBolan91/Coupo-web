@@ -148,7 +148,7 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
               {coupon.discount}% off at <span className="capitalize">{coupon.name}</span>
             </h1>
             {coupon.description && <p className="mt-5 max-w-[60ch] whitespace-pre-line text-lg text-base-content/80">{coupon.description}</p>}
-            <dl className="mt-8 grid max-w-lg grid-cols-[7rem_1fr] gap-x-4 gap-y-3 text-base">
+            <dl className="mt-8 grid max-w-lg grid-cols-[7rem_minmax(0,1fr)] gap-x-4 gap-y-3 text-base">
               {facts.map(([label, value]) => (
                 <div key={label} className="contents">
                   <dt className="text-base-content/60">{label}</dt>
@@ -158,9 +158,9 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
             </dl>
             <div className="mt-8 flex flex-wrap items-center gap-2">
               {shopUrl && (
-                <a href={shopUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-secondary h-12 min-h-12 px-5">
-                  Shop at {shopHost(shopUrl)}
-                  <PiArrowSquareOutBold className="size-4" aria-hidden />
+                <a href={shopUrl} target="_blank" rel="noopener noreferrer nofollow" className="btn btn-secondary h-12 min-h-12 max-w-full px-5">
+                  <span className="truncate">Shop at {shopHost(shopUrl)}</span>
+                  <PiArrowSquareOutBold className="size-4 shrink-0" aria-hidden />
                 </a>
               )}
               <ShareCouponButton coupon={coupon} />
