@@ -4,10 +4,9 @@ import ShareCouponButton from "../../components/coupons/ShareCouponButton";
 import AdminCouponActions from "../../components/admin/AdminCouponActions";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import CouponGrid from "../../components/coupons/CouponGrid";
-import { collectionsList } from "../../../firebaseCollections";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadError from "../../components/ui/LoadError";
-import useCouponFeed from "../../hooks/useCouponFeed";
+import { useStoreCoupons } from "../../hooks/useStores";
 import { PiArrowLeftBold, PiArrowSquareOutBold } from "react-icons/pi";
 import { shopHost, shopLink, termLabels } from "../../logic/couponTerms";
 import { latestResult, resultLabel } from "../../logic/couponResults";
@@ -15,7 +14,7 @@ import { getCoupon } from "../../database/coupons";
 import { Coupon } from "../../types/CouponType";
 import { UserAuth } from "../../auth/AuthProvider";
 import { useQuery } from "@tanstack/react-query";
-import { storePath } from "../../logic/stores";
+import { storePath, storeSlug } from "../../logic/stores";
 import usePageMeta from "../../hooks/usePageMeta";
 
 const longDate = (value?: { toDate?: () => Date }) =>
@@ -34,12 +33,12 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
     queryFn: () => getCoupon(type, couponId),
   });
 
-  // "More from this brand" comes from the feed, which is usually cached already.
-  const { data: feed = [] } = useCouponFeed(isSocial ? collectionsList.socialCoupons : collectionsList.coupons);
+  // "More from this brand": only this store's coupons (both feeds), shared with the store page's cache.
+  const { data: feed = [] } = useStoreCoupons(coupon ? storeSlug(coupon.name ?? "") : "");
   const now = Date.now();
   const moreFromBrand = coupon
     ? feed
-        .filter((c) => c.id !== coupon.id && c.name?.toLowerCase() === coupon.name?.toLowerCase())
+        .filter((c) => c.id !== coupon.id)
         .filter((c) => (c.expiry?.toMillis?.() ?? Infinity) >= now)
         .slice(0, 3)
     : [];

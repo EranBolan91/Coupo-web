@@ -2,15 +2,14 @@ import StoreTiles from "../../components/stores/StoreTiles";
 import PageHeader from "../../components/ui/PageHeader";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadError from "../../components/ui/LoadError";
-import useAllCoupons from "../../hooks/useAllCoupons";
-import { groupStores } from "../../logic/stores";
+import { useStores } from "../../hooks/useStores";
 import { Link } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 // Every store with at least one coupon, A-Z: /stores.
 const Stores = () => {
-  const { data: coupons, isPending, isError, refetch } = useAllCoupons();
-  const stores = useMemo(() => groupStores(coupons), [coupons]);
+  // One small summary per store (Stores collection), not every coupon.
+  const { data: stores = [], isPending, isError, refetch } = useStores();
   const [search, setSearch] = useState("");
   const shown = stores.filter((store) => store.name.toLowerCase().includes(search.trim().toLowerCase()));
 
@@ -36,7 +35,7 @@ const Stores = () => {
             ))}
           </div>
         ) : isError ? (
-          <LoadError what="stores" onRetry={refetch} />
+          <LoadError what="stores" onRetry={() => refetch()} />
         ) : shown.length === 0 ? (
           <EmptyState
             title={stores.length === 0 ? "No stores yet" : "No store by that name"}

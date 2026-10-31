@@ -1,11 +1,17 @@
-// Loads both public coupon feeds (cached for a few minutes) and builds the search-engine pages in
-// seoPages.ts. Used by the couponPreview function in index.ts.
+// Reads what the search-engine pages in seoPages.ts need, and builds them. Used by the couponPreview
+// function in index.ts.
+//
+// - A store page reads only that store's coupons (storeSlug == slug) and the stores sharing one of
+//   its categories, so its cost doesn't grow with the size of the site.
+// - The store list reads the Stores summaries (one small document per store).
+// - Category pages and the sitemap still read both feeds (cached 5 minutes per instance; Hosting
+//   also caches the pages for 10 minutes and the sitemap for an hour).
 import * as admin from "firebase-admin";
-import { Timestamp } from "firebase-admin/firestore";
 import { collectionsList } from "./firebaseCollections";
 import {
   FeedCoupon,
   RenderedPage,
+  StoreInfo,
   categoriesOf,
   categoriesPage,
   categoryPage,
@@ -14,55 +20,63 @@ import {
   storePage,
   storesPage,
 } from "./seoPages";
+import { couponCollections, storeCoupons, storeInfo, toFeedCoupon } from "./stores";
 
-const FEED_TTL_MS = 5 * 60 * 1000;
-let feed: { coupons: FeedCoupon[]; fetchedAt: number } | null = null;
+export { toFeedCoupon };
 
-const toDate = (value: unknown) => (value instanceof Timestamp ? value.toDate() : null);
-const text = (value: unknown) => (typeof value === "string" ? value : "");
+const TTL_MS = 5 * 60 * 1000;
+
+// Keeps the last good value for TTL_MS, and keeps serving it if a refresh fails.
+const cached = <T>(load: () => Promise<T>, label: string) => {
+  let entry: { value: T; fetchedAt: number } | null = null;
+  return async (): Promise<T> => {
+    if (entry && Date.now() - entry.fetchedAt < TTL_MS) return entry.value;
+    try {
+      entry = { value: await load(), fetchedAt: Date.now() };
+    } catch (error) {
+      console.error(`seo: couldn't read ${label}`, (error as Error).message);
+      if (!entry) throw error;
+    }
+    return entry.value;
+  };
+};
 
 const fields = ["name", "code", "discount", "category", "description", "imgUrl", "username", "likes", "dislikes", "expiry", "createdAt", "updatedAt"];
 
-// Every public coupon (store and social). Fine for a few thousand coupons; beyond that, store
-// per-store counts in their own documents instead of reading the whole feed.
-export async function getFeed(): Promise<FeedCoupon[]> {
-  if (feed && Date.now() - feed.fetchedAt < FEED_TTL_MS) return feed.coupons;
+// Every public coupon (store and social), for category pages and the sitemap.
+export const getFeed = cached(async (): Promise<FeedCoupon[]> => {
   const db = admin.firestore();
-  const read = async (collectionName: string, type: FeedCoupon["type"]) => {
-    const snapshot = await db.collection(collectionName).select(...fields).get();
-    return snapshot.docs.map((doc) => toFeedCoupon(doc.id, type, doc.data()));
-  };
-  try {
-    const [coupons, social] = await Promise.all([
-      read(collectionsList.coupons, "coupon"),
-      read(collectionsList.socialCoupons, "socialCoupon"),
-    ]);
-    feed = { coupons: [...coupons, ...social], fetchedAt: Date.now() };
-  } catch (error) {
-    console.error("seo: couldn't read the coupon feeds", (error as Error).message);
-    if (!feed) throw error;
-    // Keep serving the last good copy.
-  }
-  return feed.coupons;
-}
+  const lists = await Promise.all(
+    couponCollections.map(async ([collectionName, type]) => {
+      const snapshot = await db.collection(collectionName).select(...fields).get();
+      return snapshot.docs.map((doc) => toFeedCoupon(doc.id, type, doc.data()));
+    })
+  );
+  return lists.flat();
+}, "the coupon feeds");
 
-// Turns a Firestore coupon document into a FeedCoupon (for the coupon page).
-export const toFeedCoupon = (id: string, type: FeedCoupon["type"], data: FirebaseFirestore.DocumentData): FeedCoupon => ({
-  id,
-  type,
-  name: text(data.name).trim(),
-  code: text(data.code),
-  discount: Number(data.discount) || 0,
-  category: text(data.category).toLowerCase().trim(),
-  description: text(data.description),
-  imgUrl: text(data.imgUrl),
-  username: text(data.username),
-  likes: Number(data.likes) || 0,
-  dislikes: Number(data.dislikes) || 0,
-  expiry: toDate(data.expiry),
-  createdAt: toDate(data.createdAt),
-  updatedAt: toDate(data.updatedAt),
-});
+// Every store's summary (Stores collection), A-Z, working codes counted now.
+export const getStores = cached(async (): Promise<StoreInfo[]> => {
+  const snapshot = await admin.firestore().collection(collectionsList.stores).get();
+  const now = Date.now();
+  return snapshot.docs
+    .map((doc) => storeInfo(doc.data(), now))
+    .filter((store) => store.slug)
+    .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" }));
+}, "the stores");
+
+// Stores that share a category with these (Firestore allows up to 30 values in one query).
+async function storesInCategories(categories: string[]): Promise<StoreInfo[]> {
+  if (categories.length === 0) return [];
+  const snapshot = await admin
+    .firestore()
+    .collection(collectionsList.stores)
+    .where("categories", "array-contains-any", categories.slice(0, 30))
+    .limit(50)
+    .get();
+  const now = Date.now();
+  return snapshot.docs.map((doc) => storeInfo(doc.data(), now));
+}
 
 const decode = (value: string) => {
   try {
@@ -82,20 +96,24 @@ export async function renderListingPage(path: string): Promise<RenderedPage | nu
   if (section === "store" && !rawParam) return null;
   if (section === "stores" && rawParam) return null;
 
-  const coupons = await getFeed();
   const now = Date.now();
-  const stores = groupStores(coupons, now);
+  if (section === "stores") return storesPage(await getStores());
 
-  if (section === "stores") return storesPage(stores);
-  if (section === "categories" && !rawParam) return categoriesPage(categoriesOf(coupons.filter((c) => c.type === "coupon")));
+  if (section === "categories" && !rawParam) {
+    return categoriesPage(categoriesOf((await getFeed()).filter((c) => c.type === "coupon")));
+  }
 
   const param = decode(rawParam);
   if (param === null) return notFound(clean);
 
   if (section === "store") {
-    const store = stores.find((s) => s.slug === storeSlug(param));
-    return store ? storePage(store, stores, now) : notFound(clean);
+    const slug = storeSlug(param);
+    const store = slug ? groupStores(await storeCoupons(slug), now).find((s) => s.slug === slug) : undefined;
+    if (!store) return notFound(clean);
+    return storePage(store, await storesInCategories(store.categories), now);
   }
+
+  const [coupons, stores] = await Promise.all([getFeed(), getStores()]);
   return categoryPage(param.toLowerCase().trim(), coupons, stores, now) ?? notFound(clean);
 }
 

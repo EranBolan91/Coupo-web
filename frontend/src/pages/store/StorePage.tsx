@@ -5,7 +5,7 @@ import CouponGrid from "../../components/coupons/CouponGrid";
 import { isExpired } from "../../logic/couponFilters";
 import PageHeader from "../../components/ui/PageHeader";
 import EmptyState from "../../components/ui/EmptyState";
-import useAllCoupons from "../../hooks/useAllCoupons";
+import { useStoreCoupons, useStoresInCategories } from "../../hooks/useStores";
 import usePageMeta from "../../hooks/usePageMeta";
 import { Link, useParams } from "react-router-dom";
 import { useMemo } from "react";
@@ -14,14 +14,17 @@ import { useMemo } from "react";
 // then similar stores. The couponPreview Cloud Function sends search engines the same content.
 const StorePage = () => {
   const { storeSlug: param = "" } = useParams<{ storeSlug: string }>();
-  const { data: coupons, isPending, isError, refetch } = useAllCoupons();
+  const slug = storeSlug(param);
+  // Only this store's coupons, and only the stores that share a category with it.
+  const { data: coupons = [], isPending: loadingCoupons, isError, refetch } = useStoreCoupons(slug);
+  const isPending = !!slug && loadingCoupons;
 
-  const stores = useMemo(() => groupStores(coupons), [coupons]);
-  const store = stores.find((s) => s.slug === storeSlug(param));
+  const store = useMemo(() => groupStores(coupons).find((s) => s.slug === slug), [coupons, slug]);
+  const { data: nearby = [] } = useStoresInCategories(store?.categories ?? []);
   const now = Date.now();
   const active = store?.coupons.filter((coupon) => !isExpired(coupon, now)) ?? [];
   const expired = store?.coupons.filter((coupon) => isExpired(coupon, now)) ?? [];
-  const related = store ? relatedStores(store, stores) : [];
+  const related = store ? relatedStores(store, nearby) : [];
 
   const title = store ? `${store.name} coupon codes, ${monthLabel()}` : "";
   usePageMeta(
@@ -77,7 +80,7 @@ const StorePage = () => {
           coupons={active}
           isLoading={isPending}
           isError={isError}
-          onRetry={refetch}
+          onRetry={() => refetch()}
           emptyTitle={`No working ${store?.name ?? ""} codes right now`}
           emptyDescription={expired.length > 0 ? "Expired codes are below. Some stores accept old codes, so they may be worth a try." : undefined}
           emptyAction={

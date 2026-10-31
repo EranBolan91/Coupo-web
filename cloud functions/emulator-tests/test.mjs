@@ -186,6 +186,9 @@ await check("anon cannot record a copy", () => assertFails(setDoc(doc(anon, "Use
 await check("anyone can read SharerStats", () => assertSucceeds(getDoc(doc(anon, "SharerStats/alice"))));
 await check("users cannot write SharerStats", () => assertFails(setDoc(doc(alice, "SharerStats/alice"), { points: 999 })));
 await check("admins cannot write SharerStats from the client", () => assertFails(setDoc(doc(admin, "SharerStats/alice"), { points: 1 })));
+await check("anyone can read Stores", () => assertSucceeds(getDoc(doc(anon, "Stores/nike"))));
+await check("users cannot write Stores", () => assertFails(setDoc(doc(alice, "Stores/nike"), { name: "Nike" })));
+await check("admins cannot write Stores from the client", () => assertFails(setDoc(doc(admin, "Stores/nike"), { name: "Nike" })));
 await check("alice cannot create a coupon with copies", () =>
   assertFails(setDoc(doc(alice, "UserCoupons/alice/Coupons/fakecopies"), { ...coupon("alice"), copies: 50 })));
 
@@ -270,6 +273,23 @@ await check("social coupon create/vote/delete", async () => {
   await waitFor(async () => (await readRaw("SocialCoupons/s1"))?.likes === 1 && (await readRaw("UserCoupons/alice/SocialCoupons/s1"))?.likes === 1);
   await assertSucceeds(deleteDoc(doc(alice, "UserCoupons/alice/SocialCoupons/s1")));
   await waitFor(async () => (await readRaw("SocialCoupons/s1")) === null);
+});
+await check("new coupon gets storeSlug and a Stores summary; rename and delete move it", async () => {
+  await assertSucceeds(setDoc(doc(alice, "UserCoupons/alice/Coupons/st1"), { ...coupon("alice"), name: "Acme Store", discount: 15 }));
+  await waitFor(async () => (await readRaw("Coupons/st1"))?.storeSlug === "acme-store");
+  await waitFor(async () => {
+    const s = await readRaw("Stores/acme-store");
+    return s?.name === "Acme Store" && s?.count === 1 && s?.offers?.[0]?.discount === 15 && s?.categories?.[0] === "sports";
+  });
+  await assertSucceeds(updateDoc(doc(alice, "UserCoupons/alice/Coupons/st1"), { name: "Zeta" }));
+  await waitFor(async () => (await readRaw("Coupons/st1"))?.storeSlug === "zeta");
+  await waitFor(async () => (await readRaw("Stores/zeta"))?.count === 1 && (await readRaw("Stores/acme-store")) === null);
+  await assertSucceeds(deleteDoc(doc(alice, "UserCoupons/alice/Coupons/st1")));
+  await waitFor(async () => (await readRaw("Stores/zeta")) === null);
+});
+await check("admin coupon written straight to Coupons gets storeSlug too", async () => {
+  await assertSucceeds(setDoc(doc(admin, "Coupons/st2"), { ...coupon(""), name: "Big Shop!" }));
+  await waitFor(async () => (await readRaw("Coupons/st2"))?.storeSlug === "big-shop" && (await readRaw("Stores/big-shop"))?.count === 1);
 });
 await check("bob copies alice's code -> copies=1, alice gets 1 point", async () => {
   await assertSucceeds(setDoc(doc(alice, "UserCoupons/alice/Coupons/p1"), coupon("alice")));
@@ -385,6 +405,23 @@ await check("recountPoints rebuilds SharerStats from copies and votes", async ()
     throw new Error("after write: " + JSON.stringify(s));
   }
   if (run().includes("SharerStats/dana")) throw new Error("still reports dana after write");
+});
+
+// ---------- scripts/backfillStores.js ----------
+await check("backfillStores sets storeSlug and rebuilds Stores", async () => {
+  await env.withSecurityRulesDisabled(async (ctx) => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, "Coupons/bf1"), { ...coupon(""), name: "Back Fill", discount: 30 });
+    await setDoc(doc(db, "SocialCoupons/bf2"), { ...coupon(""), name: "back fill", discount: 5, expiry: Timestamp.fromDate(new Date(Date.now() - 86400000)) });
+    await setDoc(doc(db, "Stores/ghost"), { slug: "ghost", name: "Ghost", offers: [], count: 1 });
+  });
+  const script = fileURLToPath(new URL("../functions/scripts/backfillStores.js", import.meta.url));
+  execFileSync("node", [script, "--write"], { env: { ...process.env, GCLOUD_PROJECT: "demo-coupo" } });
+  if ((await readRaw("Coupons/bf1"))?.storeSlug !== "back-fill") throw new Error("bf1 slug missing");
+  if ((await readRaw("SocialCoupons/bf2"))?.storeSlug !== "back-fill") throw new Error("bf2 slug missing");
+  const s = await readRaw("Stores/back-fill");
+  if (s?.count !== 2 || s.name !== "Back Fill" || s.offers.length !== 2) throw new Error("store: " + JSON.stringify(s));
+  if (await readRaw("Stores/ghost")) throw new Error("stale store not deleted");
 });
 
 await env.cleanup();

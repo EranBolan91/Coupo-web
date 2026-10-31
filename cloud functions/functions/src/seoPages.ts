@@ -22,16 +22,23 @@ export type FeedCoupon = {
   updatedAt: Date | null;
 };
 
-export type Store = {
+// What lists of stores need (store list, similar stores, sitemap). Comes from Stores/{slug}
+// (stores.ts) or from grouping coupons (groupStores).
+export type StoreInfo = {
   slug: string;
   name: string;
   imgUrl: string;
+  categories: string[];
+  activeCount: number;
+  bestDiscount: number;
+  updatedAt: Date | null;
+};
+
+// One store with its coupons, for its own page.
+export type Store = StoreInfo & {
   coupons: FeedCoupon[];
   active: FeedCoupon[];
   expired: FeedCoupon[];
-  categories: string[];
-  bestDiscount: number;
-  updatedAt: Date | null;
 };
 
 export type RenderedPage = { status: number; page: PageInfo; body: string };
@@ -96,6 +103,7 @@ export const groupStores = (coupons: FeedCoupon[], now: number): Store[] => {
         coupons: sorted,
         active,
         expired,
+        activeCount: active.length,
         categories: [...new Set(list.map((coupon) => coupon.category?.toLowerCase()).filter(Boolean))].sort(),
         bestDiscount: Math.max(0, ...active.map((coupon) => coupon.discount)),
         updatedAt: latest(list.map((coupon) => coupon.updatedAt ?? coupon.createdAt)),
@@ -109,10 +117,10 @@ export const categoriesOf = (coupons: FeedCoupon[]) =>
   [...new Set(coupons.map((coupon) => coupon.category?.toLowerCase().trim()).filter(Boolean))].sort();
 
 // Stores that share a category with this one, most active codes first.
-export const relatedStores = (store: Store, stores: Store[], count = 6) =>
+export const relatedStores = (store: StoreInfo, stores: StoreInfo[], count = 6) =>
   stores
     .filter((other) => other.slug !== store.slug && other.categories.some((c) => store.categories.includes(c)))
-    .sort((a, b) => b.active.length - a.active.length || a.name.localeCompare(b.name))
+    .sort((a, b) => b.activeCount - a.activeCount || a.name.localeCompare(b.name))
     .slice(0, count);
 
 const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
@@ -196,8 +204,8 @@ const couponLine = (coupon: FeedCoupon, now: number, withStore: boolean) => {
 
 const wrap = (inner: string) => `${style}<main class="ssr">${inner}</main>`;
 
-export const storeDescription = (store: Store) => {
-  const count = store.active.length;
+export const storeDescription = (store: StoreInfo) => {
+  const count = store.activeCount;
   const best = store.bestDiscount > 0 ? `, up to ${store.bestDiscount}% off` : "";
   const where = store.categories.length ? ` ${capitalize(store.name)} is in ${store.categories.join(", ")}.` : "";
   return count > 0 ?
@@ -205,11 +213,12 @@ export const storeDescription = (store: Store) => {
     `No working ${store.name} coupon codes right now. See expired codes and coupons from similar stores on Coupo.${where}`;
 };
 
-export const storePage = (store: Store, stores: Store[], now: number): RenderedPage => {
+// `others`: stores to pick "Similar stores" from (any list that includes the ones sharing a category).
+export const storePage = (store: Store, others: StoreInfo[], now: number): RenderedPage => {
   const path = storePath(store.name);
   const title = `${store.name} coupon codes, ${monthLabel(new Date(now))}`;
   const description = storeDescription(store);
-  const related = relatedStores(store, stores);
+  const related = relatedStores(store, others);
   const crumbs: [string, string][] = [["Coupo", "/"], ["Stores", "/stores"], [store.name, path]];
 
   const body = wrap([
@@ -236,15 +245,15 @@ export const storePage = (store: Store, stores: Store[], now: number): RenderedP
   };
 };
 
-export const storesPage = (stores: Store[]): RenderedPage => {
+export const storesPage = (stores: StoreInfo[]): RenderedPage => {
   const path = "/stores";
-  const withCodes = stores.filter((store) => store.active.length > 0).length;
+  const withCodes = stores.filter((store) => store.activeCount > 0).length;
   const description = `Coupon codes for ${plural(stores.length, "store")}, A to Z. ${withCodes} have working codes right now.`;
   const body = wrap([
     crumbsHtml([["Coupo", "/"], ["Stores", path]]),
     "<h1>All stores</h1>",
     `<p>${h(description)}</p>`,
-    `<ul>${stores.map((s) => `<li>${link(storePath(s.name), s.name)} (${plural(s.active.length, "code")})</li>`).join("")}</ul>`,
+    `<ul>${stores.map((s) => `<li>${link(storePath(s.name), s.name)} (${plural(s.activeCount, "code")})</li>`).join("")}</ul>`,
   ].join(""));
   return {
     status: 200,
@@ -270,7 +279,7 @@ export const categoriesPage = (categories: string[]): RenderedPage => {
 };
 
 // Category pages list store coupons only, like the app's category page.
-export const categoryPage = (category: string, coupons: FeedCoupon[], stores: Store[], now: number): RenderedPage | null => {
+export const categoryPage = (category: string, coupons: FeedCoupon[], stores: StoreInfo[], now: number): RenderedPage | null => {
   const inCategory = coupons
     .filter((coupon) => coupon.type === "coupon" && coupon.category?.toLowerCase() === category)
     .sort(byQuality);
@@ -321,8 +330,7 @@ const xml = (value: string) =>
   value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 
 // Every page Google should know about. Expired coupons are left out; their store page still lists them.
-export const sitemapXml = (coupons: FeedCoupon[], now: number) => {
-  const stores = groupStores(coupons, now);
+export const sitemapXml = (coupons: FeedCoupon[], stores: StoreInfo[], now: number) => {
   const newest = latest(coupons.map((coupon) => coupon.updatedAt ?? coupon.createdAt));
   const entries: [string, Date | null][] = [
     ["/", newest],

@@ -1,10 +1,10 @@
 import { BrandImage } from "../../pages/coupons/components/CouponCard";
-import { Store, storePath } from "../../logic/stores";
+import { StoreInfo, storePath } from "../../logic/stores";
 import { PiArrowRightBold } from "react-icons/pi";
 import { Link } from "react-router-dom";
 
 // Store links as tiles: logo, name, number of working codes.
-const StoreTiles = ({ stores }: { stores: Store[] }) => (
+const StoreTiles = ({ stores }: { stores: StoreInfo[] }) => (
   <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
     {stores.map((store) => (
       <li key={store.slug}>

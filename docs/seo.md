@@ -20,6 +20,24 @@ Check it worked (all should load):
 - https://coupo-e03c4.web.app/stores
 - `curl -s https://coupo-e03c4.web.app/stores | grep "<h1>"` shows "All stores" (that's what Google sees before JavaScript runs).
 
+## 1b. Faster store pages (stores summary): deploy order
+
+Store pages read only their own store's coupons, using a `storeSlug` field on each coupon and a small `Stores` collection. Both are filled in by Cloud Functions. Deploy in this order, from `cloud functions`:
+
+```bash
+firebase deploy --only firestore:rules      # lets everyone read the new Stores collection
+firebase deploy --only functions            # syncStore triggers + the updated couponPreview
+cd functions && npm run build
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json node scripts/backfillStores.js           # report: what will change
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json node scripts/backfillStores.js --write   # fill storeSlug + Stores
+cd ..
+firebase deploy --only hosting              # the app now reads by storeSlug
+```
+
+Hosting must come after the backfill: until coupons have `storeSlug`, the new store pages would show "No coupons for this store yet". No new Firestore index is needed.
+
+Check: open https://coupo-e03c4.web.app/stores (every store listed) and one store page. In the Firebase console, `Stores` should have one document per store.
+
 ## 2. Google Search Console
 
 1. Go to https://search.google.com/search-console and sign in with the Google account that should own the site.

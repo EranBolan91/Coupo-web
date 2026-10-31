@@ -12,4 +12,5 @@ export const collectionsList = {
   reports: "Reports",
   userCopies: "UserCopies",
   sharerStats: "SharerStats",
+  stores: "Stores",
 };
