@@ -1,4 +1,4 @@
-import { PiChartBarBold, PiChartLineUpBold, PiFlagBold, PiFoldersBold, PiListBulletsBold, PiPlusBold, PiTagBold, PiUploadSimpleBold } from "react-icons/pi";
+import { PiChartBarBold, PiChartLineUpBold, PiFlagBold, PiFoldersBold, PiListBulletsBold, PiPlusBold, PiTagBold, PiUploadSimpleBold, PiUsersBold } from "react-icons/pi";
 import useReports from "../../../hooks/useReports";
 import { NavLink } from "react-router-dom";
 import React from "react";
@@ -6,8 +6,9 @@ import React from "react";
 const links = [
   { to: "/admin", label: "Dashboard", icon: PiChartBarBold },
   { to: "/admin/analytics", label: "Analytics", icon: PiChartLineUpBold },
+  { to: "/admin/users", label: "Users", icon: PiUsersBold },
   { to: "/admin/add", label: "Add coupon", icon: PiPlusBold },
-  { to: "/admin/import", label: "Import coupons", icon: PiUploadSimpleBold },
+  { to: "/admin/import", label: "Import coupons", icon: PiUploadSimpleBold, PiUsersBold },
   { to: "/admin/coupons", label: "Coupons", icon: PiListBulletsBold },
   { to: "/admin/reports", label: "Reports", icon: PiFlagBold },
   { to: "/admin/categories", label: "Categories", icon: PiFoldersBold },

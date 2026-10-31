@@ -158,6 +158,7 @@ const AdminDashboard = () => {
               label="Users"
               value={users.isPending ? "…" : users.isError ? "-" : users.data.total}
               detail={users.isError ? "Couldn't count users" : users.data ? `${users.data.recent} joined this week` : undefined}
+              to="/admin/users"
             />
             <Tile
               label="Said it worked"

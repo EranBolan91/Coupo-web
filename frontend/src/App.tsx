@@ -21,6 +21,7 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminImport from "./pages/admin/AdminImport";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminUsers from "./pages/admin/AdminUsers";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
 
@@ -73,6 +74,7 @@ const App = () => {
             {(
               [
                 ["/admin/analytics", <AdminAnalytics />],
+                ["/admin/users", <AdminUsers />],
                 ["/admin/add", <AdminPage />],
                 ["/admin/import", <AdminImport />],
                 ["/admin/coupons", <AdminCoupons />],
