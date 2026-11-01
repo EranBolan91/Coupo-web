@@ -20,6 +20,7 @@ export type CouponFormValues = {
   code: string;
   discount: number;
   expiry: string; // yyyy-mm-dd from the date input
+  noExpiry: boolean; // "No expiry date" ticked: expiry is ignored and the coupon never expires
   description: string;
   terms: CouponTerms; // store link and conditions (not a react-hook-form field)
 };
@@ -66,7 +67,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<CouponFormValues>({
-    defaultValues: { name: "", imgUrl: "", category: "", code: "", expiry: "", description: "", terms: emptyTerms },
+    defaultValues: { name: "", imgUrl: "", category: "", code: "", expiry: "", noExpiry: false, description: "", terms: emptyTerms },
   });
 
   // Brand and category are required; register them so react-hook-form validates them.
@@ -77,7 +78,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   }, [register, brandMode]);
 
   const values = watch();
-  const expiryDate = values.expiry ? new Date(values.expiry) : null;
+  const expiryDate = !values.noExpiry && values.expiry ? new Date(values.expiry) : null;
   const preview: Coupon = {
     id: "preview",
     name: values.name,
@@ -90,7 +91,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     userID: userDocument?.userUID ?? "",
     likes: 0,
     dislikes: 0,
-    expiry: (expiryDate && !isNaN(expiryDate.getTime()) ? Timestamp.fromDate(expiryDate) : undefined) as Timestamp,
+    expiry: expiryDate && !isNaN(expiryDate.getTime()) ? Timestamp.fromDate(expiryDate) : null,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
     type: brandMode === "social" ? "socialCoupon" : "coupon",
@@ -205,18 +206,29 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
           </Field>
         </div>
 
-        <Field label="Expires on" htmlFor="expiry" error={errors.expiry?.message}>
-          <input
-            id="expiry"
-            type="date"
-            min={today()}
-            className="input input-bordered h-12 w-full bg-base-100 sm:w-1/2"
-            aria-invalid={!!errors.expiry}
-            {...register("expiry", {
-              required: "Expiry date is required",
-              validate: (v) => v >= today() || "The date has already passed",
-            })}
-          />
+        <Field label="Expires on" htmlFor={values.noExpiry ? "noExpiry" : "expiry"} error={values.noExpiry ? undefined : errors.expiry?.message}>
+          {!values.noExpiry && (
+            <input
+              id="expiry"
+              type="date"
+              min={today()}
+              className="input input-bordered mb-3 h-12 w-full bg-base-100 sm:w-1/2"
+              aria-invalid={!!errors.expiry}
+              {...register("expiry", {
+                validate: (v, form) =>
+                  form.noExpiry || (!v ? "Expiry date is required" : v >= today() || "The date has already passed"),
+              })}
+            />
+          )}
+          <label htmlFor="noExpiry" className="flex cursor-pointer items-center gap-3">
+            <input
+              id="noExpiry"
+              type="checkbox"
+              className="checkbox checkbox-primary [&:not(:checked)]:bg-base-100"
+              {...register("noExpiry")}
+            />
+            <span className="font-semibold">No expiry date</span>
+          </label>
         </Field>
 
         <CouponTermsFields idPrefix="new" value={terms} onChange={setTerms} showErrors={triedSubmit} />

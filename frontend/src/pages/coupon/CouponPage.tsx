@@ -17,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { storePath, storeSlug } from "../../logic/stores";
 import usePageMeta from "../../hooks/usePageMeta";
 
-const longDate = (value?: { toDate?: () => Date }) =>
+const longDate = (value?: { toDate?: () => Date } | null) =>
   value?.toDate?.().toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" });
 
 // One coupon: /coupons/:couponId (store) or /social/:couponId (social). This is the link people share.

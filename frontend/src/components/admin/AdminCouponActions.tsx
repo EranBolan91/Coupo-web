@@ -13,7 +13,7 @@ import { useState } from "react";
 import CouponTermsFields from "../coupons/CouponTermsFields";
 import { cleanTerms, termsError, termsOf } from "../../logic/couponTerms";
 
-const toDateInput = (expiry?: Timestamp) => {
+const toDateInput = (expiry?: Timestamp | null) => {
   const date = expiry?.toDate?.();
   if (!date) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -37,6 +37,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
   const [category, setCategory] = useState(coupon.category);
   const [discount, setDiscount] = useState(String(coupon.discount));
   const [expiry, setExpiry] = useState(toDateInput(coupon.expiry));
+  const [noExpiry, setNoExpiry] = useState(!coupon.expiry);
   const [description, setDescription] = useState(coupon.description ?? "");
   const [terms, setTerms] = useState(() => termsOf(coupon));
 
@@ -47,6 +48,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
     setCategory(coupon.category);
     setDiscount(String(coupon.discount));
     setExpiry(toDateInput(coupon.expiry));
+    setNoExpiry(!coupon.expiry);
     setDescription(coupon.description ?? "");
     setTerms(termsOf(coupon));
     setEditOpen(true);
@@ -56,7 +58,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
   const errors = {
     code: code.trim() ? undefined : "Code is required",
     discount: Number.isInteger(discountNumber) && discountNumber >= 1 && discountNumber <= 100 ? undefined : "Enter a whole number from 1 to 100",
-    expiry: expiry ? undefined : "Expiry date is required",
+    expiry: noExpiry || expiry ? undefined : "Expiry date is required",
     terms: termsError(terms),
   };
   const invalid = Object.values(errors).some(Boolean);
@@ -70,7 +72,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
         code: code.trim().toUpperCase(),
         category,
         discount: discountNumber,
-        expiry: Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)),
+        expiry: noExpiry ? null : Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)),
         description: description.trim(),
         ...cleanTerms(terms),
       });
@@ -177,14 +179,30 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
                 ))}
               </select>
             </Field>
-            <Field label="Expires on" htmlFor={`admin-expiry-${coupon.id}`} error={errors.expiry}>
-              <input
-                id={`admin-expiry-${coupon.id}`}
-                type="date"
-                className="input input-bordered h-12 w-full bg-base-100"
-                value={expiry}
-                onChange={(e) => setExpiry(e.target.value)}
-              />
+            <Field
+              label="Expires on"
+              htmlFor={noExpiry ? `admin-noexpiry-${coupon.id}` : `admin-expiry-${coupon.id}`}
+              error={errors.expiry}
+            >
+              {!noExpiry && (
+                <input
+                  id={`admin-expiry-${coupon.id}`}
+                  type="date"
+                  className="input input-bordered mb-3 h-12 w-full bg-base-100"
+                  value={expiry}
+                  onChange={(e) => setExpiry(e.target.value)}
+                />
+              )}
+              <label htmlFor={`admin-noexpiry-${coupon.id}`} className="flex cursor-pointer items-center gap-3">
+                <input
+                  id={`admin-noexpiry-${coupon.id}`}
+                  type="checkbox"
+                  className="checkbox checkbox-primary [&:not(:checked)]:bg-base-100"
+                  checked={noExpiry}
+                  onChange={(e) => setNoExpiry(e.target.checked)}
+                />
+                <span className="font-semibold">No expiry date</span>
+              </label>
             </Field>
           </div>
           <CouponTermsFields idPrefix={`admin-${coupon.id}`} value={terms} onChange={setTerms} />

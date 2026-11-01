@@ -74,6 +74,10 @@ export const parseExpiry = (input: string): string | undefined => {
   return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
 };
 
+// A blank expiry cell, or one of these, means the coupon has no expiry date.
+const NO_EXPIRY = ["", "never", "none", "no", "no expiry", "-"];
+export const isNoExpiry = (input: string) => NO_EXPIRY.includes(input.trim().toLowerCase());
+
 const yes = (input: string) => ["yes", "y", "true", "1", "x"].includes(input.toLowerCase());
 
 export type ImportRow = {
@@ -119,15 +123,16 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
     const code = value.code.toUpperCase();
     const category = context.categories.get(value.category.toLowerCase());
     const discount = Number(value.discount.replace("%", ""));
-    const expiry = parseExpiry(value.expiry);
+    const noExpiry = isNoExpiry(value.expiry);
+    const expiry = noExpiry ? undefined : parseExpiry(value.expiry);
 
     if (!brand) problems.push("Missing brand");
     else if (!context.brands.has(brand)) notes.push("No logo for this brand yet, so the card shows its first letter");
     if (!code) problems.push("Missing code");
     else if (/\s/.test(code)) problems.push("Code can't contain spaces");
     if (!Number.isInteger(discount) || discount < 1 || discount > 100) problems.push("Discount must be a whole number from 1 to 100");
-    if (!expiry) problems.push("Expiry must be a date like 2026-12-31 or 31/12/2026");
-    else if (expiry < context.today) problems.push("Already expired");
+    if (!expiry && !noExpiry) problems.push('Expiry must be a date like 2026-12-31 or 31/12/2026, or blank / "never" for no expiry');
+    else if (expiry && expiry < context.today) problems.push("Already expired");
     if (!category) problems.push(value.category ? `No category "${value.category}". Add it on the Categories page first` : "Missing category");
 
     const terms: CouponTerms = { ...emptyTerms };
@@ -148,9 +153,9 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
       seen.add(key);
     }
 
-    const row: ImportRow = { line: i + 2, brand, code, discount: value.discount, expiry: expiry ?? value.expiry, problems, notes };
-    if (problems.length === 0 && expiry && category) {
-      const [y, m, d] = expiry.split("-").map(Number);
+    const row: ImportRow = { line: i + 2, brand, code, discount: value.discount, expiry: noExpiry ? "No expiry" : expiry ?? value.expiry, problems, notes };
+    if (problems.length === 0 && (expiry || noExpiry) && category) {
+      const [y, m, d] = (expiry ?? "").split("-").map(Number);
       row.coupon = {
         name: brand,
         imgUrl: context.brands.get(brand) ?? "",
@@ -162,7 +167,7 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
         username: "Coupo",
         likes: 0,
         dislikes: 0,
-        expiry: Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)),
+        expiry: expiry ? Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)) : null,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
         type: "coupon",

@@ -110,8 +110,10 @@ const AdminImport = () => {
           <div className="max-w-3xl space-y-3 text-base-content/70">
             <p>
               Paste rows from a spreadsheet or a CSV file. The first line names the columns:{" "}
-              <span className="font-mono text-sm text-base-content">{IMPORT_COLUMNS.join(", ")}</span>. The first five are
-              required. Expiry can be 2026-12-31 or 31/12/2026, and usableAt is online, in-store or both.
+              <span className="font-mono text-sm text-base-content">{IMPORT_COLUMNS.join(", ")}</span>. The first five columns
+              must be there, and every row needs a brand, code, discount and category. Expiry can be 2026-12-31 or
+              31/12/2026. Leave it blank or write "never" for a coupon with no expiry date. usableAt is online, in-store
+              or both.
             </p>
             <p>Only publish codes a store has made public, and check that they still work.</p>
           </div>

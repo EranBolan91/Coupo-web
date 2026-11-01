@@ -2,13 +2,15 @@ import { CouponFormValues } from "./CouponForm";
 import { Coupon } from "../../types/CouponType";
 import { Timestamp } from "firebase/firestore";
 
-// Builds the document the save functions expect. Expiry becomes a Firestore Timestamp (end of that day).
+// Builds the document the save functions expect. Expiry becomes a Firestore Timestamp (end of that day),
+// or null when "No expiry date" is ticked.
 export const toCoupon = (
   values: CouponFormValues,
   owner: { userID?: string; username?: string },
   type: Coupon["type"]
 ): Omit<Coupon, "id"> => {
   const [year, month, day] = values.expiry.split("-").map(Number);
+  const expiry = values.noExpiry ? null : Timestamp.fromDate(new Date(year, month - 1, day, 23, 59, 59));
   return {
     name: values.name.trim(),
     imgUrl: values.imgUrl ?? "",
@@ -20,7 +22,7 @@ export const toCoupon = (
     username: owner.username ?? "",
     likes: 0,
     dislikes: 0,
-    expiry: Timestamp.fromDate(new Date(year, month - 1, day, 23, 59, 59)),
+    expiry,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
     type,

@@ -12,7 +12,8 @@ export const couponSchema = z.object({
   userID: z.string().uuid(),
   discount: z.number().min(1).max(100),
   dislikes: z.number().min(0),
-  expiry: z.instanceof(Timestamp),
+  // null = no expiry date (the coupon never expires).
+  expiry: z.instanceof(Timestamp).nullable(),
   description: z.string().optional(),
   createdAt: z.instanceof(Timestamp),
   updatedAt: z.instanceof(Timestamp),
