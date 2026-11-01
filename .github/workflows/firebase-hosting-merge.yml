@@ -11,10 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci && npm run build
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      # The site lives in frontend/; firebase.json (in "cloud functions") serves "cloud functions/public".
+      - run: npm ci && npm run build -- --outDir "../cloud functions/public" --emptyOutDir
+        working-directory: frontend
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_COUPO_E03C4 }}
           channelId: live
           projectId: coupo-e03c4
+          entryPoint: "cloud functions"

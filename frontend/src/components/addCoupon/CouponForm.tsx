@@ -1,16 +1,16 @@
-import { PiCaretUpDownBold, PiCheckBold, PiPlusBold } from "react-icons/pi";
+import { PiPlusBold } from "react-icons/pi";
 import CouponCard, { BrandImage } from "../../pages/coupons/components/CouponCard";
 import { getCategories, getCouponsBrands } from "../../database/databaseCalls";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { Listbox, Transition } from "@headlessui/react";
 import { CouponBrand } from "../../types/CouponBrandType";
 import { Coupon } from "../../types/CouponType";
 import { useQuery } from "@tanstack/react-query";
 import { Timestamp } from "firebase/firestore";
 import { CouponTerms, cleanTerms, emptyTerms, termsError } from "../../logic/couponTerms";
 import CouponTermsFields from "../coupons/CouponTermsFields";
-import { Fragment, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import SearchSelect from "../ui/SearchSelect";
 import Field from "../ui/Field";
 
 export type CouponFormValues = {
@@ -42,61 +42,11 @@ const RetryLink = ({ onClick }: { onClick: () => void }) => (
   </button>
 );
 
-// Brand dropdown with logos (Headless UI Listbox, keyboard accessible).
-const BrandPicker = ({
-  brands,
-  value,
-  onChange,
-  invalid,
-}: {
-  brands: CouponBrand[];
-  value: string;
-  onChange: (brand: CouponBrand) => void;
-  invalid?: boolean;
-}) => {
-  const selected = brands.find((brand) => brand.brand === value);
-  return (
-    <Listbox value={selected ?? null} onChange={(brand: CouponBrand) => onChange(brand)} by="brand">
-      <div className="relative">
-        <Listbox.Button
-          id="brand"
-          className={`input input-bordered flex h-12 w-full items-center gap-3 bg-base-100 text-left ${invalid ? "input-error" : ""}`}
-        >
-          {selected ? (
-            <>
-              <BrandImage name={selected.brand} src={selected.imgURL} className="size-7" />
-              <span className="flex-1 truncate font-semibold capitalize">{selected.brand}</span>
-            </>
-          ) : (
-            <span className="flex-1 text-base-content/50">Choose a brand</span>
-          )}
-          <PiCaretUpDownBold className="size-4 text-base-content/50" aria-hidden />
-        </Listbox.Button>
-        <Transition as={Fragment} leave="transition ease-in duration-100" leaveFrom="opacity-100" leaveTo="opacity-0">
-          <Listbox.Options className="absolute z-20 mt-2 max-h-72 w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-1.5 shadow-xl focus:outline-none">
-            {brands.map((brand) => (
-              <Listbox.Option
-                key={brand.brand}
-                value={brand}
-                className={({ active }) =>
-                  `flex cursor-pointer items-center gap-3 rounded-btn px-3 py-2 ${active ? "bg-base-200" : ""}`
-                }
-              >
-                {({ selected: isSelected }) => (
-                  <>
-                    <BrandImage name={brand.brand} src={brand.imgURL} className="size-8" />
-                    <span className={`flex-1 truncate capitalize ${isSelected ? "font-bold" : ""}`}>{brand.brand}</span>
-                    {isSelected && <PiCheckBold className="size-4 text-accent" aria-hidden />}
-                  </>
-                )}
-              </Listbox.Option>
-            ))}
-          </Listbox.Options>
-        </Transition>
-      </div>
-    </Listbox>
-  );
-};
+const brandLabel = (brand: CouponBrand) => brand.brand;
+const brandIcon = (brand: CouponBrand, size: "sm" | "md") => (
+  <BrandImage name={brand.brand} src={brand.imgURL} className={size === "sm" ? "size-7" : "size-8"} />
+);
+const categoryLabel = (category: string) => category;
 
 // Shared "share a coupon" form with a live ticket preview. Used by the store, social and admin flows.
 const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
@@ -123,6 +73,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   useEffect(() => {
     register("name", { required: brandMode === "store" ? "Choose a brand" : "Brand is required" });
     register("imgUrl");
+    register("category", { required: "Choose a category" });
   }, [register, brandMode]);
 
   const values = watch();
@@ -176,9 +127,15 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
             labelAside={brandMode === "store" && brandsQuery.isError && <RetryLink onClick={() => brandsQuery.refetch()} />}
           >
             {brandMode === "store" ? (
-              <BrandPicker
-                brands={brands}
-                value={values.name}
+              <SearchSelect
+                id="brand"
+                options={brands}
+                value={brands.find((brand) => brand.brand === values.name) ?? null}
+                getLabel={brandLabel}
+                renderIcon={brandIcon}
+                placeholder="Type a brand name"
+                labelClassName="capitalize"
+                loading={brandsQuery.isLoading}
                 invalid={!!errors.name}
                 onChange={(brand) => {
                   setValue("name", brand.brand, { shouldValidate: true });
@@ -203,21 +160,16 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
             error={errors.category?.message ?? (categoriesQuery.isError ? "Couldn't load the categories." : undefined)}
             labelAside={categoriesQuery.isError && <RetryLink onClick={() => categoriesQuery.refetch()} />}
           >
-            <select
+            <SearchSelect
               id="category"
-              className="select select-bordered h-12 w-full bg-base-100"
-              aria-invalid={!!errors.category}
-              {...register("category", { required: "Choose a category" })}
-            >
-              <option value="" disabled>
-                Choose a category
-              </option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
+              options={categories}
+              value={values.category || null}
+              getLabel={categoryLabel}
+              placeholder="Type a category"
+              loading={categoriesQuery.isLoading}
+              invalid={!!errors.category}
+              onChange={(category) => setValue("category", category, { shouldValidate: true })}
+            />
           </Field>
         </div>
 
