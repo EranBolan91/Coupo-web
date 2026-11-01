@@ -56,8 +56,8 @@ const Category = () => {
         {stores.length > 0 && (
           <nav aria-label="Stores in this category" className="flex flex-wrap gap-2">
             {stores.map((store) => (
-              <Link key={store.slug} to={storePath(store.name)} className="btn btn-sm h-10 min-h-10 rounded-btn border-base-300 bg-base-200">
-                {store.name}
+              <Link key={store.slug} to={storePath(store.name)} className="btn btn-sm h-10 min-h-10 max-w-full rounded-btn border-base-300 bg-base-200">
+                <span className="truncate">{store.name}</span>
               </Link>
             ))}
           </nav>
