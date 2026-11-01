@@ -7,7 +7,7 @@ export type Coupon = {
   imgUrl: string;
   code: string;
   category: string;
-  expiry: Timestamp;
+  expiry: Timestamp | null; // null = no expiry date
   discount: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;

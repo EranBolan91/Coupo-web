@@ -1,4 +1,5 @@
 import { CouponTerms } from "../logic/couponTerms";
+import { isExpired } from "../logic/couponFilters";
 import {
   collection,
   getDocsFromServer,
@@ -69,10 +70,9 @@ export const getUserCoupons = async (userID: string) => {
 
   const socialCouponsRef = collection(db, collectionsList.userCoupons, userID, collectionsList.socialCoupons);
   const couponsRef = collection(db, collectionsList.userCoupons, userID, collectionsList.coupons);
-  const socialccouponsQuery = query(socialCouponsRef, where("expiry", ">=", today));
-  const couponsQuery = query(couponsRef, where("expiry", ">=", today));
-
-  const [couponsSnap, socialCouponsSnap] = await Promise.all([getDocsFromServer(couponsQuery), getDocsFromServer(socialccouponsQuery)]);
+  // Not filtered in the query: where("expiry", ">=", today) would also leave out coupons with no
+  // expiry date (null). Expired ones are dropped below instead.
+  const [couponsSnap, socialCouponsSnap] = await Promise.all([getDocsFromServer(couponsRef), getDocsFromServer(socialCouponsRef)]);
 
   couponsSnap.forEach((doc) => {
     const coupon = { id: doc.id, type: "coupon", ...doc.data() };
@@ -84,9 +84,10 @@ export const getUserCoupons = async (userID: string) => {
     coupons.push(coupon as Coupon);
   });
 
-  return coupons;
+  return coupons.filter((coupon) => !isExpired(coupon, today.getTime()));
 };
 
+// Coupons with no expiry date (null) are left out by the query, which is what we want here.
 export const getExpiredCoupons = async (userID: string) => {
   const coupons: Coupon[] = [];
   const today = new Date();
@@ -125,10 +126,11 @@ export const saveUserNewCoupon = async (coupon: Omit<Coupon, "id">, userID: stri
     coupon.createdAt = Timestamp.fromDate(new Date());
     coupon.likes = 0;
     coupon.dislikes = 0;
-    // Accept a Timestamp (CouponForm) or a date string (older callers).
-    if (!(coupon.expiry instanceof Timestamp)) {
+    // Accept a Timestamp (CouponForm), null (no expiry date) or a date string (older callers).
+    if (coupon.expiry && !(coupon.expiry instanceof Timestamp)) {
       coupon.expiry = Timestamp.fromDate(new Date(String(coupon.expiry)));
     }
+    if (!coupon.expiry) coupon.expiry = null;
 
     const userCouponsRef = collection(db, `${collectionsList.userCoupons}/${userID}/${collectionsList.coupons}/`);
     await addDoc(userCouponsRef, coupon);

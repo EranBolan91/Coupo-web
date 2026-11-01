@@ -24,7 +24,13 @@ export const couponSortOptions = [
 
 export type CouponSort = (typeof couponSortOptions)[number]["value"];
 
-const time = (value?: { toMillis: () => number }) => value?.toMillis?.() ?? 0;
+const time = (value?: { toMillis: () => number } | null) => value?.toMillis?.() ?? 0;
+
+// direction 1 = soonest first, -1 = latest first. No expiry date is always after every dated coupon.
+const byExpiry = (a: Coupon, b: Coupon, direction: 1 | -1) => {
+  if (!a.expiry || !b.expiry) return (a.expiry ? 0 : 1) - (b.expiry ? 0 : 1);
+  return direction * (time(a.expiry) - time(b.expiry));
+};
 
 // Returns a sorted copy, with expired coupons always after the active ones.
 export const sortCoupons = (coupons: Coupon[], sort: CouponSort, now = Date.now()) => {
@@ -41,10 +47,11 @@ const sortBy = (coupons: Coupon[], sort: CouponSort) => {
       return sorted.sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0) || (a.dislikes ?? 0) - (b.dislikes ?? 0));
     case "discount-desc":
       return sorted.sort((a, b) => Number(b.discount) - Number(a.discount));
+    // Coupons with no expiry date go last either way.
     case "expiry-asc":
-      return sorted.sort((a, b) => time(a.expiry) - time(b.expiry));
+      return sorted.sort((a, b) => byExpiry(a, b, 1));
     case "expiry-desc":
-      return sorted.sort((a, b) => time(b.expiry) - time(a.expiry));
+      return sorted.sort((a, b) => byExpiry(a, b, -1));
     case "brand-asc":
       return sorted.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
     case "brand-desc":

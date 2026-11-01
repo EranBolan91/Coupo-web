@@ -80,6 +80,8 @@ await check("carol can merge just imageURL into her existing doc", () =>
 await check("set+merge without userUID cannot create a doc", () =>
   assertFails(setDoc(doc(bob, "Users/bob"), { firstName: "B" }, { merge: true })));
 
+await check("alice can create a coupon with no expiry date", () =>
+  assertSucceeds(setDoc(doc(alice, "UserCoupons/alice/Coupons/noexp"), { ...coupon("alice"), expiry: null })));
 await check("alice cannot create coupon with likes>0", () => assertFails(setDoc(doc(alice, "UserCoupons/alice/Coupons/bad"), { ...coupon("alice"), likes: 99 })));
 await check("alice cannot create coupon owned by bob", () => assertFails(setDoc(doc(alice, "UserCoupons/alice/Coupons/bad"), coupon("bob"))));
 await check("alice cannot create under bob's uid", () => assertFails(setDoc(doc(alice, "UserCoupons/bob/Coupons/bad"), coupon("alice"))));
@@ -441,6 +443,7 @@ await check("backfillStores sets storeSlug and rebuilds Stores", async () => {
     const db = ctx.firestore();
     await setDoc(doc(db, "Coupons/bf1"), { ...coupon(""), name: "Back Fill", discount: 30 });
     await setDoc(doc(db, "SocialCoupons/bf2"), { ...coupon(""), name: "back fill", discount: 5, expiry: Timestamp.fromDate(new Date(Date.now() - 86400000)) });
+    await setDoc(doc(db, "Coupons/bf3"), { ...coupon(""), name: "Back Fill", code: "FOREVER", discount: 15, expiry: null });
     await setDoc(doc(db, "Stores/ghost"), { slug: "ghost", name: "Ghost", offers: [], count: 1 });
   });
   const script = fileURLToPath(new URL("../functions/scripts/backfillStores.js", import.meta.url));
@@ -448,7 +451,8 @@ await check("backfillStores sets storeSlug and rebuilds Stores", async () => {
   if ((await readRaw("Coupons/bf1"))?.storeSlug !== "back-fill") throw new Error("bf1 slug missing");
   if ((await readRaw("SocialCoupons/bf2"))?.storeSlug !== "back-fill") throw new Error("bf2 slug missing");
   const s = await readRaw("Stores/back-fill");
-  if (s?.count !== 2 || s.name !== "Back Fill" || s.offers.length !== 2) throw new Error("store: " + JSON.stringify(s));
+  if (s?.count !== 3 || s.name !== "Back Fill" || s.offers.length !== 3) throw new Error("store: " + JSON.stringify(s));
+  if (!s.offers.some((offer) => offer.discount === 15 && offer.expiry === null)) throw new Error("no-expiry offer: " + JSON.stringify(s.offers));
   if (await readRaw("Stores/ghost")) throw new Error("stale store not deleted");
 });
 

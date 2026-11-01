@@ -6,6 +6,7 @@
 //
 // coupons.json: [{ "brand": "nike", "category": "sport", "code": "SAVE20", "discount": 20,
 //                  "expiry": "2026-12-31", "description": "Optional details" }, ...]
+// "expiry": null (or "never") publishes a coupon with no expiry date.
 // brand and category must already exist (Brands / Category collections); the brand logo is filled in automatically.
 // A coupon whose brand + code already exists is skipped, so running it twice doesn't create duplicates.
 // Add "sample": true to mark a made-up demo coupon. Remove all of them later with:
@@ -50,12 +51,15 @@ const removeSamples = async () => {
     if (!categories.has(category)) problems.push(`unknown category "${c.category}"`);
     if (!c.code || !String(c.code).trim()) problems.push("missing code");
     if (!Number.isInteger(c.discount) || c.discount < 1 || c.discount > 100) problems.push("discount must be a whole number 1-100");
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(c.expiry || "") || c.expiry < today) problems.push("expiry must be a future date YYYY-MM-DD");
+    const noExpiry = c.expiry === null || c.expiry === "never";
+    if (!noExpiry && (!/^\d{4}-\d{2}-\d{2}$/.test(c.expiry || "") || c.expiry < today)) {
+      problems.push("expiry must be a future date YYYY-MM-DD, or null / \"never\" for no expiry");
+    }
     if (problems.length) return console.log(`SKIP ${row}: ${problems.join(", ")}`);
     const key = `${brand}|${String(c.code).trim().toUpperCase()}`;
     if (existing.has(key)) return console.log(`SKIP ${row}: already on Coupo (or listed twice in this file)`);
     existing.add(key);
-    const [y, m, d] = c.expiry.split("-").map(Number);
+    const [y, m, d] = noExpiry ? [] : c.expiry.split("-").map(Number);
     const now = admin.firestore.Timestamp.now();
     ok.push({
       name: brand,
@@ -68,13 +72,13 @@ const removeSamples = async () => {
       username: "Coupo",
       likes: 0,
       dislikes: 0,
-      expiry: admin.firestore.Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)),
+      expiry: noExpiry ? null : admin.firestore.Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)),
       createdAt: now,
       updatedAt: now,
       type: "coupon",
       ...(c.sample === true ? { sample: true } : {}),
     });
-    console.log(`OK   ${row}: ${c.discount}% until ${c.expiry}`);
+    console.log(`OK   ${row}: ${c.discount}% ${noExpiry ? "with no expiry date" : `until ${c.expiry}`}`);
   });
 
   if (flag !== "--write") {
