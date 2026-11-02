@@ -42,3 +42,5 @@ jobs:
           channelId: live
           projectId: coupo-e03c4
           entryPoint: "cloud functions"
+      # The deploy step rebuilds the site (predeploy in firebase.json); confirm what it uploaded has the key.
+      - run: grep -rqF -- "$VITE_API_KEY" "cloud functions/public/assets" || { echo "::error::The deployed build has no Firebase API key"; exit 1; }
