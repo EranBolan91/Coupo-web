@@ -18,17 +18,12 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       # The site lives in frontend/; firebase.json (in "cloud functions") serves "cloud functions/public".
       # Vite bakes the Firebase config into the build. .env is not in git, so it comes from repo secrets.
-      # Stop here if any are missing: a build without them ships a site that fails with auth/invalid-api-key.
+      # Stop if any are missing or malformed: that ships a site that fails with auth/invalid-api-key.
       - run: |
-          missing=""
-          for v in VITE_API_KEY VITE_AUTH_DOMAIN VITE_PROJECT_ID VITE_STORAGE_BUCKET VITE_MESSAGING_SENDER_ID VITE_APP_ID; do
-            [ -n "${!v}" ] || missing="$missing $v"
-          done
-          if [ -n "$missing" ]; then
-            echo "::error::Missing GitHub secrets:$missing (Settings > Secrets and variables > Actions)"
-            exit 1
-          fi
+          bash ../.github/scripts/check-firebase-env.sh
           npm ci && npm run build -- --outDir "../cloud functions/public" --emptyOutDir
+          # The key must end up in the built app, or the live site fails on load.
+          grep -rqF -- "$VITE_API_KEY" "../cloud functions/public/assets" || { echo "::error::The Firebase API key is not in the built app"; exit 1; }
         working-directory: frontend
         env:
           VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
