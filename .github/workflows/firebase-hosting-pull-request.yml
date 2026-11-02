@@ -19,8 +19,28 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       # The site lives in frontend/; firebase.json (in "cloud functions") serves "cloud functions/public".
-      - run: npm ci && npm run build -- --outDir "../cloud functions/public" --emptyOutDir
+      # Vite bakes the Firebase config into the build. .env is not in git, so it comes from repo secrets.
+      # Stop here if any are missing: a build without them ships a site that fails with auth/invalid-api-key.
+      - run: |
+          missing=""
+          for v in VITE_API_KEY VITE_AUTH_DOMAIN VITE_PROJECT_ID VITE_STORAGE_BUCKET VITE_MESSAGING_SENDER_ID VITE_APP_ID; do
+            [ -n "${!v}" ] || missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing GitHub secrets:$missing (Settings > Secrets and variables > Actions)"
+            exit 1
+          fi
+          npm ci && npm run build -- --outDir "../cloud functions/public" --emptyOutDir
         working-directory: frontend
+        env:
+          VITE_API_KEY: ${{ secrets.VITE_API_KEY }}
+          VITE_AUTH_DOMAIN: ${{ secrets.VITE_AUTH_DOMAIN }}
+          VITE_PROJECT_ID: ${{ secrets.VITE_PROJECT_ID }}
+          VITE_STORAGE_BUCKET: ${{ secrets.VITE_STORAGE_BUCKET }}
+          VITE_MESSAGING_SENDER_ID: ${{ secrets.VITE_MESSAGING_SENDER_ID }}
+          VITE_APP_ID: ${{ secrets.VITE_APP_ID }}
+          VITE_MEASUREMENT_ID: ${{ secrets.VITE_MEASUREMENT_ID }}
+          VITE_SITE_URL: ${{ secrets.VITE_SITE_URL }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
