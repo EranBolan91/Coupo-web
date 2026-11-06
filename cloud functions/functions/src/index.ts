@@ -263,7 +263,8 @@ async function handleBrands(filePath: string, bucketName: string) {
     if (filePath.split("/").length === 1) {
       return null;
     }
-    const brandName = filePath.split("/").pop()?.split(".")[0];
+    // Drop only the extension, so "Booking.com.png" is the brand "Booking.com".
+    const brandName = (filePath.split("/").pop() ?? "").replace(/\.[^.]+$/, "");
 
     const bucket = storage.bucket(bucketName);
     const file = bucket.file(filePath);
