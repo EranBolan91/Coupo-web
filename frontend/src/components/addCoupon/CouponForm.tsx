@@ -12,6 +12,7 @@ import CouponTermsFields from "../coupons/CouponTermsFields";
 import { useEffect, useState } from "react";
 import SearchSelect from "../ui/SearchSelect";
 import Field from "../ui/Field";
+import { newBrandError, sameBrand } from "../../logic/newBrands";
 
 export type CouponFormValues = {
   name: string; // brand
@@ -57,6 +58,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   const [terms, setTerms] = useState<CouponTerms>(emptyTerms);
   const [triedSubmit, setTriedSubmit] = useState(false);
   const brands = brandsQuery.data ?? [];
+  const [newBrandIssue, setNewBrandIssue] = useState<string>();
   const categories = categoriesQuery.data ?? [];
 
   const {
@@ -78,6 +80,9 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   }, [register, brandMode]);
 
   const values = watch();
+  // A brand the user added that isn't in the Brands list yet (shown with its first letter until an admin adds a logo).
+  const pickedBrand = brands.find((brand) => brand.brand === values.name) ?? null;
+  const isNewBrand = brandMode === "store" && !!values.name && !pickedBrand && brandsQuery.isSuccess;
   const expiryDate = !values.noExpiry && values.expiry ? new Date(values.expiry) : null;
   const preview: Coupon = {
     id: "preview",
@@ -124,23 +129,39 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
           <Field
             label="Brand"
             htmlFor="brand"
-            error={errors.name?.message ?? (brandMode === "store" && brandsQuery.isError ? "Couldn't load the brands." : undefined)}
+            hint={isNewBrand ? "New brand. It shows its first letter until we add the logo." : undefined}
+            error={
+              newBrandIssue ??
+              errors.name?.message ??
+              (brandMode === "store" && brandsQuery.isError ? "Couldn't load the brands." : undefined)
+            }
             labelAside={brandMode === "store" && brandsQuery.isError && <RetryLink onClick={() => brandsQuery.refetch()} />}
           >
             {brandMode === "store" ? (
               <SearchSelect
                 id="brand"
                 options={brands}
-                value={brands.find((brand) => brand.brand === values.name) ?? null}
+                value={pickedBrand ?? (isNewBrand ? { brand: values.name, imgURL: "" } : null)}
                 getLabel={brandLabel}
                 renderIcon={brandIcon}
                 placeholder="Type a brand name"
-                labelClassName="capitalize"
+                // Brands list names are lowercase file names; a new brand keeps the case the user typed.
+                labelClassName={isNewBrand ? "" : "capitalize"}
                 loading={brandsQuery.isLoading}
-                invalid={!!errors.name}
+                invalid={!!errors.name || !!newBrandIssue}
                 onChange={(brand) => {
+                  setNewBrandIssue(undefined);
                   setValue("name", brand.brand, { shouldValidate: true });
                   setValue("imgUrl", brand.imgURL);
+                }}
+                // Brand not in the list: let the user add it. An admin adds the logo later (/admin/new-brands).
+                createLabel={(text) => (brands.some((brand) => sameBrand(brand.brand, text)) ? null : `Add "${text}" as a new brand`)}
+                onCreate={(text) => {
+                  const issue = newBrandError(text);
+                  setNewBrandIssue(issue);
+                  if (issue) return;
+                  setValue("name", text.replace(/\s+/g, " "), { shouldValidate: true });
+                  setValue("imgUrl", "");
                 }}
               />
             ) : (

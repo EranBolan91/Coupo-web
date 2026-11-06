@@ -23,6 +23,7 @@ import AdminImport from "./pages/admin/AdminImport";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminFeedback from "./pages/admin/AdminFeedback";
+import AdminNewBrands from "./pages/admin/AdminNewBrands";
 import FeedbackPage from "./pages/feedback/FeedbackPage";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
@@ -85,6 +86,7 @@ const App = () => {
                 ["/admin/reports", <AdminReports />],
                 ["/admin/feedback", <AdminFeedback />],
                 ["/admin/categories", <AdminCategories />],
+                ["/admin/new-brands", <AdminNewBrands />],
               ] as const
             ).map(([path, page]) => (
               <Route key={path} path={path} element={<AdminRoute>{page}</AdminRoute>} />
