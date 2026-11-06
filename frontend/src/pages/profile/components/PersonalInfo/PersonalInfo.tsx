@@ -18,7 +18,7 @@ const PersonalInfo = ({ currentUser }: { currentUser: UserDocument | null }) => 
     <dl className="overflow-hidden rounded-box bg-base-100">
       {rows.map((row, i) => (
         <div key={row.label} className="relative grid gap-1 px-6 py-5 sm:grid-cols-3 sm:gap-4">
-          {i > 0 && <span className="perf-x absolute inset-x-6 top-0 text-base-300" aria-hidden="true" />}
+          {i > 0 && <span className="wave h-1.5 absolute inset-x-6 top-0 text-base-300" aria-hidden="true" />}
           <dt className="text-sm font-semibold text-base-content/60">{row.label}</dt>
           <dd className="break-words font-semibold sm:col-span-2">{row.value}</dd>
         </div>

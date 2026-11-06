@@ -93,8 +93,8 @@ const StorePage = () => {
 
       {expired.length > 0 && (
         <section className="page-container pb-12">
-          <div className="perf-x mb-10 w-full text-base-300" aria-hidden="true" />
-          <h2 className="mb-2 text-4xl font-extrabold leading-[1] tracking-tight md:text-5xl">Expired codes</h2>
+          <div className="wave h-1.5 mb-10 w-full text-base-300" aria-hidden="true" />
+          <h2 className="mb-2 text-4xl font-black leading-[1] tracking-tight md:text-5xl">Expired codes</h2>
           <p className="mb-8 text-base-content/70">These have passed their end date. They're here for reference.</p>
           <div className="opacity-75">
             <CouponGrid coupons={expired} />
@@ -104,8 +104,8 @@ const StorePage = () => {
 
       {related.length > 0 && (
         <section className="page-container pb-20">
-          <div className="perf-x mb-10 w-full text-base-300" aria-hidden="true" />
-          <h2 className="mb-8 text-4xl font-extrabold leading-[1] tracking-tight md:text-5xl">Similar stores</h2>
+          <div className="wave h-1.5 mb-10 w-full text-base-300" aria-hidden="true" />
+          <h2 className="mb-8 text-4xl font-black leading-[1] tracking-tight md:text-5xl">Similar stores</h2>
           <StoreTiles stores={related} />
         </section>
       )}

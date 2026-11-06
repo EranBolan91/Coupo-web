@@ -37,7 +37,7 @@ const Notifications = () => {
         tabIndex={0}
         className="dropdown-content z-50 mt-3 w-[22rem] rounded-box border border-base-300 bg-base-100 p-2 shadow-lg max-sm:!fixed max-sm:!left-4 max-sm:!right-4 max-sm:!top-[4.25rem] max-sm:!mt-0 max-sm:!w-auto"
       >
-        <p className="px-3 pb-2 pt-2 font-display text-lg font-extrabold">Notifications</p>
+        <p className="px-3 pb-2 pt-2 font-display text-lg font-black">Notifications</p>
         {items.length === 0 ? (
           <div className="px-3 pb-4 text-sm text-base-content/70">
             <p className="font-semibold text-base-content">You're all caught up</p>

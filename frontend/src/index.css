@@ -37,17 +37,30 @@
   h1,
   h2,
   h3 {
-    @apply font-display;
-    font-optical-sizing: auto;
+    @apply font-display font-black;
   }
 
-  /* Visible keyboard focus everywhere (ink/light outline, never lime-on-white). */
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+
+  /* Visible keyboard focus everywhere. */
   :focus-visible {
-    @apply outline outline-2 outline-offset-2 outline-base-content;
+    @apply outline outline-[3px] outline-offset-2 outline-primary;
   }
 
   ::selection {
-    @apply bg-primary text-primary-content;
+    @apply bg-secondary text-secondary-content;
+  }
+
+  html {
+    scrollbar-color: theme("colors.base-300") transparent;
+    caret-color: theme("colors.primary");
+  }
+
+  a {
+    text-underline-offset: 0.2em;
   }
 }
 
@@ -60,6 +73,7 @@
   /* Pressable buttons: a small bottom edge that flattens when pressed. */
   .btn {
     @apply font-bold normal-case;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
   .btn-primary,
   .btn-secondary {
@@ -68,6 +82,16 @@
   .btn-primary:active,
   .btn-secondary:active {
     box-shadow: inset 0 -1px 0 rgb(0 0 0 / 0.18);
+  }
+
+  /* Room for the phone tab bar (components/navbar/BottomNav) so it never covers content. */
+  .pb-tabbar {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 1024px) {
+    .pb-tabbar {
+      padding-bottom: 0;
+    }
   }
 
   /* Textareas are containers, not pills. */
@@ -84,59 +108,38 @@
   }
 
   /*
-   * Ticket with a stub on the right: two half-circle notches cut into the top and bottom edges
-   * at the tear line. Works on any background because it's a mask, not painted circles.
-   * Set --stub (stub width) and --notch (notch radius) on the element.
+   * Price tag: a rounded label with a punched hole on the left, like the tag on a shelf.
+   * It's a mask, so it works on any background. Set --hole (hole radius) if needed.
    */
-  .ticket {
-    --notch: 0.7rem;
-    --stub: 6.5rem;
-    --tear: calc(100% - var(--stub));
-    -webkit-mask:
-      radial-gradient(circle var(--notch) at var(--tear) 0, #0000 98%, #000) top / 100% 51% no-repeat,
-      radial-gradient(circle var(--notch) at var(--tear) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
-    mask:
-      radial-gradient(circle var(--notch) at var(--tear) 0, #0000 98%, #000) top / 100% 51% no-repeat,
-      radial-gradient(circle var(--notch) at var(--tear) 100%, #0000 98%, #000) bottom / 100% 51% no-repeat;
+  .tag {
+    --hole: 0.3rem;
+    -webkit-mask: radial-gradient(circle var(--hole) at calc(var(--hole) * 2.6) 50%, #0000 96%, #000);
+    mask: radial-gradient(circle var(--hole) at calc(var(--hole) * 2.6) 50%, #0000 96%, #000);
+    padding-left: calc(var(--hole) * 4.6);
   }
 
-  /* Perforation lines (dotted "tear here"). Color comes from currentColor. */
-  .perf-y {
-    width: 2px;
-    background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.5px);
-    background-size: 2px 8px;
-    background-repeat: repeat-y;
-    background-position: center;
-  }
-  .perf-x {
-    height: 2px;
-    background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.5px);
-    background-size: 8px 2px;
-    background-repeat: repeat-x;
-    background-position: center;
-  }
-
-  /* Scalloped top and bottom edges, like the edge of a stamp or ticket roll. */
-  .edge-scallop {
-    -webkit-mask:
-      radial-gradient(circle 0.55rem at 50% 0, #0000 98%, #000) 50% 0 / 1.6rem 51% repeat-x,
-      radial-gradient(circle 0.55rem at 50% 100%, #0000 98%, #000) 50% 100% / 1.6rem 51% repeat-x;
-    mask:
-      radial-gradient(circle 0.55rem at 50% 0, #0000 98%, #000) 50% 0 / 1.6rem 51% repeat-x,
-      radial-gradient(circle 0.55rem at 50% 100%, #0000 98%, #000) 50% 100% / 1.6rem 51% repeat-x;
-  }
-
-  /* Lime label behind a word in a headline (readable in both themes: ink text on lime). */
+  /* Yellow highlighter behind a word in a headline (ink text on yellow in both themes). */
   .marker {
-    @apply rounded-[0.18em] bg-primary px-[0.12em] text-primary-content;
+    @apply rounded-[0.22em] bg-secondary px-[0.14em] text-secondary-content;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
 
-  /* Rubber-stamp discount badge. */
+  /* Wavy underline/divider, drawn in currentColor. Give it a height (e.g. h-2) and a width. */
+  .wave {
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 8'%3E%3Cpath d='M0 4q6-5 12 0t12 0' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") left center / auto 100% repeat-x;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 8'%3E%3Cpath d='M0 4q6-5 12 0t12 0' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") left center / auto 100% repeat-x;
+  }
+
+  /* Round badge (ranks, small counts): ink on deal yellow. */
   .stamp {
-    @apply inline-flex flex-col items-center justify-center rounded-[0.65rem] border-2 border-current font-display font-extrabold uppercase leading-none;
-    font-stretch: 80%;
+    @apply inline-flex items-center justify-center rounded-full bg-secondary font-display font-black leading-none text-secondary-content;
+  }
+
+  /* Card surface: white squircle with soft blue-tinted depth. */
+  .surface {
+    @apply rounded-box bg-base-100 shadow-soft dark:shadow-none dark:ring-1 dark:ring-base-300/70;
   }
 }
 
@@ -156,4 +159,15 @@
 }
 .hide-scrollbar {
   scrollbar-width: none;
+}
+
+/* The hippo blinks every few seconds (logo and mascot). */
+@keyframes hippo-blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+.hippo-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: hippo-blink 5s infinite;
 }

@@ -1,17 +1,18 @@
 import defaultTheme from "tailwindcss/defaultTheme";
 
-// Coupo design tokens: two DaisyUI themes (coupo = light, coupo-dark) plus fonts.
+// Coupo design tokens: "Hippo pop". Two DaisyUI themes (coupo = light, coupo-dark) plus fonts.
 // Use semantic classes (bg-base-*, text-base-content, btn-primary, text-accent, ...) so both themes stay in sync.
-// See CLAUDE.md "Design system" for the rules (lime is a FILL color; readable accent text uses text-accent).
+// primary = hippo blue (brand, main actions). secondary = deal yellow (savings, highlights; ink text on it).
+// accent = blue that is safe for TEXT on the page background. See CLAUDE.md "Design system".
 
-// Shape: interactive things are pills, containers are 1.25rem.
+// Shape: interactive things are pills, containers are soft 1.5rem squircles.
 const shape = {
-  "--rounded-box": "1.25rem",
+  "--rounded-box": "1.5rem",
   "--rounded-btn": "9999px",
   "--rounded-badge": "9999px",
-  "--animation-btn": "0.18s",
-  "--animation-input": "0.18s",
-  "--btn-focus-scale": "0.97",
+  "--animation-btn": "0.2s",
+  "--animation-input": "0.2s",
+  "--btn-focus-scale": "0.96",
   "--border-btn": "1px",
   "--tab-border": "1px",
   "--tab-radius": "9999px",
@@ -25,9 +26,18 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans Variable"', ...defaultTheme.fontFamily.sans],
-        display: ['"Bricolage Grotesque Variable"', '"Plus Jakarta Sans Variable"', ...defaultTheme.fontFamily.sans],
+        sans: ['"DM Sans Variable"', ...defaultTheme.fontFamily.sans],
+        display: ['"Nunito Variable"', '"DM Sans Variable"', ...defaultTheme.fontFamily.sans],
         mono: ['"JetBrains Mono Variable"', ...defaultTheme.fontFamily.mono],
+      },
+      colors: {
+        // Fixed brand blue for big hero/brand panels (white text on it in both themes).
+        brand: { DEFAULT: "#2f5bef", deep: "#2142c9" },
+      },
+      boxShadow: {
+        // Soft, blue-tinted depth (offset + blur). "lift" is for hover.
+        soft: "0 1px 2px rgb(13 23 51 / 0.05), 0 8px 24px -6px rgb(35 64 160 / 0.14)",
+        lift: "0 2px 4px rgb(13 23 51 / 0.06), 0 18px 36px -10px rgb(35 64 160 / 0.26)",
       },
       keyframes: {
         marquee: { from: { transform: "translateX(0)" }, to: { transform: "translateX(-50%)" } },
@@ -41,57 +51,57 @@ export default {
   daisyui: {
     themes: [
       {
-        // Light: cool "paper" neutrals, ink text, electric lime as the one accent fill.
+        // Light: cloud-blue page, white cards, navy ink, hippo blue + deal yellow.
         coupo: {
           ...shape,
           "color-scheme": "light",
-          primary: "#c4f034",
-          "primary-content": "#10110e",
-          secondary: "#10110e",
-          "secondary-content": "#f6f7f2",
-          // Readable lime-family color for TEXT on light backgrounds (lime itself is too light for text).
-          accent: "#3d5a00",
-          "accent-content": "#f7fee7",
-          neutral: "#10110e",
-          "neutral-content": "#f6f7f2",
-          "base-100": "#fefefb",
-          "base-200": "#f1f2ec",
-          "base-300": "#dcded4",
-          "base-content": "#10110e",
-          info: "#1d4ed8",
-          "info-content": "#eff6ff",
-          success: "#3d7a00",
-          "success-content": "#f7fee7",
+          primary: "#2f5bef",
+          "primary-content": "#ffffff",
+          secondary: "#ffd23f",
+          "secondary-content": "#0d1733",
+          accent: "#2550e0",
+          "accent-content": "#ffffff",
+          neutral: "#0d1733",
+          "neutral-content": "#f3f6ff",
+          "base-100": "#ffffff",
+          "base-200": "#f1f5ff",
+          "base-300": "#dbe3f7",
+          "base-content": "#0d1733",
+          info: "#2f5bef",
+          "info-content": "#ffffff",
+          success: "#0f7a55",
+          "success-content": "#ecfdf5",
           warning: "#a15c07",
           "warning-content": "#fffbeb",
-          error: "#c4291c",
-          "error-content": "#fff4f2",
+          error: "#d42a3a",
+          "error-content": "#fff1f2",
         },
       },
       {
+        // Dark: deep navy night, lighter hippo blue, same deal yellow.
         "coupo-dark": {
           ...shape,
           "color-scheme": "dark",
-          primary: "#c8f43c",
-          "primary-content": "#0b0c0a",
-          secondary: "#ecede6",
-          "secondary-content": "#0b0c0a",
-          accent: "#c8f43c",
-          "accent-content": "#0b0c0a",
-          neutral: "#0b0c0a",
-          "neutral-content": "#ecede6",
-          "base-100": "#151613",
-          "base-200": "#0b0c0a",
-          "base-300": "#2a2c26",
-          "base-content": "#ecede6",
-          info: "#7aa7ff",
-          "info-content": "#0b1220",
-          success: "#c8f43c",
-          "success-content": "#0b0c0a",
+          primary: "#7c9bff",
+          "primary-content": "#0a1024",
+          secondary: "#ffd23f",
+          "secondary-content": "#0a1024",
+          accent: "#8ea9ff",
+          "accent-content": "#0a1024",
+          neutral: "#050914",
+          "neutral-content": "#e8eeff",
+          "base-100": "#121a36",
+          "base-200": "#0a1024",
+          "base-300": "#26325c",
+          "base-content": "#e8eeff",
+          info: "#8ea9ff",
+          "info-content": "#0a1024",
+          success: "#4ade9b",
+          "success-content": "#04170f",
           warning: "#fbbf24",
           "warning-content": "#1c1206",
-          error: "#ff6a5c",
-          "error-content": "#1f0604",
+          error: "#ff6b7a",
+          "error-content": "#22050a",
         },
       },
     ],

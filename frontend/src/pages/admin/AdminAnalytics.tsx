@@ -28,14 +28,14 @@ const ago = (ms: number) => {
 const Tile = ({ label, value, detail }: { label: string; value: React.ReactNode; detail?: React.ReactNode }) => (
   <div className="h-full rounded-box border border-base-300 bg-base-100 p-5">
     <span className="text-sm font-semibold text-base-content/60">{label}</span>
-    <span className="mt-2 block font-display text-5xl font-extrabold leading-none tracking-tight">{value}</span>
+    <span className="mt-2 block font-display text-5xl font-black leading-none tracking-tight">{value}</span>
     {detail && <span className="mt-2 block text-sm text-base-content/70">{detail}</span>}
   </div>
 );
 
 const Panel = ({ title, description, children }: { title: string; description: string; children: React.ReactNode }) => (
   <section className="rounded-box border border-base-300 bg-base-100 p-5">
-    <h2 className="text-2xl font-extrabold tracking-tight">{title}</h2>
+    <h2 className="text-2xl font-black tracking-tight">{title}</h2>
     <p className="mt-1 text-sm text-base-content/70">{description}</p>
     <div className="mt-4">{children}</div>
   </section>

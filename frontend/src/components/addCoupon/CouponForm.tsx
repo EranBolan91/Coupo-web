@@ -49,7 +49,7 @@ const brandIcon = (brand: CouponBrand, size: "sm" | "md") => (
 );
 const categoryLabel = (category: string) => category;
 
-// Shared "share a coupon" form with a live ticket preview. Used by the store, social and admin flows.
+// Shared "share a coupon" form with a live card preview. Used by the store, social and admin flows.
 const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   const userDocument = useCurrentUser();
   const brandsQuery = useQuery({ queryKey: ["brands"], queryFn: getCouponsBrands, enabled: brandMode === "store" });

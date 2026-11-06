@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 interface Props {
   coupon: Coupon;
   className?: string;
-  // Icon-only button for coupon cards; the menu then opens upwards so it stays inside the ticket.
+  // Icon-only button for coupon cards; the menu then opens upwards so it stays inside the card.
   compact?: boolean;
 }
 

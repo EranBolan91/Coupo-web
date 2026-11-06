@@ -20,7 +20,7 @@ const EmailRegistration = () => {
       <span className="mx-auto flex size-16 items-center justify-center rounded-full bg-primary text-primary-content">
         <PiEnvelopeSimpleOpenBold className="size-8" aria-hidden />
       </span>
-      <h2 className="mt-6 text-3xl font-extrabold tracking-tight">Check your inbox</h2>
+      <h2 className="mt-6 text-3xl font-black tracking-tight">Check your inbox</h2>
       <p className="mt-3 text-base-content/75">
         We sent a verification link to <span className="font-bold text-base-content">{email ?? "your email"}</span>. Click it, then log in.
       </p>

@@ -37,7 +37,7 @@ const UserRow = ({ user, shared }: { user: AdminUser; shared: number }) => {
         <SharerAvatar name={name || user.email || ""} />
       )}
       <div className="min-w-0 flex-1">
-        <p className="truncate font-display text-lg font-extrabold">{name || "No name"}</p>
+        <p className="truncate font-display text-lg font-black">{name || "No name"}</p>
         <p className="flex items-center gap-1.5 truncate text-sm text-base-content/70">
           <PiEnvelopeSimpleBold className="size-4 shrink-0" aria-hidden />
           <span className="truncate">{user.email || "No email"}</span>

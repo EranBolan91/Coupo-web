@@ -11,7 +11,7 @@ interface TabsProps {
   tabs: TabContentProps[];
 }
 
-// Pill tabs with a sliding lime indicator. Keyboard: arrow keys move between tabs.
+// Pill tabs with a sliding blue indicator. Keyboard: arrow keys move between tabs.
 const Tabs = ({ tabs }: TabsProps) => {
   const [selectedTab, setSelectedTab] = useState<number>(0);
   const reduceMotion = useReducedMotion();

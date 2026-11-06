@@ -26,11 +26,12 @@ import AdminFeedback from "./pages/admin/AdminFeedback";
 import FeedbackPage from "./pages/feedback/FeedbackPage";
 import { Toaster } from "react-hot-toast";
 import Footer from "./layout/Footer";
+import BottomNav from "./components/navbar/BottomNav";
 
 const App = () => {
   return (
     <>
-      <div className="flex min-h-[100dvh] flex-col">
+      <div className="pb-tabbar flex min-h-[100dvh] flex-col">
         <RouteMeta />
         <Navbar />
         <main className="grow">
@@ -100,11 +101,12 @@ const App = () => {
           </Routes>
         </main>
         <Footer />
+        <BottomNav />
       </div>
       <Toaster
-        position="top-right"
+        position="top-center"
         reverseOrder={false}
-        toastOptions={{ className: "!bg-base-100 !text-base-content border border-base-300 !rounded-box" }}
+        toastOptions={{ className: "!bg-base-100 !text-base-content !rounded-btn !shadow-lift !font-semibold" }}
       />
     </>
   );

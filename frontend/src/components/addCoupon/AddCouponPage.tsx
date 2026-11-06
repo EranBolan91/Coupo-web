@@ -34,7 +34,7 @@ const AddCouponPage = () => {
                 aria-checked={active}
                 onClick={() => setKind(id)}
                 className={`relative flex items-center gap-4 rounded-box border-2 p-4 pr-6 text-left transition-colors ${
-                  active ? "border-base-content bg-base-100" : "border-base-300 bg-base-100/50 hover:border-base-content/40"
+                  active ? "border-primary bg-base-100" : "border-base-300 bg-base-100/50 hover:border-primary/50"
                 }`}
               >
                 <span
@@ -45,7 +45,7 @@ const AddCouponPage = () => {
                   <Icon className="size-6" aria-hidden />
                 </span>
                 <span>
-                  <span className="block font-display text-xl font-extrabold tracking-tight">{label}</span>
+                  <span className="block font-display text-xl font-black tracking-tight">{label}</span>
                   <span className="block text-sm text-base-content/60">{hint}</span>
                 </span>
               </button>

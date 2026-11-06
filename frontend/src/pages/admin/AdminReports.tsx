@@ -95,7 +95,7 @@ const AdminReports = () => {
                   <AdminCouponRow coupon={coupon}>{details}</AdminCouponRow>
                 ) : (
                   <div className="rounded-box border border-base-300 bg-base-100 p-4 sm:p-5">
-                    <p className="font-display text-lg font-extrabold">Coupon was removed</p>
+                    <p className="font-display text-lg font-black">Coupon was removed</p>
                     <p className="text-sm text-base-content/60">It's no longer on Coupo, so these reports can be dismissed.</p>
                     {details}
                   </div>

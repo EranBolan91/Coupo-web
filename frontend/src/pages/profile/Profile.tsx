@@ -18,10 +18,10 @@ import { Link } from "react-router-dom";
 import Tabs from "./components/Tabs";
 import { useState } from "react";
 
-// A stat shown as a small stamped ticket.
+// A stat shown as a small tile.
 const Stat = ({ value, label }: { value: number; label: string }) => (
   <div className="flex min-w-[7.5rem] flex-col rounded-box bg-base-200 px-5 py-4">
-    <span className="font-display text-4xl font-extrabold leading-none tracking-tight">{value}</span>
+    <span className="font-display text-4xl font-black leading-none tracking-tight">{value}</span>
     <span className="mt-1.5 text-sm font-semibold text-base-content/60">{label}</span>
   </div>
 );
@@ -71,7 +71,7 @@ const Profile = () => {
               )}
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-4xl font-extrabold leading-[0.95] tracking-tight md:text-6xl">
+              <h1 className="truncate text-4xl font-black leading-[0.95] tracking-tight md:text-6xl">
                 Hi, {userDocument.firstName || "there"}
               </h1>
               <p className="mt-2 truncate text-base-content/70">{userDocument.email}</p>
@@ -97,14 +97,14 @@ const Profile = () => {
           {myCoupons.length > 0 && (
             <Link
               to={sharerPath(userDocument.userUID)}
-              className="flex min-w-[10rem] shrink-0 items-center gap-2 self-stretch rounded-box border-2 border-dashed border-base-300 px-5 text-sm font-bold transition-colors hover:border-base-content"
+              className="flex min-w-[10rem] shrink-0 items-center gap-2 self-stretch rounded-box border-2 border-dashed border-base-300 px-5 text-sm font-bold transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lift"
             >
               Your public page
               <PiArrowRightBold aria-hidden />
             </Link>
           )}
         </div>
-        <div className="perf-x w-full text-base-300" aria-hidden="true" />
+        <div className="wave h-1.5 w-full text-base-300" aria-hidden="true" />
       </header>
 
       <section className="page-container py-10">

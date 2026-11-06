@@ -8,8 +8,8 @@ import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import App from "./App.tsx";
 import React from "react";
-import "@fontsource-variable/plus-jakarta-sans";
-import "@fontsource-variable/bricolage-grotesque";
+import "@fontsource-variable/dm-sans";
+import "@fontsource-variable/nunito";
 import "@fontsource-variable/jetbrains-mono";
 import "./index.css";
 

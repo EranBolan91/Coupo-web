@@ -96,7 +96,7 @@ const ReportCouponButton = ({ coupon }: { coupon: Coupon }) => {
               <label
                 key={option.value}
                 className={`flex cursor-pointer items-center gap-3 rounded-btn border-2 px-4 py-3 font-semibold transition-colors ${
-                  reason === option.value ? "border-base-content bg-base-200" : "border-base-300 hover:border-base-content/40"
+                  reason === option.value ? "border-primary bg-primary/5" : "border-base-300 hover:border-primary/50"
                 }`}
               >
                 <input

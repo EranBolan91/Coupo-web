@@ -33,13 +33,13 @@ const Tile = ({ label, value, detail, to }: { label: string; value: React.ReactN
   const body = (
     <>
       <span className="text-sm font-semibold text-base-content/60">{label}</span>
-      <span className="mt-2 block font-display text-5xl font-extrabold leading-none tracking-tight">{value}</span>
+      <span className="mt-2 block font-display text-5xl font-black leading-none tracking-tight">{value}</span>
       {detail && <span className="mt-2 block text-sm text-base-content/70">{detail}</span>}
     </>
   );
   const className = "block h-full rounded-box border border-base-300 bg-base-100 p-5";
   return to ? (
-    <Link to={to} className={`${className} transition-colors hover:border-base-content`}>
+    <Link to={to} className={`${className} transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lift`}>
       {body}
     </Link>
   ) : (
@@ -50,7 +50,7 @@ const Tile = ({ label, value, detail, to }: { label: string; value: React.ReactN
 const Panel = ({ title, link, children }: { title: string; link?: { to: string; label: string }; children: React.ReactNode }) => (
   <section className="rounded-box border border-base-300 bg-base-100 p-5">
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-2xl font-extrabold tracking-tight">{title}</h2>
+      <h2 className="text-2xl font-black tracking-tight">{title}</h2>
       {link && (
         <Link to={link.to} className="btn btn-ghost btn-sm h-9 min-h-9 px-3 text-sm">
           {link.label}
@@ -235,7 +235,7 @@ const AdminDashboard = () => {
                         to={sharerPath(s.userID)}
                         className="-mx-2 flex items-center gap-3 rounded-btn px-2 py-2 transition-colors hover:bg-base-200"
                       >
-                        <span className="w-8 shrink-0 font-display font-extrabold text-base-content/60">#{s.rank}</span>
+                        <span className="w-8 shrink-0 font-display font-black text-base-content/60">#{s.rank}</span>
                         <span className="min-w-0 flex-1 truncate font-bold">{s.name}</span>
                         <span className="shrink-0 text-sm font-semibold">
                           {s.likes} {s.likes === 1 ? "like" : "likes"} · {s.coupons.length}{" "}

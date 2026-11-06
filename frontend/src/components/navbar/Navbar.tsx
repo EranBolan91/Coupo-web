@@ -20,12 +20,12 @@ const navigation = [
 ];
 
 const desktopLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `rounded-btn px-4 py-2 text-sm font-bold transition-colors ${
-    isActive ? "bg-primary text-primary-content" : "text-base-content/75 hover:bg-base-200 hover:text-base-content"
+  `rounded-btn px-4 py-2 text-sm font-bold transition-all duration-200 ${
+    isActive ? "bg-base-100 text-base-content shadow-soft dark:bg-base-300" : "text-base-content/70 hover:text-base-content"
   }`;
 
 const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
-  `block rounded-btn px-4 py-3 font-display text-2xl font-extrabold tracking-tight ${
+  `flex items-center justify-between rounded-2xl px-4 py-3.5 font-display text-2xl font-black tracking-tight ${
     isActive ? "bg-primary text-primary-content" : "text-base-content hover:bg-base-200"
   }`;
 
@@ -43,13 +43,13 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-base-300/70 bg-base-100/85 backdrop-blur-md supports-[backdrop-filter]:bg-base-100/70">
-      <nav className="page-container flex h-[4.25rem] items-center justify-between gap-4" aria-label="Main">
+    <header className="sticky top-0 z-40 bg-base-200/80 backdrop-blur-lg supports-[backdrop-filter]:bg-base-200/70">
+      <nav className="page-container flex h-16 items-center justify-between gap-4 lg:h-[4.5rem]" aria-label="Main">
         <div className="flex lg:flex-1">
           <Logo />
         </div>
 
-        <div className="hidden lg:flex lg:gap-x-1">
+        <div className="hidden rounded-btn bg-base-300/50 p-1 lg:flex lg:gap-x-0.5">
           {navigation.map((item) => (
             <NavLink to={item.href} key={item.name} end={item.href === "/"} className={desktopLinkClass}>
               {item.name}
@@ -116,7 +116,7 @@ const Navbar = () => {
               Feedback
             </NavLink>
           </div>
-          <div className="perf-x mt-6 w-full text-base-300" aria-hidden="true" />
+          <div className="wave mt-6 h-2 w-24 text-base-300" aria-hidden="true" />
           <div className="mt-6 space-y-1">
             {userDocument ? (
               <>

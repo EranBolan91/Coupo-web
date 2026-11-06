@@ -14,7 +14,7 @@ const brand = (name: string) => (name ? name.charAt(0).toUpperCase() + name.slic
 
 const Stat = ({ value, label }: { value: string | number; label: string }) => (
   <div className="flex flex-col rounded-box bg-base-100 px-5 py-4">
-    <span className="font-display text-4xl font-extrabold leading-none tracking-tight">{value}</span>
+    <span className="font-display text-4xl font-black leading-none tracking-tight">{value}</span>
     <span className="mt-1.5 text-sm font-semibold text-base-content/60">{label}</span>
   </div>
 );
@@ -57,7 +57,7 @@ const Impact = () => {
   return (
     <div className="flex flex-col gap-12">
       <section aria-labelledby="impact-points">
-        <h2 id="impact-points" className="text-3xl font-extrabold tracking-tight">
+        <h2 id="impact-points" className="text-3xl font-black tracking-tight">
           Points
         </h2>
         <p className="mt-1 text-base-content/70">
@@ -75,14 +75,14 @@ const Impact = () => {
       </section>
 
       <section aria-labelledby="impact-badges">
-        <h2 id="impact-badges" className="mb-5 text-3xl font-extrabold tracking-tight">
+        <h2 id="impact-badges" className="mb-5 text-3xl font-black tracking-tight">
           Badges
         </h2>
         <Badges badges={list} showLocked />
       </section>
 
       <section aria-labelledby="impact-coupons">
-        <h2 id="impact-coupons" className="mb-5 text-3xl font-extrabold tracking-tight">
+        <h2 id="impact-coupons" className="mb-5 text-3xl font-black tracking-tight">
           Your active coupons
         </h2>
         <ul className="divide-y divide-base-300 overflow-hidden rounded-box border border-base-300 bg-base-100">

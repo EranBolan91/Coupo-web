@@ -1,5 +1,5 @@
 // Letter avatar for a sharer (profile photos live on private Users docs, so public pages use initials).
-// inverted: ink circle with lime letters, for use on a lime background.
+// inverted: light circle with blue letters, for use on a blue background.
 const SharerAvatar = ({
   name,
   className = "size-12 text-xl",
@@ -17,7 +17,7 @@ const SharerAvatar = ({
     .join("");
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-full font-display font-extrabold ${
+      className={`flex shrink-0 items-center justify-center rounded-full font-display font-black ${
         inverted ? "bg-primary-content text-primary" : "bg-primary text-primary-content"
       } ${className}`}
       aria-hidden="true"

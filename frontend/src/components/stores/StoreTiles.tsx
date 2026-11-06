@@ -10,11 +10,11 @@ const StoreTiles = ({ stores }: { stores: StoreInfo[] }) => (
       <li key={store.slug}>
         <Link
           to={storePath(store.name)}
-          className="group flex items-center gap-4 rounded-box border-2 border-base-300 bg-base-100 p-4 transition-colors hover:border-base-content"
+          className="group flex items-center gap-4 surface p-4 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lift"
         >
           <BrandImage name={store.name} src={store.imgUrl} className="size-12" />
           <span className="min-w-0 grow">
-            <span className="block truncate font-display text-xl font-extrabold tracking-tight">{store.name}</span>
+            <span className="block truncate font-display text-xl font-black tracking-tight">{store.name}</span>
             <span className="block text-sm text-base-content/70">
               {store.activeCount === 0
                 ? "No working codes right now"

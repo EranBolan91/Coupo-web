@@ -115,7 +115,7 @@ const AdminCategories = () => {
               return (
                 <li key={category.id} className="flex items-center justify-between gap-4 px-5 py-3">
                   <div>
-                    <p className="font-display text-lg font-extrabold capitalize">{category.category}</p>
+                    <p className="font-display text-lg font-black capitalize">{category.category}</p>
                     <p className="text-sm text-base-content/60">
                       {!countsReady ? "Counting coupons..." : count === 1 ? "1 coupon" : `${count} coupons`}
                     </p>

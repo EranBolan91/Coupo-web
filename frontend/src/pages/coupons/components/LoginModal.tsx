@@ -14,7 +14,7 @@ const LoginModal = ({ open, onClose, message = "Saving and voting on coupons nee
     <Modal isOpen={open} onClose={onClose} label="Log in to continue">
       <div className="flex flex-col items-center text-center">
         <LogoMark className="size-14 -rotate-6" />
-        <h2 className="mt-5 text-3xl font-extrabold tracking-tight">Log in to continue</h2>
+        <h2 className="mt-5 text-3xl font-black tracking-tight">Log in to continue</h2>
         <p className="mt-2 text-base-content/70">{message}</p>
       </div>
       <div className="mt-8 flex flex-col gap-3">
