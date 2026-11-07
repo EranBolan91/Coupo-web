@@ -1,6 +1,11 @@
-import { PiChatCircleTextBold, PiChartBarBold, PiChartLineUpBold, PiFlagBold, PiFoldersBold, PiListBulletsBold, PiPlusBold, PiTagBold, PiUploadSimpleBold, PiUsersBold } from "react-icons/pi";
+import { PiChatCircleTextBold, PiChartBarBold, PiChartLineUpBold, PiFlagBold, PiFoldersBold, PiListBulletsBold, PiPlusBold, PiSealQuestionBold, PiTagBold, PiUploadSimpleBold, PiUsersBold } from "react-icons/pi";
 import useReports from "../../../hooks/useReports";
 import useFeedback from "../../../hooks/useFeedback";
+import useCouponFeed from "../../../hooks/useCouponFeed";
+import { useQuery } from "@tanstack/react-query";
+import { getCouponsBrands } from "../../../database/databaseCalls";
+import { collectionsList } from "../../../../firebaseCollections";
+import { findNewBrands } from "../../../logic/newBrands";
 import { NavLink } from "react-router-dom";
 import React from "react";
 
@@ -14,6 +19,7 @@ const links = [
   { to: "/admin/reports", label: "Reports", icon: PiFlagBold },
   { to: "/admin/feedback", label: "Feedback", icon: PiChatCircleTextBold },
   { to: "/admin/categories", label: "Categories", icon: PiFoldersBold },
+  { to: "/admin/new-brands", label: "New brands", icon: PiSealQuestionBold },
   { to: "/admin/addBrand", label: "Add brands", icon: PiTagBold },
 ];
 
@@ -31,6 +37,9 @@ export const AdminLayout = ({
   const openReports = new Set(reports?.map((report) => report.couponID)).size;
   const { data: feedback } = useFeedback();
   const newFeedback = feedback?.filter((item) => !item.handled).length ?? 0;
+  const { data: brands } = useQuery({ queryKey: ["brands"], queryFn: getCouponsBrands });
+  const { data: storeCoupons } = useCouponFeed(collectionsList.coupons);
+  const newBrands = brands && storeCoupons ? findNewBrands(storeCoupons, brands).length : 0;
 
   return (
     <div className="page-container grid grid-cols-[minmax(0,1fr)] gap-8 py-10 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-12">
@@ -56,6 +65,12 @@ export const AdminLayout = ({
                   <span className="ml-auto rounded-full bg-error px-2 py-0.5 text-xs font-bold text-error-content">
                     {openReports}
                     <span className="sr-only"> coupons reported</span>
+                  </span>
+                )}
+                {to === "/admin/new-brands" && newBrands > 0 && (
+                  <span className="ml-auto rounded-full bg-secondary px-2 py-0.5 text-xs font-bold text-secondary-content">
+                    {newBrands}
+                    <span className="sr-only"> brands need a logo</span>
                   </span>
                 )}
                 {to === "/admin/feedback" && newFeedback > 0 && (
