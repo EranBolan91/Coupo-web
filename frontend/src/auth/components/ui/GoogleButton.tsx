@@ -3,7 +3,7 @@ const GoogleButton = ({ onClick, label = "Continue with Google" }: { onClick: ()
   <button
     type="button"
     onClick={onClick}
-    className="btn h-12 min-h-12 w-full border-2 border-base-300 bg-base-100 font-bold hover:border-base-content/40 hover:bg-base-200"
+    className="btn h-12 min-h-12 w-full border-2 border-base-300 bg-base-100 font-bold hover:border-primary/50 hover:bg-base-200"
   >
     <svg viewBox="0 0 48 48" className="size-5" aria-hidden="true">
       <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />

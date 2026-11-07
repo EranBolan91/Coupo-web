@@ -28,13 +28,13 @@ export const Brand = () => {
         onDragLeave={() => setDragging(false)}
         onDrop={onDrop}
         className={`flex cursor-pointer flex-col items-center justify-center rounded-box border-2 border-dashed px-6 py-20 text-center transition-colors ${
-          dragging ? "border-base-content bg-primary/20" : "border-base-300 bg-base-100 hover:border-base-content/40"
+          dragging ? "border-primary bg-primary/10" : "border-base-300 bg-base-100 hover:border-primary/50"
         }`}
       >
         <span className="flex size-16 items-center justify-center rounded-full bg-primary text-primary-content">
           <PiUploadSimpleBold className="size-8" aria-hidden />
         </span>
-        <span className="mt-5 font-display text-2xl font-extrabold tracking-tight">Drop logos here, or click to choose</span>
+        <span className="mt-5 font-display text-2xl font-black tracking-tight">Drop logos here, or click to choose</span>
         <span className="mt-1 text-sm text-base-content/60">PNG, JPG or SVG. Images under 5 MB. Several at once is fine.</span>
         <input
           type="file"

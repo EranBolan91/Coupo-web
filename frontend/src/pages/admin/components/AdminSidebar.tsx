@@ -70,7 +70,7 @@ export const AdminLayout = ({
         </ul>
       </nav>
       <div className="min-w-0">
-        <h1 className="text-5xl font-extrabold leading-[0.95] tracking-tight">{title}</h1>
+        <h1 className="text-5xl font-black leading-[0.95] tracking-tight">{title}</h1>
         <p className="mt-3 max-w-[60ch] text-base-content/70">{description}</p>
         <div className="mt-10">{children}</div>
       </div>

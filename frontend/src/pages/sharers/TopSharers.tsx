@@ -31,7 +31,7 @@ const Stats = ({ sharer }: { sharer: Sharer }) => {
   );
 };
 
-// Top 3 as stamped tickets; #1 is the big one.
+// Top 3 as cards with a round rank badge; #1 is the big blue one.
 type Entry = { userID: string; name: string; rank: number; stats: React.ReactNode };
 
 const Podium = ({ sharers, myID }: { sharers: Entry[]; myID?: string }) => (
@@ -40,16 +40,16 @@ const Podium = ({ sharers, myID }: { sharers: Entry[]; myID?: string }) => (
       <li key={sharer.userID} className={sharer.rank === 1 ? "md:order-2" : sharer.rank === 2 ? "md:order-1 md:mt-8" : "md:order-3 md:mt-14"}>
         <Link
           to={sharerPath(sharer.userID)}
-          className={`group relative flex h-full flex-col gap-4 overflow-hidden rounded-box border-2 p-6 transition-colors hover:border-base-content ${
-            sharer.rank === 1 ? "border-base-content bg-primary text-primary-content" : "border-base-300 bg-base-100"
+          className={`group relative flex h-full flex-col gap-4 overflow-hidden rounded-box p-6 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lift ${
+            sharer.rank === 1 ? "bg-primary text-primary-content shadow-soft" : "surface"
           }`}
         >
-          <span className="stamp absolute right-5 top-5 rotate-6 px-2.5 py-1 text-2xl" aria-label={`Rank ${sharer.rank}`}>
+          <span className="stamp absolute right-5 top-5 size-12 rotate-6 text-xl" aria-label={`Rank ${sharer.rank}`}>
             #{sharer.rank}
           </span>
           <SharerAvatar name={sharer.name} className="size-16 text-2xl" inverted={sharer.rank === 1} />
           <span>
-            <span className="block truncate pr-16 font-display text-2xl font-extrabold tracking-tight">
+            <span className="block truncate pr-16 font-display text-2xl font-black tracking-tight">
               {sharer.name}
               {sharer.userID === myID && <span className="ml-2 align-middle text-sm font-bold">(you)</span>}
             </span>
@@ -85,7 +85,7 @@ const Rows = ({ entries, myID, lastItemRef }: { entries: Entry[]; myID?: string;
     {entries.map((sharer, i) => (
       <li key={sharer.userID} ref={i === entries.length - 1 ? lastItemRef : undefined}>
         <Link to={sharerPath(sharer.userID)} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-base-200">
-          <span className="w-10 shrink-0 font-display text-xl font-extrabold text-base-content/60">#{sharer.rank}</span>
+          <span className="w-10 shrink-0 font-display text-xl font-black text-base-content/60">#{sharer.rank}</span>
           <SharerAvatar name={sharer.name} className="size-11 text-base" />
           <span className="min-w-0 flex-1">
             <span className="block truncate font-bold">

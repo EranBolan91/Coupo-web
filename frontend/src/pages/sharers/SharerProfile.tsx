@@ -13,7 +13,7 @@ import { badges, thisMonth } from "../../logic/points";
 
 const Stat = ({ value, label }: { value: string | number; label: string }) => (
   <div className="flex min-w-[7.5rem] flex-col rounded-box bg-base-200 px-5 py-4">
-    <span className="font-display text-4xl font-extrabold leading-none tracking-tight">{value}</span>
+    <span className="font-display text-4xl font-black leading-none tracking-tight">{value}</span>
     <span className="mt-1.5 text-sm font-semibold text-base-content/60">{label}</span>
   </div>
 );
@@ -78,7 +78,7 @@ const SharerProfile = () => {
             <p className="text-sm font-bold uppercase tracking-wider text-base-content/50">
               #{sharer.rank} top sharer{sharer.userID === myID && " · This is you"}
             </p>
-            <h1 className="mt-1 truncate text-5xl font-extrabold leading-[0.95] tracking-tight md:text-6xl">{sharer.name}</h1>
+            <h1 className="mt-1 truncate text-5xl font-black leading-[0.95] tracking-tight md:text-6xl">{sharer.name}</h1>
             <p className="mt-2 text-base-content/70">Sharing coupons since {since}</p>
           </div>
         </div>
@@ -94,11 +94,11 @@ const SharerProfile = () => {
             <Badges badges={earned} />
           </div>
         )}
-        <div className="perf-x w-full text-base-300" aria-hidden="true" />
+        <div className="wave h-1.5 w-full text-base-300" aria-hidden="true" />
       </header>
 
       <section className="page-container py-10">
-        <h2 className="mb-6 text-4xl font-extrabold leading-[1] tracking-tight">Active coupons</h2>
+        <h2 className="mb-6 text-4xl font-black leading-[1] tracking-tight">Active coupons</h2>
         <CouponGrid
           coupons={active}
           emptyTitle="No active coupons"
@@ -106,7 +106,7 @@ const SharerProfile = () => {
         />
         {expired.length > 0 && (
           <>
-            <h2 className="mb-6 mt-14 text-4xl font-extrabold leading-[1] tracking-tight">Expired</h2>
+            <h2 className="mb-6 mt-14 text-4xl font-black leading-[1] tracking-tight">Expired</h2>
             <CouponGrid coupons={expired} />
           </>
         )}

@@ -2,7 +2,7 @@ import { useState } from "react";
 
 export type WeekBar = { label: string; fullLabel: string; count: number };
 
-// Single-series bar chart: coupons added per week. Bars use text-accent (olive in light, lime in
+// Single-series bar chart: coupons added per week. Bars use text-accent (blue in light, light blue in
 // dark) so they keep contrast on both themes. Hover or focus a bar for its value; a table
 // with the same numbers is there for screen readers.
 const WeeklyChart = ({ weeks, title }: { weeks: WeekBar[]; title: string }) => {

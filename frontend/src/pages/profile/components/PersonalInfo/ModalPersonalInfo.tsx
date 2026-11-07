@@ -88,7 +88,7 @@ export const ModalPersonalInfo = ({ currentUser, open, onClose }: Props) => {
             {currentImage ? (
               <img src={currentImage} alt="" className="size-full object-cover" />
             ) : (
-              <span className="flex size-full items-center justify-center font-display text-3xl font-extrabold">
+              <span className="flex size-full items-center justify-center font-display text-3xl font-black">
                 {currentUser.firstName?.charAt(0)}
               </span>
             )}

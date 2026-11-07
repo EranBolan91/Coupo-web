@@ -60,7 +60,7 @@ const ChangePassword = ({ email }: { email: string }) => {
 
   return (
     <section className="mt-8 rounded-box bg-base-100 px-6 py-6">
-      <h2 className="text-2xl font-extrabold tracking-tight">Password</h2>
+      <h2 className="text-2xl font-black tracking-tight">Password</h2>
 
       {!hasPassword() ? (
         <p className="mt-2 text-base-content/70">

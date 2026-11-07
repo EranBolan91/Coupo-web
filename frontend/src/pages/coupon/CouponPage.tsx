@@ -144,7 +144,7 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold uppercase tracking-wider text-base-content/50">{isSocial ? "Social coupon" : "Coupon"}</p>
-            <h1 className="mt-2 text-5xl font-extrabold leading-[0.95] tracking-tight md:text-6xl">
+            <h1 className="mt-2 text-5xl font-black leading-[0.95] tracking-tight md:text-6xl">
               {coupon.discount}% off at <span className="capitalize">{coupon.name}</span>
             </h1>
             {coupon.description && <p className="mt-5 max-w-[60ch] whitespace-pre-line text-lg text-base-content/80">{coupon.description}</p>}
@@ -178,8 +178,8 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
 
       {moreFromBrand.length > 0 && (
         <section className="page-container pb-20">
-          <div className="perf-x mb-10 w-full text-base-300" aria-hidden="true" />
-          <h2 className="mb-8 text-4xl font-extrabold leading-[1] tracking-tight md:text-5xl">
+          <div className="wave h-1.5 mb-10 w-full text-base-300" aria-hidden="true" />
+          <h2 className="mb-8 text-4xl font-black leading-[1] tracking-tight md:text-5xl">
             More from <span className="capitalize">{coupon.name}</span>
           </h2>
           <CouponGrid coupons={moreFromBrand} />

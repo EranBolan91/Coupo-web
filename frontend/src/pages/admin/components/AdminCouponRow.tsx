@@ -19,7 +19,7 @@ const AdminCouponRow = ({ coupon, children }: { coupon: Coupon; children?: React
           <BrandImage name={coupon.name} src={coupon.imgUrl} />
           <div className="min-w-0">
             <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-display text-lg font-extrabold capitalize">{coupon.name}</span>
+              <span className="font-display text-lg font-black capitalize">{coupon.name}</span>
               <code className="font-mono text-sm font-bold uppercase tracking-wider">{coupon.code}</code>
               <span className="text-sm font-bold">{coupon.discount}% off</span>
             </p>

@@ -106,7 +106,7 @@ const FeedbackPage = () => {
         {sent ? (
           <div className="rounded-box border border-base-300 bg-base-100 p-8 text-center sm:p-12" role="status">
             <PiCheckCircleFill className="mx-auto size-14 text-accent" aria-hidden />
-            <h2 className="mt-4 text-3xl font-extrabold tracking-tight">Thanks, we got it</h2>
+            <h2 className="mt-4 text-3xl font-black tracking-tight">Thanks, we got it</h2>
             <p className="mx-auto mt-2 max-w-sm text-base-content/70">
               {email.trim() ? "If we have a question, we'll write to you." : "Every message helps us make Coupo better."}
             </p>
@@ -131,7 +131,7 @@ const FeedbackPage = () => {
                     <label
                       key={option.value}
                       className={`flex cursor-pointer items-center gap-3 rounded-btn border-2 px-4 py-3 font-semibold transition-colors has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 ${
-                        active ? "border-base-content bg-base-200" : "border-base-300 hover:border-base-content/40"
+                        active ? "border-primary bg-primary/5" : "border-base-300 hover:border-primary/50"
                       }`}
                     >
                       <input

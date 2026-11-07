@@ -67,7 +67,7 @@ const Modal = ({ isOpen, onClose, children, title, description, label, footer, s
             </button>
             {title && (
               <div className="mb-6 pr-10">
-                <h2 id={titleId} className="text-3xl font-extrabold leading-tight tracking-tight">
+                <h2 id={titleId} className="text-3xl font-black leading-tight tracking-tight">
                   {title}
                 </h2>
                 {description && <p className="mt-2 text-base-content/70">{description}</p>}

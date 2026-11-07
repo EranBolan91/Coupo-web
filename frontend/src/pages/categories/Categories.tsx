@@ -32,16 +32,16 @@ const Categories = () => {
               <li key={category}>
                 <Link
                   to={encodeURIComponent(category)}
-                  className="group relative flex h-36 flex-col justify-end overflow-hidden rounded-box border-2 border-base-300 bg-base-100 p-6 transition-colors hover:border-base-content hover:bg-primary hover:text-primary-content"
+                  className="group relative flex h-36 flex-col justify-end overflow-hidden surface p-6 transition-[transform,box-shadow,background-color,color] duration-300 hover:-translate-y-0.5 hover:bg-primary hover:text-primary-content hover:shadow-lift"
                 >
                   <span className="flex items-end justify-between gap-3">
-                    <span className="truncate font-display text-4xl font-extrabold capitalize tracking-tight">{category}</span>
+                    <span className="truncate font-display text-4xl font-black capitalize tracking-tight">{category}</span>
                     <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-base-200 transition-all group-hover:-rotate-45 group-hover:bg-primary-content group-hover:text-primary">
                       <PiArrowRightBold className="size-5" aria-hidden />
                     </span>
                   </span>
                   <span
-                    className="pointer-events-none absolute -right-4 -top-10 select-none font-display text-[9rem] font-extrabold uppercase leading-none opacity-[0.04]"
+                    className="pointer-events-none absolute -right-4 -top-10 select-none font-display text-[9rem] font-black uppercase leading-none opacity-[0.04]"
                     aria-hidden="true"
                   >
                     {category.charAt(0)}

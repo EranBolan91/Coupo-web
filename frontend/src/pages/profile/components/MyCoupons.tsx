@@ -9,7 +9,7 @@ import RemoveCouponBtn from "./RemoveCouponBtn";
 import ModalEditCoupon from "./ModalEditCoupon";
 import { Link } from "react-router-dom";
 
-// The user's own active coupons: ticket preview + an owner bar with votes, Edit and Remove.
+// The user's own active coupons: card preview + an owner bar with votes, Edit and Remove.
 const MyCoupons = () => {
   const userDocument = useCurrentUser();
   const { data = [], isLoading, refetch } = useQuery<Coupon[]>({
