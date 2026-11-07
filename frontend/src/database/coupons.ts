@@ -42,3 +42,19 @@ export const adminDeleteCoupon = async (coupon: Coupon) => {
   if (owner) batch.delete(owner);
   await batch.commit();
 };
+
+// Admin: put these coupons under one brand name and logo (adding a logo to a new brand, or merging a
+// misspelled brand into an existing one). Updates the public doc and the owner's copy of each.
+export const adminSetCouponsBrand = async (coupons: Coupon[], name: string, imgUrl: string) => {
+  const update = { name, imgUrl, updatedAt: Timestamp.now() };
+  const refs = await Promise.all(
+    coupons.map(async (coupon) => [doc(db, publicCollection(coupon.type), coupon.id), await ownerCopy(coupon)] as const)
+  );
+  const writes = refs.flatMap(([publicRef, owner]) => (owner ? [publicRef, owner] : [publicRef]));
+  // A batch takes at most 500 writes.
+  for (let i = 0; i < writes.length; i += 500) {
+    const batch = writeBatch(db);
+    writes.slice(i, i + 500).forEach((ref) => batch.update(ref, update));
+    await batch.commit();
+  }
+};
