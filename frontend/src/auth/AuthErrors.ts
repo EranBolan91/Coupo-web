@@ -53,8 +53,7 @@ const authErrors: AuthErrors = {
   "invalid-api-key":
     "Your API key is invalid, please check you have copied it correctly.",
   "invalid-cert-hash": "The SHA-1 certificate hash provided is invalid.",
-  "invalid-credential":
-    "The supplied auth credential is malformed or has expired.",
+  "invalid-credential": "Wrong email or password. Check them and try again.",
   "invalid-message-payload":
     "The email template corresponding to this action contains invalid characters in its message. Please fix by going to the Auth email templates section in the Firebase Console.",
   "invalid-multi-factor-session":
@@ -67,8 +66,7 @@ const authErrors: AuthErrors = {
     "This domain is not authorized for OAuth operations for your Firebase project. Edit the list of authorized domains from the Firebase console.",
   "invalid-action-code":
     "The action code is invalid. This can happen if the code is malformed, expired, or has already been used.",
-  "wrong-password":
-    "The password is invalid or the user does not have a password.",
+  "wrong-password": "Wrong email or password. Check them and try again.",
   "invalid-persistence-type":
     "The specified persistence type is invalid. It can only be local, session or none.",
   "invalid-phone-number":
@@ -155,8 +153,7 @@ const authErrors: AuthErrors = {
   "unverified-email": "The operation requires a verified email.",
   "user-cancelled":
     "The user did not grant your application the permissions it requested.",
-  "user-not-found":
-    "There is no user record corresponding to this identifier. The user may have been deleted.",
+  "user-not-found": "Wrong email or password. Check them and try again.",
   "user-disabled": "The user account has been disabled by an administrator.",
   "user-mismatch":
     "The supplied credentials do not correspond to the previously signed in user.",
@@ -164,7 +161,7 @@ const authErrors: AuthErrors = {
   "weak-password": "The password must be 6 characters long or more.",
   "web-storage-unsupported":
     "This browser is not supported or 3rd party cookies and data may be disabled.",
-  "invalid-login-credentials": "invalid login credentials",
+  "invalid-login-credentials": "Wrong email or password. Check them and try again.",
 };
 
 export default authErrors;
