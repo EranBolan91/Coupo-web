@@ -31,7 +31,8 @@ interface AuthProviderProps {
   isAdmin: boolean;
   logout: () => Promise<void>;
   signinWthGoogle: () => Promise<void>;
-  sendEmailVerification: (user: User, actionCodeSettings?: ActionCodeSettings | null) => Promise<void>;
+  // Sends the verification email again, with a link back to the login page.
+  sendEmailVerification: (user: User) => Promise<void>;
   // Sends Firebase's password-reset email.
   resetPassword: (email: string) => Promise<void>;
   // True when the signed-in user can sign in with email + password (Google-only accounts can't).
@@ -134,6 +135,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => unsubscribe();
   }, [auth, loadUserDocument]);
 
+  // After clicking the link, Firebase's page shows a "Continue" button back to the login page.
+  const verifyEmailSettings = (): ActionCodeSettings => ({ url: `${window.location.origin}/login` });
+
+  // The link needs this site's domain in Firebase Auth's authorized domains (a PR preview isn't).
+  // If it's missing, still send the email, just without the link back.
+  const resendEmailVerification = async (user: User) => {
+    try {
+      await sendEmailVerification(user, verifyEmailSettings());
+    } catch (error: any) {
+      if (error?.code !== "auth/unauthorized-continue-uri") throw error;
+      await sendEmailVerification(user);
+    }
+  };
+
   // After setting a new password, Firebase's page shows a "Continue" button back to the login page.
   const resetPassword = (email: string) =>
     sendPasswordResetEmail(auth, email, { url: `${window.location.origin}/login` });
@@ -157,14 +172,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const newUser = await createUserWithEmailAndPassword(auth, email, password);
       if (newUser !== null && auth.currentUser !== null) {
-        await sendEmailVerification(newUser.user);
+        await resendEmailVerification(newUser.user);
         const userEmail = newUser.user.email ?? "";
         const userUID = newUser.user.uid;
+        // "Tester" has no last name and "Mary Ann Smith" has two words after the first one.
+        // Firestore rejects undefined fields, so lastName must always be a string.
+        const [firstName = "", ...lastNames] = fullName.trim().split(/\s+/);
 
         await saveUserToDatabase({
           userUID: userUID,
-          firstName: fullName.split(" ")[0],
-          lastName: fullName.split(" ")[1],
+          firstName,
+          lastName: lastNames.join(" "),
           email: userEmail,
           isEmailVerified: newUser.user.emailVerified,
           imageURL: "",
@@ -226,7 +244,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin,
         logout,
         signinWthGoogle,
-        sendEmailVerification,
+        sendEmailVerification: resendEmailVerification,
         refreshUserDocument,
         resetPassword,
         hasPassword,
