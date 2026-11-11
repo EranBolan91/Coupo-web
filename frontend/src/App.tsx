@@ -13,6 +13,7 @@ import Category from "./pages/category/Category";
 import StorePage from "./pages/store/StorePage";
 import Stores from "./pages/stores/Stores";
 import RouteMeta from "./components/seo/RouteMeta";
+import PageViewTracker from "./components/seo/PageViewTracker";
 import Navbar from "./components/navbar/Navbar";
 import MainPage from "./pages/main/MainPage";
 import { AdminDashboard, AdminPage, Login } from "./pages/lazyPages";
@@ -34,6 +35,7 @@ const App = () => {
     <>
       <div className="pb-tabbar flex min-h-[100dvh] flex-col">
         <RouteMeta />
+        <PageViewTracker />
         <Navbar />
         <main className="grow">
           <Routes>

@@ -1,5 +1,7 @@
+import { stopAnalytics, track } from "../analytics";
 import {
   User,
+  getAdditionalUserInfo,
   signOut,
   signInWithPopup,
   GoogleAuthProvider,
@@ -103,6 +105,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const token = await user.getIdTokenResult();
         setIsAdmin(token.claims.admin === true);
+        if (token.claims.admin === true) stopAnalytics();
       } catch {
         setIsAdmin(false);
       }
@@ -172,6 +175,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const newUser = await createUserWithEmailAndPassword(auth, email, password);
       if (newUser !== null && auth.currentUser !== null) {
+        track("sign_up", { method: "email" });
         await resendEmailVerification(newUser.user);
         const userEmail = newUser.user.email ?? "";
         const userUID = newUser.user.uid;
@@ -207,6 +211,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (loginUser.user.emailVerified === true) {
           // Load the profile before returning so the caller can navigate to a protected route.
           await loadUserDocument(loginUser.user);
+          track("login", { method: "email" });
           return AuthMSG.Good;
         } else {
           return AuthMSG.VerifyEmailError;
@@ -223,6 +228,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signinWthGoogle = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
+      track(getAdditionalUserInfo(result)?.isNewUser ? "sign_up" : "login", { method: "google" });
       await loadUserDocument(result.user);
     } catch (error: any) {
       // Log the code (e.g. auth/unauthorized-domain) and let the caller show it.
