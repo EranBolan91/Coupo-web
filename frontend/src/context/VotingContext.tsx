@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import { Vote } from "../types/VoteType";
 import { createContext } from "react";
 import { Timestamp } from "firebase/firestore";
+import { track } from "../analytics";
 
 export type VoteKind = "likes" | "dislikes";
 
@@ -51,7 +52,8 @@ export const VotingContextProvider = ({ children }: { children: ReactNode }) => 
     return null;
   };
 
-  const toggleVote = async (coupon: Coupon, kind: VoteKind): Promise<Coupon> => {
+  // applyVote does the work; toggleVote is the thumbs buttons and also logs the action.
+  const applyVote = async (coupon: Coupon, kind: VoteKind): Promise<Coupon> => {
     const uid = userProfile.userUID;
     const other: VoteKind = kind === "likes" ? "dislikes" : "likes";
     const current = getUserVote(coupon.id);
@@ -75,13 +77,19 @@ export const VotingContextProvider = ({ children }: { children: ReactNode }) => 
     return updated;
   };
 
+  const toggleVote = (coupon: Coupon, kind: VoteKind) => {
+    track("vote", { vote: getUserVote(coupon.id) === kind ? "removed" : kind === "likes" ? "worked" : "didnt_work" });
+    return applyVote(coupon, kind);
+  };
+
   const reportResult = async (coupon: Coupon, worked: boolean): Promise<Coupon> => {
     const kind: VoteKind = worked ? "likes" : "dislikes";
+    track("coupon_result", { worked });
     let updated: Coupon = coupon;
     if (getUserVote(coupon.id) === kind) {
       await saveUserVote(coupon, userProfile.userUID, worked);
     } else {
-      updated = await toggleVote(coupon, kind);
+      updated = await applyVote(coupon, kind);
     }
     return { ...updated, [worked ? "lastWorkedAt" : "lastFailedAt"]: Timestamp.now() };
   };

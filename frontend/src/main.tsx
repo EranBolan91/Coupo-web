@@ -12,6 +12,9 @@ import "@fontsource-variable/dm-sans";
 import "@fontsource-variable/nunito";
 import "@fontsource-variable/jetbrains-mono";
 import "./index.css";
+import { startAnalytics } from "./analytics";
+
+startAnalytics();
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -1,4 +1,5 @@
 import { logSearch, normalizeTerm, SearchPage } from "../database/searches";
+import { track } from "../analytics";
 import { CouponFilters, filterCoupons } from "../logic/couponFilters";
 import { UserAuth } from "../auth/AuthProvider";
 import { Coupon } from "../types/CouponType";
@@ -27,6 +28,7 @@ const useSearchLogging = (page: SearchPage, search: string, coupons: Coupon[], r
       const results = filterCoupons(coupons, term, noFilters).results.length;
       // Analytics only: a failed write must never get in the visitor's way.
       logSearch(term, results, page).catch(() => logged.delete(key));
+      track("search", { search_term: term, page, results });
     }, WAIT_MS);
     return () => clearTimeout(timer);
   }, [page, search, coupons, ready, isAdmin]);

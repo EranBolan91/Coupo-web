@@ -1,4 +1,5 @@
 import { motion, useAnimationControls, useReducedMotion } from "motion/react";
+import { track } from "../../../analytics";
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
 import ShareCouponButton from "../../../components/coupons/ShareCouponButton";
 import { PiArrowSquareOutBold, PiCheckBold, PiCheckCircleFill, PiCopyBold, PiWarningCircleFill, PiXBold } from "react-icons/pi";
@@ -84,6 +85,7 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
     try {
       await navigator.clipboard.writeText(shown.code);
       setCopied(true);
+      if (!preview) track("copy_code", { coupon_type: shown.type, brand: shown.name, signed_in: !!userDocument });
       if (userDocument && !preview) {
         setAskResult(true);
         // Counts toward the sharer's "copied" number and points (once per person, not for their own code).

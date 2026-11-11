@@ -1,4 +1,5 @@
 import { useCurrentUser } from "../../hooks/useCurrentUser";
+import { track } from "../../analytics";
 import { saveUserSocialCoupon } from "../../database/social";
 import { useQueryClient } from "@tanstack/react-query";
 import { Coupon } from "../../types/CouponType";
@@ -27,6 +28,7 @@ const AddUserSocialCoupon = () => {
           success: `${coupon.name} coupon shared. Thanks!`,
           error: "Couldn't share the coupon",
         });
+        track("add_coupon", { coupon_type: "socialCoupon" });
         ["usercoupons", "coupons"].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
       }}
     />

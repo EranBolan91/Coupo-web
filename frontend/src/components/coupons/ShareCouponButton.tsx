@@ -1,4 +1,5 @@
 import { PiCheckBold, PiLinkBold, PiShareNetworkBold, PiWhatsappLogoBold } from "react-icons/pi";
+import { track } from "../../analytics";
 import { couponShareText, couponShareURL } from "../../logic/couponLinks";
 import { useEffect, useRef, useState } from "react";
 import { Coupon } from "../../types/CouponType";
@@ -39,6 +40,7 @@ const ShareCouponButton = ({ coupon, className = "", compact = false }: Props) =
     setOpen(false);
     try {
       await navigator.clipboard.writeText(couponShareURL(coupon, "share"));
+      track("share", { method: "copy_link", content_type: coupon.type, item_id: coupon.id });
       setCopied(true);
       toast.success("Link copied");
       setTimeout(() => setCopied(false), 1600);
@@ -54,6 +56,7 @@ const ShareCouponButton = ({ coupon, className = "", compact = false }: Props) =
     }
     try {
       await navigator.share({ title: text, text, url: couponShareURL(coupon, "share") });
+      track("share", { method: "share_sheet", content_type: coupon.type, item_id: coupon.id });
     } catch (error) {
       if ((error as Error)?.name !== "AbortError") setOpen(true); // share sheet failed: offer the menu instead
     }
@@ -88,7 +91,16 @@ const ShareCouponButton = ({ coupon, className = "", compact = false }: Props) =
           }`}
         >
           <li role="none">
-            <a role="menuitem" href={whatsappHref} target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}>
+            <a
+              role="menuitem"
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                track("share", { method: "whatsapp", content_type: coupon.type, item_id: coupon.id });
+                setOpen(false);
+              }}
+            >
               <PiWhatsappLogoBold className="size-5" aria-hidden /> WhatsApp
             </a>
           </li>
