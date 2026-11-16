@@ -9,6 +9,9 @@ export type Coupon = {
   category: string;
   expiry: Timestamp | null; // null = no expiry date
   discount: string;
+  discountType?: "percent" | "amount" | "shipping"; // missing = percent
+  currency?: string;
+  minSpend?: number | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   likes: number;

@@ -1,3 +1,4 @@
+import { percentOff, percentValue } from "./discount";
 import { Coupon } from "../types/CouponType";
 import { Timestamp } from "firebase/firestore";
 import { isExpired } from "./couponFilters";
@@ -39,7 +40,7 @@ export const monthLabel = (date = new Date()) =>
 // Best first: codes people said worked, then bigger discounts, then newer.
 const byQuality = (a: Coupon, b: Coupon) =>
   (b.likes ?? 0) - (b.dislikes ?? 0) - ((a.likes ?? 0) - (a.dislikes ?? 0)) ||
-  Number(b.discount) - Number(a.discount) ||
+  (percentValue(b) ?? 0) - (percentValue(a) ?? 0) ||
   (b.createdAt?.toMillis?.() ?? 0) - (a.createdAt?.toMillis?.() ?? 0);
 
 // Groups coupons (from either feed) by store name, ignoring case and punctuation, A-Z.
@@ -64,7 +65,7 @@ export const groupStores = (coupons: Coupon[], now = Date.now()): Store[] => {
         imgUrl: newest.find((coupon) => coupon.imgUrl)?.imgUrl ?? "",
         coupons,
         activeCount: active.length,
-        bestDiscount: Math.max(0, ...active.map((coupon) => Number(coupon.discount) || 0)),
+        bestDiscount: Math.max(0, ...active.map(percentOff)),
         categories: [...new Set(list.map((coupon) => coupon.category?.toLowerCase().trim()).filter(Boolean))].sort(),
       };
     })
@@ -95,7 +96,8 @@ export interface StoreDoc {
   name: string;
   imgUrl: string;
   categories: string[];
-  offers: { discount: number; expiry: Timestamp | null }[];
+  // discount is the percent off (0 for amount and free-shipping coupons; see stores.ts in functions).
+  offers: { discount: number; discountType?: Coupon["discountType"]; expiry: Timestamp | null }[];
   count: number;
 }
 
@@ -107,6 +109,6 @@ export const storeFromDoc = (data: StoreDoc, now = Date.now()): StoreInfo => {
     imgUrl: data.imgUrl ?? "",
     categories: data.categories ?? [],
     activeCount: active.length,
-    bestDiscount: Math.max(0, ...active.map((offer) => Number(offer.discount) || 0)),
+    bestDiscount: Math.max(0, ...active.map((offer) => percentOff(offer))),
   };
 };

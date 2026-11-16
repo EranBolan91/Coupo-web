@@ -1,4 +1,5 @@
 import { Coupon } from "../types/CouponType";
+import { compareDiscounts, percentValue } from "./discount";
 
 // True when every word of the search appears somewhere in the coupon (brand, code, category,
 // details or who shared it). Case doesn't matter, and parts of words match: "tom hil" finds tommy-hilfiger.
@@ -45,8 +46,9 @@ const sortBy = (coupons: Coupon[], sort: CouponSort) => {
     case "likes-desc":
       // Most likes first; on a tie, fewer dislikes first.
       return sorted.sort((a, b) => (b.likes ?? 0) - (a.likes ?? 0) || (a.dislikes ?? 0) - (b.dislikes ?? 0));
+    // Percent deals (and amounts with a minimum spend, as a percent of it) first, then other amounts, then free shipping.
     case "discount-desc":
-      return sorted.sort((a, b) => Number(b.discount) - Number(a.discount));
+      return sorted.sort(compareDiscounts);
     // Coupons with no expiry date go last either way.
     case "expiry-asc":
       return sorted.sort((a, b) => byExpiry(a, b, 1));
@@ -92,7 +94,8 @@ export const matchesFilters = (coupon: Coupon, filters: CouponFilters, now = Dat
   if (!filters.showExpired && isExpired(coupon, now)) return false;
   if (filters.categories.length > 0 && !filters.categories.map(lower).includes(lower(coupon.category))) return false;
   if (filters.brands.length > 0 && !filters.brands.map(lower).includes(lower(coupon.name))) return false;
-  if (filters.minDiscount > 0 && Number(coupon.discount) < filters.minDiscount) return false;
+  // "25% or more": amounts count as a percent of their minimum spend; without one (or free shipping) they don't match.
+  if (filters.minDiscount > 0 && (percentValue(coupon) ?? 0) < filters.minDiscount) return false;
   if (filters.expiringSoon) {
     const expiry = time(coupon.expiry);
     if (expiry < now || expiry > now + WEEK_MS) return false;

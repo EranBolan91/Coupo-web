@@ -16,6 +16,10 @@ const END = "<!-- preview:end -->";
 export type PreviewCoupon = {
   name?: string;
   discount?: string | number;
+  // Missing on older coupons, which are percent off.
+  discountType?: string;
+  currency?: string;
+  minSpend?: number | null;
   description?: string;
   imgUrl?: string;
   expiry?: { toDate: () => Date } | null;
@@ -52,10 +56,65 @@ export const safeImage = (url?: string) => {
   }
 };
 
-export const couponTitle = (coupon: Pick<PreviewCoupon, "name" | "discount">) => {
+// ---- Discount wording. Same as frontend/src/logic/discount.ts; keep them in step. ----
+
+type Deal = Pick<PreviewCoupon, "discount" | "discountType" | "currency" | "minSpend">;
+
+export const discountTypeOf = (coupon: Deal): "percent" | "amount" | "shipping" =>
+  coupon.discountType === "amount" || coupon.discountType === "shipping" ? coupon.discountType : "percent";
+
+const CURRENCIES = ["USD", "EUR", "GBP", "ILS", "CAD", "AUD", "INR", "JPY", "CHF", "BRL"];
+
+// "₪50", "$12.50".
+export const formatMoney = (amount: number, currency?: string) => {
+  const code = currency && CURRENCIES.includes(currency) ? currency : "USD";
+  const whole = Number.isInteger(amount);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: code,
+    currencyDisplay: "narrowSymbol",
+    minimumFractionDigits: whole ? 0 : 2,
+    maximumFractionDigits: whole ? 0 : 2,
+  }).format(amount);
+};
+
+const minSpendOf = (coupon: Deal) => {
+  const value = Number(coupon.minSpend);
+  return Number.isFinite(value) && value > 0 ? value : 0;
+};
+
+// "20% off", "₪50 off", "Free shipping", or "" when there's no usable discount.
+export const discountLabel = (coupon: Deal) => {
+  const type = discountTypeOf(coupon);
+  const value = Number(coupon.discount) || 0;
+  if (type === "shipping") return "Free shipping";
+  if (value <= 0) return "";
+  return type === "amount" ? `${formatMoney(value, coupon.currency)} off` : `${value}% off`;
+};
+
+// "₪50 off orders of ₪100+", "Free shipping on orders of $35+", "15% off".
+export const dealText = (coupon: Deal) => {
+  const label = discountLabel(coupon);
+  const min = minSpendOf(coupon);
+  if (!label || min <= 0) return label;
+  return `${label} ${discountTypeOf(coupon) === "shipping" ? "on orders" : "orders"} of ${formatMoney(min, coupon.currency)}+`;
+};
+
+// The percent off for percent coupons, 0 for the others (store summaries say "up to X% off").
+export const percentOff = (coupon: Deal) => (discountTypeOf(coupon) === "percent" ? Number(coupon.discount) || 0 : 0);
+
+// "Biggest" for ordering a store's codes: percent, or amount / minimum spend as a percent.
+export const percentValue = (coupon: Deal) => {
+  const type = discountTypeOf(coupon);
+  if (type === "percent") return Number(coupon.discount) || 0;
+  const min = minSpendOf(coupon);
+  return type === "amount" && min > 0 ? Math.min(100, ((Number(coupon.discount) || 0) / min) * 100) : 0;
+};
+
+export const couponTitle = (coupon: Pick<PreviewCoupon, "name"> & Deal) => {
   const name = oneLine(coupon.name || "a store", 80);
-  const discount = Number(coupon.discount) || 0;
-  return discount > 0 ? `${discount}% off at ${name}` : `Coupon for ${name}`;
+  const deal = dealText(coupon);
+  return deal ? `${deal} at ${name}` : `Coupon for ${name}`;
 };
 
 export const previewTags = (coupon: PreviewCoupon, path: string, jsonLd: object[] = []) => {

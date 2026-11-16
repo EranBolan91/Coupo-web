@@ -7,6 +7,7 @@ import * as admin from "firebase-admin";
 import { Timestamp } from "firebase-admin/firestore";
 import { collectionsList } from "./firebaseCollections";
 import { FeedCoupon, StoreInfo, groupStores, isExpired, storeSlug } from "./seoPages";
+import { percentOff } from "./couponPreview";
 
 const toDate = (value: unknown) => (value instanceof Timestamp ? value.toDate() : null);
 const text = (value: unknown) => (typeof value === "string" ? value : "");
@@ -18,6 +19,9 @@ export const toFeedCoupon = (id: string, type: FeedCoupon["type"], data: Firebas
   name: text(data.name).trim(),
   code: text(data.code),
   discount: Number(data.discount) || 0,
+  discountType: text(data.discountType) || "percent",
+  currency: text(data.currency),
+  minSpend: Number(data.minSpend) > 0 ? Number(data.minSpend) : null,
   category: text(data.category).toLowerCase().trim(),
   description: text(data.description),
   imgUrl: text(data.imgUrl),
@@ -38,13 +42,15 @@ export const couponCollections: [string, FeedCoupon["type"]][] = [
 export const slugOf = (data: FirebaseFirestore.DocumentData | undefined) => storeSlug(text(data?.name).trim());
 
 // Stores/{slug}. Each coupon's discount and expiry are kept (not just counts) so "working codes" stays
-// right after a coupon expires, without anything being rewritten at that moment.
+// right after a coupon expires, without anything being rewritten at that moment. An offer's
+// `discount` is the percent off, and 0 for fixed-amount and free-shipping coupons, so "up to X% off"
+// never reads an amount as a percent.
 export type StoreDoc = {
   slug: string;
   name: string;
   imgUrl: string;
   categories: string[];
-  offers: { discount: number; expiry: Timestamp | null }[];
+  offers: { discount: number; discountType: string; expiry: Timestamp | null }[];
   count: number;
   updatedAt: Timestamp | null;
 };
@@ -59,7 +65,8 @@ export const summarize = (slug: string, coupons: FeedCoupon[]): StoreDoc | null 
     imgUrl: store.imgUrl,
     categories: store.categories,
     offers: store.coupons.map((coupon) => ({
-      discount: coupon.discount,
+      discount: percentOff(coupon),
+      discountType: coupon.discountType || "percent",
       expiry: coupon.expiry ? Timestamp.fromDate(coupon.expiry) : null,
     })),
     count: store.coupons.length,
@@ -113,7 +120,7 @@ export async function rebuildStore(slug: string) {
 }
 
 // Fields shown in the summary. Votes and copies change other fields and don't need a rebuild.
-const summaryFields = ["storeSlug", "name", "discount", "expiry", "category", "imgUrl", "createdAt", "updatedAt"];
+const summaryFields = ["storeSlug", "name", "discount", "discountType", "minSpend", "expiry", "category", "imgUrl", "createdAt", "updatedAt"];
 
 const same = (a: unknown, b: unknown) =>
   a instanceof Timestamp && b instanceof Timestamp ? a.isEqual(b) : JSON.stringify(a) === JSON.stringify(b);

@@ -9,6 +9,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Timestamp } from "firebase/firestore";
 import { CouponTerms, cleanTerms, emptyTerms, termsError } from "../../logic/couponTerms";
 import CouponTermsFields from "../coupons/CouponTermsFields";
+import CouponDealFields from "../coupons/CouponDealFields";
+import { CouponDeal, DealInput, cleanDeal, dealError, emptyDeal } from "../../logic/discount";
 import { useEffect, useState } from "react";
 import SearchSelect from "../ui/SearchSelect";
 import Field from "../ui/Field";
@@ -19,7 +21,7 @@ export type CouponFormValues = {
   imgUrl: string;
   category: string;
   code: string;
-  discount: number;
+  deal: CouponDeal; // discount type, amount, currency and minimum spend (not a react-hook-form field)
   expiry: string; // yyyy-mm-dd from the date input
   noExpiry: boolean; // "No expiry date" ticked: expiry is ignored and the coupon never expires
   description: string;
@@ -56,6 +58,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   const brandsQuery = useQuery({ queryKey: ["brands"], queryFn: getCouponsBrands, enabled: brandMode === "store" });
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: getCategories });
   const [terms, setTerms] = useState<CouponTerms>(emptyTerms);
+  const [deal, setDeal] = useState<DealInput>(emptyDeal);
   const [triedSubmit, setTriedSubmit] = useState(false);
   const brands = brandsQuery.data ?? [];
   const [newBrandIssue, setNewBrandIssue] = useState<string>();
@@ -90,7 +93,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     imgUrl: values.imgUrl,
     category: values.category,
     code: values.code?.toUpperCase(),
-    discount: Number.isFinite(values.discount) ? values.discount : 0,
+    ...cleanDeal(deal),
     description: values.description,
     username: ownerName ?? (userDocument ? `${userDocument.firstName} ${userDocument.lastName}`.trim() : ""),
     userID: userDocument?.userUID ?? "",
@@ -104,11 +107,13 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
   };
 
   const submit: SubmitHandler<CouponFormValues> = async (form) => {
-    if (termsError(terms)) return;
+    if (termsError(terms) || dealError(deal)) return;
     try {
-      await onSubmit({ ...form, code: form.code.trim().toUpperCase(), terms: cleanTerms(terms) });
+      await onSubmit({ ...form, code: form.code.trim().toUpperCase(), deal: cleanDeal(deal), terms: cleanTerms(terms) });
       reset();
       setTerms(emptyTerms);
+      // Keep the currency: people usually share several codes in the same one.
+      setDeal({ ...emptyDeal(), currency: deal.currency });
       setTriedSubmit(false);
     } catch {
       // The caller shows the error toast; keep what the user typed.
@@ -195,37 +200,20 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
           </Field>
         </div>
 
-        <div className="grid gap-6 sm:grid-cols-[1fr_9rem]">
-          <Field label="Coupon code" htmlFor="code" error={errors.code?.message}>
-            <input
-              id="code"
-              type="text"
-              placeholder="SAVE20"
-              autoCapitalize="characters"
-              spellCheck={false}
-              className="input input-bordered h-12 w-full bg-base-100 font-mono font-bold uppercase tracking-wider"
-              aria-invalid={!!errors.code}
-              {...register("code", { required: "Code is required", validate: (v) => v.trim() !== "" || "Code is required" })}
-            />
-          </Field>
-          <Field label="Discount (%)" htmlFor="discount" error={errors.discount?.message}>
-            <input
-              id="discount"
-              type="number"
-              min={1}
-              max={100}
-              inputMode="numeric"
-              placeholder="20"
-              className="input input-bordered h-12 w-full bg-base-100"
-              aria-invalid={!!errors.discount}
-              {...register("discount", {
-                valueAsNumber: true,
-                required: "Discount is required",
-                validate: (v) => (Number.isInteger(v) && v >= 1 && v <= 100) || "1 to 100",
-              })}
-            />
-          </Field>
-        </div>
+        <Field label="Coupon code" htmlFor="code" className="sm:w-1/2" error={errors.code?.message}>
+          <input
+            id="code"
+            type="text"
+            placeholder="SAVE20"
+            autoCapitalize="characters"
+            spellCheck={false}
+            className="input input-bordered h-12 w-full bg-base-100 font-mono font-bold uppercase tracking-wider"
+            aria-invalid={!!errors.code}
+            {...register("code", { required: "Code is required", validate: (v) => v.trim() !== "" || "Code is required" })}
+          />
+        </Field>
+
+        <CouponDealFields idPrefix="new" value={deal} onChange={setDeal} showErrors={triedSubmit} />
 
         <Field label="Expires on" htmlFor={values.noExpiry ? "noExpiry" : "expiry"} error={values.noExpiry ? undefined : errors.expiry?.message}>
           {!values.noExpiry && (

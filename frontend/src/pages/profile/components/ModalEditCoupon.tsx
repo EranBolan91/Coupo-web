@@ -9,6 +9,8 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import CouponTermsFields from "../../../components/coupons/CouponTermsFields";
 import { cleanTerms, termsError, termsOf } from "../../../logic/couponTerms";
+import CouponDealFields from "../../../components/coupons/CouponDealFields";
+import { cleanDeal, dealError, dealOf } from "../../../logic/discount";
 
 interface Props {
   coupon: Coupon;
@@ -16,9 +18,9 @@ interface Props {
   refetchData: () => void;
 }
 
-// Owner edits category, discount and description. The Cloud Function copies the change to the public coupon.
+// Owner edits category, discount, conditions and description. The Cloud Function copies the change to the public coupon.
 const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
-  const [discount, setDiscount] = useState<string>(String(coupon.discount));
+  const [deal, setDeal] = useState(() => dealOf(coupon));
   const [description, setDescription] = useState<string>(coupon.description ?? "");
   const [category, setCategory] = useState<string>(coupon.category);
   const [terms, setTerms] = useState(() => termsOf(coupon));
@@ -27,17 +29,13 @@ const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
 
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: getCategories, enabled: open });
 
-  const discountNumber = Number(discount);
-  const discountError =
-    discount === "" || !Number.isInteger(discountNumber) || discountNumber < 1 || discountNumber > 100
-      ? "Enter a whole number from 1 to 100"
-      : undefined;
+  const discountError = dealError(deal);
 
   const save = () => {
     if (discountError || termsError(terms)) return;
     setOpen(false);
     toast
-      .promise(updateCoupon(category, discountNumber, description, coupon.id, userDocument?.userUID ?? "", coupon.type, cleanTerms(terms)), {
+      .promise(updateCoupon(category, cleanDeal(deal), description, coupon.id, userDocument?.userUID ?? "", coupon.type, cleanTerms(terms)), {
         loading: "Saving changes...",
         success: "Coupon updated",
         error: "Couldn't update the coupon",
@@ -73,7 +71,7 @@ const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
         }
       >
         <div className="space-y-5">
-          <div className="grid gap-5 sm:grid-cols-2">
+          <div className="grid gap-5">
             <Field label="Category" htmlFor={`category-${coupon.id}`}>
               <select
                 id={`category-${coupon.id}`}
@@ -89,20 +87,8 @@ const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
                 ))}
               </select>
             </Field>
-            <Field label="Discount (%)" htmlFor={`discount-${coupon.id}`} error={discountError}>
-              <input
-                id={`discount-${coupon.id}`}
-                type="number"
-                min={1}
-                max={100}
-                inputMode="numeric"
-                className="input input-bordered h-12 w-full bg-base-100"
-                value={discount}
-                aria-invalid={!!discountError}
-                onChange={(e) => setDiscount(e.target.value)}
-              />
-            </Field>
           </div>
+          <CouponDealFields idPrefix={`edit-deal-${coupon.id}`} value={deal} onChange={setDeal} />
           <CouponTermsFields idPrefix={`edit-${coupon.id}`} value={terms} onChange={setTerms} />
           <Field label="Description" htmlFor={`description-${coupon.id}`} hint="Optional. Anything else people should know.">
             <textarea

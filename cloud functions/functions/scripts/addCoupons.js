@@ -7,6 +7,9 @@
 // coupons.json: [{ "brand": "nike", "category": "sport", "code": "SAVE20", "discount": 20,
 //                  "expiry": "2026-12-31", "description": "Optional details" }, ...]
 // "expiry": null (or "never") publishes a coupon with no expiry date.
+// Optional: "discountType": "percent" (default) | "amount" | "shipping", "currency": "USD" | "ILS" | "EUR" | ...
+// (for amounts and minSpend), "minSpend": 100 (minimum order). e.g. { ..., "discountType": "amount",
+// "discount": 50, "currency": "ILS", "minSpend": 200 } is 50 off orders of 200+. Free shipping needs no discount.
 // brand and category must already exist (Brands / Category collections); the brand logo is filled in automatically.
 // A coupon whose brand + code already exists is skipped, so running it twice doesn't create duplicates.
 // Add "sample": true to mark a made-up demo coupon. Remove all of them later with:
@@ -50,7 +53,13 @@ const removeSamples = async () => {
     if (!brands.has(brand)) problems.push(`unknown brand "${c.brand}"`);
     if (!categories.has(category)) problems.push(`unknown category "${c.category}"`);
     if (!c.code || !String(c.code).trim()) problems.push("missing code");
-    if (!Number.isInteger(c.discount) || c.discount < 1 || c.discount > 100) problems.push("discount must be a whole number 1-100");
+    const type = c.discountType || "percent";
+    const currencies = ["USD", "EUR", "GBP", "ILS", "CAD", "AUD", "INR", "JPY", "CHF", "BRL"];
+    if (!["percent", "amount", "shipping"].includes(type)) problems.push("discountType must be percent, amount or shipping");
+    if (type === "percent" && (!Number.isInteger(c.discount) || c.discount < 1 || c.discount > 100)) problems.push("discount must be a whole number 1-100");
+    if (type === "amount" && !(typeof c.discount === "number" && c.discount > 0)) problems.push("discount must be an amount above 0");
+    if (c.minSpend != null && !(typeof c.minSpend === "number" && c.minSpend > 0)) problems.push("minSpend must be an amount above 0");
+    if ((type === "amount" || c.minSpend != null) && !currencies.includes(c.currency)) problems.push(`currency must be one of ${currencies.join(", ")}`);
     const noExpiry = c.expiry === null || c.expiry === "never";
     if (!noExpiry && (!/^\d{4}-\d{2}-\d{2}$/.test(c.expiry || "") || c.expiry < today)) {
       problems.push("expiry must be a future date YYYY-MM-DD, or null / \"never\" for no expiry");
@@ -66,7 +75,10 @@ const removeSamples = async () => {
       imgUrl: brands.get(brand) || "",
       category: categories.get(category),
       code: String(c.code).trim().toUpperCase(),
-      discount: c.discount,
+      discount: type === "shipping" ? 0 : c.discount,
+      discountType: type,
+      ...(c.currency ? { currency: c.currency } : {}),
+      minSpend: c.minSpend ?? null,
       description: String(c.description || "").trim(),
       userID: "",
       username: "Coupo",
@@ -78,7 +90,8 @@ const removeSamples = async () => {
       type: "coupon",
       ...(c.sample === true ? { sample: true } : {}),
     });
-    console.log(`OK   ${row}: ${c.discount}% ${noExpiry ? "with no expiry date" : `until ${c.expiry}`}`);
+    const deal = type === "shipping" ? "free shipping" : type === "amount" ? `${c.discount} ${c.currency} off` : `${c.discount}%`;
+    console.log(`OK   ${row}: ${deal}${c.minSpend ? ` (min. ${c.minSpend} ${c.currency})` : ""} ${noExpiry ? "with no expiry date" : `until ${c.expiry}`}`);
   });
 
   if (flag !== "--write") {

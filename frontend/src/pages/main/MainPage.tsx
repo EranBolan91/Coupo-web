@@ -1,3 +1,4 @@
+import { compareDiscounts } from "../../logic/discount";
 import { PiArrowRightBold, PiCopyBold, PiMagnifyingGlassBold, PiPlusBold, PiThumbsUpBold } from "react-icons/pi";
 import { getCategories, getCouponsBrands, getLatestCoupons } from "../../database/databaseCalls";
 import { isExpired } from "../../logic/couponFilters";
@@ -190,7 +191,7 @@ const MainPage = () => {
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
   const { data: brands = [] } = useQuery({ queryKey: ["brands"], queryFn: getCouponsBrands });
 
-  const biggestDiscounts = [...latest].sort((a, b) => Number(b.discount) - Number(a.discount)).slice(0, 3);
+  const biggestDiscounts = [...latest].sort(compareDiscounts).slice(0, 3);
   const brandLogos = brands.filter((brand) => brand.imgURL);
   // Repeat the list so the marquee track is always wider than the screen.
   const marqueeItems = brandLogos.length
