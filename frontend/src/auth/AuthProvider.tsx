@@ -67,8 +67,8 @@ export enum AuthMSG {
 const userDocumentFromAuthUser = (user: User): UserDocument => ({
   userUID: user.uid,
   email: user.email ?? "",
-  firstName: user.displayName?.split(" ")[0] ?? "",
-  lastName: user.displayName?.split(" ")[1] ?? "",
+  firstName: (user.displayName ?? "").trim().split(/\s+/)[0] ?? "",
+  lastName: (user.displayName ?? "").trim().split(/\s+/).slice(1).join(" "),
   imageURL: user.photoURL ?? "",
   isEmailVerified: user.emailVerified,
   lastLogin: Timestamp.now(),
@@ -113,7 +113,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const userDocument = await getUserDocument(user.uid);
         if (userDocument === undefined) {
-          dispatch(setUserDocument(userDocumentFromAuthUser(user)));
+          // No Users doc (e.g. a Google sign-up while the Cloud Function was failing): save one now,
+          // so the person shows up on /admin/users. merge keeps anything the function wrote meanwhile.
+          const fresh = userDocumentFromAuthUser(user);
+          dispatch(setUserDocument(fresh));
+          saveUserToDatabase(fresh, { merge: true }).catch((error) => console.log("Saving Users doc failed:", error?.message));
           return;
         }
         if (userDocument.isEmailVerified === false) {

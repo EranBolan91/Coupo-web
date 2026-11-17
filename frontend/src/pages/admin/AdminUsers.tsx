@@ -1,6 +1,6 @@
-import { PiCheckCircleFill, PiEnvelopeSimpleBold } from "react-icons/pi";
+import { PiArrowsClockwiseBold, PiCheckCircleFill, PiEnvelopeSimpleBold } from "react-icons/pi";
 import { collectionsList } from "../../../firebaseCollections";
-import { AdminUser, getAllUsers } from "../../database/users";
+import { AdminUser, getAllUsers, syncUsersFromAuth } from "../../database/users";
 import EmptyState from "../../components/ui/EmptyState";
 import LoadError from "../../components/ui/LoadError";
 import SharerAvatar from "../sharers/SharerAvatar";
@@ -9,7 +9,8 @@ import { AdminLayout } from "./components/AdminSidebar";
 import SearchBar from "../main/components/Searchbar";
 import useShowMore from "../../hooks/useShowMore";
 import { sharerPath } from "../../logic/sharers";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { Timestamp } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { useMemo, useState } from "react";
@@ -79,6 +80,14 @@ const AdminUsers = () => {
   const social = useCouponFeed(collectionsList.socialCoupons);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<Sort>("newest");
+  const sync = useMutation({
+    mutationFn: syncUsersFromAuth,
+    onSuccess: (added) => {
+      toast.success(added === 0 ? "Everyone is already listed" : `Added ${added === 1 ? "1 missing user" : `${added} missing users`}`);
+      if (added > 0) users.refetch();
+    },
+    onError: () => toast.error("Couldn't check for missing users. Try again."),
+  });
 
   const sharedBy = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -121,6 +130,16 @@ const AdminUsers = () => {
             {option.label}
           </button>
         ))}
+        <button
+          type="button"
+          onClick={() => sync.mutate()}
+          disabled={sync.isPending}
+          className="btn btn-ghost btn-sm h-10 min-h-10 border-base-300 bg-base-100 px-4"
+          title="Adds anyone who signed in (e.g. with Google) but isn't listed yet"
+        >
+          {sync.isPending ? <span className="loading loading-spinner loading-xs" /> : <PiArrowsClockwiseBold className="size-4" aria-hidden />}
+          Find missing users
+        </button>
         {users.data && (
           <span className="ml-auto text-sm text-base-content/60" aria-live="polite">
             {search
