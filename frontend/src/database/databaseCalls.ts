@@ -1,3 +1,4 @@
+import { CouponDeal } from "../logic/discount";
 import { CouponTerms } from "../logic/couponTerms";
 import { isExpired } from "../logic/couponFilters";
 import {
@@ -172,7 +173,7 @@ export const saveUserVote = async (coupon: Coupon, userID: string, vote: boolean
 
 export const updateCoupon = async (
   category: string,
-  discount: number,
+  deal: CouponDeal,
   description: string,
   couponID: string,
   userID: string,
@@ -182,7 +183,7 @@ export const updateCoupon = async (
   const docRef = doc(db, collectionsList.userCoupons, userID, userCouponsSubcollection(type), couponID);
   await updateDoc(docRef, {
     category: category,
-    discount: discount,
+    ...deal,
     description: description,
     ...terms,
   });

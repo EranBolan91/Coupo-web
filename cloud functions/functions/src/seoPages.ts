@@ -2,7 +2,7 @@
 // (/categories, /categories/{name}), the readable part of coupon pages, the sitemap and robots.txt.
 // Pure helpers only (no Firebase), so they can be checked without the emulators. seoServer.ts loads
 // the coupons and calls these.
-import { PageInfo, SITE_URL, couponTitle, escapeHtml, oneLine } from "./couponPreview";
+import { PageInfo, SITE_URL, couponTitle, dealText, escapeHtml, oneLine, percentOff, percentValue } from "./couponPreview";
 
 // One coupon from either public feed, with dates already converted.
 export type FeedCoupon = {
@@ -11,6 +11,10 @@ export type FeedCoupon = {
   name: string;
   code: string;
   discount: number;
+  // "percent" (also when missing on older coupons), "amount" or "shipping".
+  discountType?: string;
+  currency?: string;
+  minSpend?: number | null;
   category: string;
   description: string;
   imgUrl: string;
@@ -74,7 +78,7 @@ const latest = (dates: (Date | null)[]) =>
 // Best first: codes people said worked, then bigger discounts, then newer.
 const byQuality = (a: FeedCoupon, b: FeedCoupon) =>
   b.likes - b.dislikes - (a.likes - a.dislikes) ||
-  b.discount - a.discount ||
+  percentValue(b) - percentValue(a) ||
   (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0);
 
 // Groups both feeds by store name (ignoring case and punctuation), A-Z.
@@ -105,7 +109,7 @@ export const groupStores = (coupons: FeedCoupon[], now: number): Store[] => {
         expired,
         activeCount: active.length,
         categories: [...new Set(list.map((coupon) => coupon.category?.toLowerCase()).filter(Boolean))].sort(),
-        bestDiscount: Math.max(0, ...active.map((coupon) => coupon.discount)),
+        bestDiscount: Math.max(0, ...active.map(percentOff)),
         updatedAt: latest(list.map((coupon) => coupon.updatedAt ?? coupon.createdAt)),
       };
     })
@@ -193,7 +197,7 @@ const crumbsHtml = (items: [string, string][]) =>
 
 const couponLine = (coupon: FeedCoupon, now: number, withStore: boolean) => {
   const bits = [
-    `<a href="${h(couponPagePath(coupon))}">${h(withStore ? couponTitle(coupon) : coupon.discount > 0 ? `${coupon.discount}% off` : "Coupon")}</a>`,
+    `<a href="${h(couponPagePath(coupon))}">${h(withStore ? couponTitle(coupon) : dealText(coupon) || "Coupon")}</a>`,
     coupon.code ? `code <code>${h(oneLine(coupon.code, 60))}</code>` : "",
     coupon.description ? h(oneLine(coupon.description, 140)) : "",
     coupon.expiry ? (isExpired(coupon, now) ? `expired ${shortDate(coupon.expiry)}` : `valid until ${shortDate(coupon.expiry)}`) : "",

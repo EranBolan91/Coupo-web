@@ -2,6 +2,7 @@ import { doc, getDoc, Timestamp, writeBatch } from "firebase/firestore";
 import { collectionsList } from "../../firebaseCollections";
 import { Coupon } from "../types/CouponType";
 import { CouponTerms } from "../logic/couponTerms";
+import { CouponDeal } from "../logic/discount";
 import { db } from "./databaseConfig";
 
 const publicCollection = (type: Coupon["type"] | undefined) =>
@@ -21,7 +22,7 @@ const ownerCopy = async (coupon: Coupon) => {
   return (await getDoc(ref)).exists() ? ref : null;
 };
 
-export type AdminCouponEdit = Pick<Coupon, "code" | "category" | "discount" | "expiry" | "description"> & CouponTerms;
+export type AdminCouponEdit = Pick<Coupon, "code" | "category" | "expiry" | "description"> & CouponDeal & CouponTerms;
 
 // Admin edit of any coupon: the public doc and the owner's copy are updated together, so the
 // owner's profile shows the change too (the mirror trigger then copies the same values again).

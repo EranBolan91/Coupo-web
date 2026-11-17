@@ -1,4 +1,5 @@
 import { Coupon } from "../types/CouponType";
+import { formatMoney, minSpendOf } from "./discount";
 
 // Optional extras on a coupon: where to shop and its conditions.
 export type CouponTerms = Required<Pick<Coupon, "storeUrl" | "minOrder" | "usableAt" | "firstOrderOnly">>;
@@ -55,11 +56,13 @@ export const shopHost = (url: string) => new URL(url).hostname.replace(/^www\./,
 
 const usableAtLabel: Record<string, string> = { online: "Online only", "in-store": "In store only", both: "Online and in store" };
 
-// Short labels for the card, e.g. ["Online only", "Min. order $50", "First order only"].
+// Short labels for the card, e.g. ["Online only", "Min. spend $50", "First order only"].
 export const termLabels = (coupon: Partial<Coupon>): string[] => {
   const labels: string[] = [];
   if (coupon.usableAt && usableAtLabel[coupon.usableAt]) labels.push(usableAtLabel[coupon.usableAt]);
-  if (coupon.minOrder?.trim()) labels.push(`Min. order ${coupon.minOrder.trim()}`);
+  const minSpend = minSpendOf(coupon);
+  if (minSpend > 0) labels.push(`Min. spend ${formatMoney(minSpend, coupon.currency)}`);
+  else if (coupon.minOrder?.trim()) labels.push(`Min. order ${coupon.minOrder.trim()}`);
   if (coupon.firstOrderOnly) labels.push("First order only");
   return labels;
 };

@@ -12,6 +12,8 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import CouponTermsFields from "../coupons/CouponTermsFields";
 import { cleanTerms, termsError, termsOf } from "../../logic/couponTerms";
+import CouponDealFields from "../coupons/CouponDealFields";
+import { cleanDeal, dealError, dealOf } from "../../logic/discount";
 
 const toDateInput = (expiry?: Timestamp | null) => {
   const date = expiry?.toDate?.();
@@ -35,7 +37,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
   const [busy, setBusy] = useState(false);
   const [code, setCode] = useState(coupon.code);
   const [category, setCategory] = useState(coupon.category);
-  const [discount, setDiscount] = useState(String(coupon.discount));
+  const [deal, setDeal] = useState(() => dealOf(coupon));
   const [expiry, setExpiry] = useState(toDateInput(coupon.expiry));
   const [noExpiry, setNoExpiry] = useState(!coupon.expiry);
   const [description, setDescription] = useState(coupon.description ?? "");
@@ -46,7 +48,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
   const openEdit = () => {
     setCode(coupon.code);
     setCategory(coupon.category);
-    setDiscount(String(coupon.discount));
+    setDeal(dealOf(coupon));
     setExpiry(toDateInput(coupon.expiry));
     setNoExpiry(!coupon.expiry);
     setDescription(coupon.description ?? "");
@@ -54,10 +56,9 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
     setEditOpen(true);
   };
 
-  const discountNumber = Number(discount);
   const errors = {
     code: code.trim() ? undefined : "Code is required",
-    discount: Number.isInteger(discountNumber) && discountNumber >= 1 && discountNumber <= 100 ? undefined : "Enter a whole number from 1 to 100",
+    deal: dealError(deal),
     expiry: noExpiry || expiry ? undefined : "Expiry date is required",
     terms: termsError(terms),
   };
@@ -71,7 +72,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
       await adminUpdateCoupon(coupon, {
         code: code.trim().toUpperCase(),
         category,
-        discount: discountNumber,
+        ...cleanDeal(deal),
         expiry: noExpiry ? null : Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)),
         description: description.trim(),
         ...cleanTerms(terms),
@@ -140,7 +141,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
         }
       >
         <div className="space-y-5">
-          <div className="grid gap-5 sm:grid-cols-[1fr_9rem]">
+          <div className="grid gap-5">
             <Field label="Coupon code" htmlFor={`admin-code-${coupon.id}`} error={errors.code}>
               <input
                 id={`admin-code-${coupon.id}`}
@@ -148,18 +149,6 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
                 value={code}
                 spellCheck={false}
                 onChange={(e) => setCode(e.target.value)}
-              />
-            </Field>
-            <Field label="Discount (%)" htmlFor={`admin-discount-${coupon.id}`} error={errors.discount}>
-              <input
-                id={`admin-discount-${coupon.id}`}
-                type="number"
-                min={1}
-                max={100}
-                inputMode="numeric"
-                className="input input-bordered h-12 w-full bg-base-100"
-                value={discount}
-                onChange={(e) => setDiscount(e.target.value)}
               />
             </Field>
           </div>
@@ -205,6 +194,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
               </label>
             </Field>
           </div>
+          <CouponDealFields idPrefix={`admin-deal-${coupon.id}`} value={deal} onChange={setDeal} />
           <CouponTermsFields idPrefix={`admin-${coupon.id}`} value={terms} onChange={setTerms} />
           <Field label="Details" htmlFor={`admin-description-${coupon.id}`} hint="Optional">
             <textarea

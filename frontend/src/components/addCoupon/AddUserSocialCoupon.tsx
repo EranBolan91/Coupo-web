@@ -28,7 +28,7 @@ const AddUserSocialCoupon = () => {
           success: `${coupon.name} coupon shared. Thanks!`,
           error: "Couldn't share the coupon",
         });
-        track("add_coupon", { coupon_type: "socialCoupon" });
+        track("add_coupon", { coupon_type: "socialCoupon", discount_type: values.deal.discountType });
         ["usercoupons", "coupons"].forEach((key) => queryClient.invalidateQueries({ queryKey: [key] }));
       }}
     />

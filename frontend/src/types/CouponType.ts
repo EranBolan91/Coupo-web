@@ -10,7 +10,14 @@ export const couponSchema = z.object({
   username: z.string(),
   category: z.string(),
   userID: z.string().uuid(),
-  discount: z.number().min(1).max(100),
+  // Percent off (1-100) for "percent", the amount off for "amount", 0 for "shipping".
+  discount: z.number().min(0),
+  // Missing on older coupons, which are percent off. Read it with discountTypeOf (logic/discount.ts).
+  discountType: z.enum(["percent", "amount", "shipping"]).optional(),
+  // ISO code ("USD", "ILS"...) for the amount off and the minimum spend.
+  currency: z.string().optional(),
+  // Minimum order total for the code to work, in `currency`. null or missing = no minimum.
+  minSpend: z.number().positive().nullable().optional(),
   dislikes: z.number().min(0),
   // null = no expiry date (the coupon never expires).
   expiry: z.instanceof(Timestamp).nullable(),
@@ -20,6 +27,7 @@ export const couponSchema = z.object({
   type: z.enum(["coupon", "socialCoupon"]),
   // Optional terms (see logic/couponTerms.ts). Older coupons don't have them.
   storeUrl: z.string().optional(),
+  // Old free-text minimum order ("$50"). New coupons use minSpend instead.
   minOrder: z.string().optional(),
   usableAt: z.enum(["online", "in-store", "both", ""]).optional(),
   firstOrderOnly: z.boolean().optional(),

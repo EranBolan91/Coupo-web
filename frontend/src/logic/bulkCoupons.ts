@@ -1,18 +1,64 @@
-import { CouponTerms, emptyTerms, MIN_ORDER_MAX_LENGTH, normalizeStoreUrl } from "./couponTerms";
+import { CouponTerms, emptyTerms, normalizeStoreUrl } from "./couponTerms";
 import { Coupon } from "../types/CouponType";
 import { Timestamp } from "firebase/firestore";
+import { CouponDeal, CurrencyCode, MAX_AMOUNT, isCurrency } from "./discount";
 
 // Bulk import on /admin/import: turns a pasted CSV (or rows copied from a spreadsheet) into
 // admin coupons, checking each row the same way the coupon form would.
 
-export const IMPORT_COLUMNS = ["brand", "code", "discount", "expiry", "category", "description", "storeUrl", "minOrder", "usableAt", "firstOrderOnly"] as const;
+export const IMPORT_COLUMNS = ["brand", "code", "discount", "expiry", "category", "description", "storeUrl", "minSpend", "usableAt", "firstOrderOnly"] as const;
 type Column = (typeof IMPORT_COLUMNS)[number];
 const REQUIRED: Column[] = ["brand", "code", "discount", "expiry", "category"];
 
 export const IMPORT_TEMPLATE = [
   IMPORT_COLUMNS.join(","),
-  'asos,EXAMPLE20,20,2026-12-31,fashion,"20% off full-price items",asos.com,,online,no',
+  'asos,EXAMPLE20,20%,2026-12-31,fashion,"20% off full-price items",asos.com,,online,no',
+  "asos,EXAMPLE50,£50,2026-12-31,fashion,,asos.com,200,online,no",
+  "asos,FREESHIP,free shipping,never,fashion,,asos.com,£35,online,no",
 ].join("\n");
+
+// Currency symbols and names people write, longest first so "CA$" wins over "$".
+const CURRENCY_WORDS: [string, CurrencyCode][] = [
+  ["ca$", "CAD"], ["a$", "AUD"], ["r$", "BRL"], ["$", "USD"], ["€", "EUR"], ["£", "GBP"], ["₪", "ILS"], ["₹", "INR"], ["¥", "JPY"],
+  ["nis", "ILS"], ["shekels", "ILS"], ["shekel", "ILS"],
+];
+
+// "₪50", "50 ILS", "$12.50", "1,000", "50" → { amount, currency? }, or undefined if it isn't an amount.
+export const parseMoney = (input: string): { amount: number; currency?: CurrencyCode } | undefined => {
+  let text = input.trim().toLowerCase();
+  let currency: CurrencyCode | undefined;
+  const code = text.match(/\b([a-z]{3})\b/);
+  if (code && isCurrency(code[1].toUpperCase())) {
+    currency = code[1].toUpperCase() as CurrencyCode;
+    text = text.replace(code[0], "");
+  } else {
+    const word = CURRENCY_WORDS.find(([w]) => text.includes(w));
+    if (word) {
+      currency = word[1];
+      text = text.replace(word[0], "");
+    }
+  }
+  text = text.replace(/[\s,]/g, "");
+  if (!/^\d+(\.\d{1,2})?$/.test(text)) return undefined;
+  const amount = Number(text);
+  return amount > 0 && amount <= MAX_AMOUNT ? { amount, currency } : undefined;
+};
+
+// The discount cell: "20" or "20%" is percent off (as before), "free shipping" is free shipping, and an
+// amount with its currency ("₪50", "50 ILS", "$10") is an amount off.
+export const parseDiscount = (
+  input: string
+): { type: CouponDeal["discountType"]; value: number; currency?: CurrencyCode } | { error: string } => {
+  const text = input.trim().toLowerCase();
+  if (/^(free\s*)?shipping$|^free\s*delivery$/.test(text)) return { type: "shipping", value: 0 };
+  if (/^\d+(\.\d+)?\s*%?$/.test(text)) {
+    const value = Number(text.replace("%", "").trim());
+    return Number.isInteger(value) && value >= 1 && value <= 100 ? { type: "percent", value } : { error: "Percent off must be a whole number from 1 to 100" };
+  }
+  const money = parseMoney(text);
+  if (!money) return { error: 'Discount must be like 20%, ₪50, 50 ILS or "free shipping"' };
+  return money.currency ? { type: "amount", value: money.amount, currency: money.currency } : { error: "Add the currency, like ₪50 or 50 ILS" };
+};
 
 // Splits CSV text into rows of cells. Handles quoted cells ("a, b" and "say ""hi""") and line breaks
 // inside quotes. Uses tabs instead of commas when the first line has a tab (rows pasted from a spreadsheet).
@@ -58,7 +104,17 @@ export const parseCsv = (text: string): string[][] => {
 // "Store URL", "store_url" and "storeurl" all mean storeUrl.
 const columnFor = (header: string): Column | undefined => {
   const key = header.toLowerCase().replace(/[^a-z]/g, "");
-  const aliases: Record<string, Column> = { store: "brand", name: "brand", link: "storeUrl", url: "storeUrl", details: "description" };
+  const aliases: Record<string, Column> = {
+    store: "brand",
+    name: "brand",
+    link: "storeUrl",
+    url: "storeUrl",
+    details: "description",
+    // Older templates had a free-text minOrder column; amounts in it become the minimum spend.
+    minorder: "minSpend",
+    minimumspend: "minSpend",
+    minimumorder: "minSpend",
+  };
   return IMPORT_COLUMNS.find((c) => c.toLowerCase() === key) ?? aliases[key];
 };
 
@@ -122,7 +178,7 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
     const brand = value.brand.toLowerCase().replace(/\s+/g, " ");
     const code = value.code.toUpperCase();
     const category = context.categories.get(value.category.toLowerCase());
-    const discount = Number(value.discount.replace("%", ""));
+    const parsed = parseDiscount(value.discount);
     const noExpiry = isNoExpiry(value.expiry);
     const expiry = noExpiry ? undefined : parseExpiry(value.expiry);
 
@@ -130,7 +186,17 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
     else if (!context.brands.has(brand)) notes.push("No logo for this brand yet, so the card shows its first letter");
     if (!code) problems.push("Missing code");
     else if (/\s/.test(code)) problems.push("Code can't contain spaces");
-    if (!Number.isInteger(discount) || discount < 1 || discount > 100) problems.push("Discount must be a whole number from 1 to 100");
+    if ("error" in parsed) problems.push(parsed.error);
+    const minSpend = value.minSpend.trim() ? parseMoney(value.minSpend) : undefined;
+    if (value.minSpend.trim() && !minSpend) problems.push("Minimum spend must be an amount, like 100 or ₪100");
+    const currency = ("error" in parsed ? undefined : parsed.currency) ?? minSpend?.currency;
+    if (minSpend && !currency) problems.push("Add the currency to the minimum spend, like ₪100 or 100 ILS");
+    if (!("error" in parsed) && parsed.type === "amount" && minSpend && minSpend.currency && parsed.currency && minSpend.currency !== parsed.currency) {
+      problems.push("Discount and minimum spend are in different currencies");
+    }
+    if (!("error" in parsed) && parsed.type === "amount" && minSpend && parsed.value >= minSpend.amount) {
+      problems.push("Minimum spend should be more than the amount off");
+    }
     if (!expiry && !noExpiry) problems.push('Expiry must be a date like 2026-12-31 or 31/12/2026, or blank / "never" for no expiry');
     else if (expiry && expiry < context.today) problems.push("Already expired");
     if (!category) problems.push(value.category ? `No category "${value.category}". Add it on the Categories page first` : "Missing category");
@@ -140,8 +206,6 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
       terms.storeUrl = normalizeStoreUrl(value.storeUrl);
       if (!terms.storeUrl) problems.push("Store link isn't a web address");
     }
-    terms.minOrder = value.minOrder;
-    if (terms.minOrder.length > MIN_ORDER_MAX_LENGTH) problems.push(`Min. order must be under ${MIN_ORDER_MAX_LENGTH} characters`);
     const usableAt = value.usableAt.toLowerCase().replace(/\s+/g, "-");
     if (usableAt === "online" || usableAt === "in-store" || usableAt === "both") terms.usableAt = usableAt;
     else if (usableAt) problems.push('Usable at must be "online", "in-store" or "both"');
@@ -154,14 +218,17 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
     }
 
     const row: ImportRow = { line: i + 2, brand, code, discount: value.discount, expiry: noExpiry ? "No expiry" : expiry ?? value.expiry, problems, notes };
-    if (problems.length === 0 && (expiry || noExpiry) && category) {
+    if (problems.length === 0 && (expiry || noExpiry) && category && !("error" in parsed)) {
       const [y, m, d] = (expiry ?? "").split("-").map(Number);
       row.coupon = {
         name: brand,
         imgUrl: context.brands.get(brand) ?? "",
         category,
         code,
-        discount,
+        discountType: parsed.type,
+        discount: parsed.value,
+        currency: currency ?? "USD",
+        minSpend: minSpend?.amount ?? null,
         description: value.description,
         userID: "",
         username: "Coupo",

@@ -1,3 +1,4 @@
+import { couponTitle, dealText } from "../../logic/discount";
 import CouponCard, { CouponCardSkeleton } from "../coupons/components/CouponCard";
 import ReportCouponButton from "../../components/coupons/ReportCouponButton";
 import ShareCouponButton from "../../components/coupons/ShareCouponButton";
@@ -47,7 +48,7 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
   usePageMeta(
     coupon
       ? {
-          title: Number(coupon.discount) > 0 ? `${coupon.discount}% off at ${coupon.name}` : `Coupon for ${coupon.name}`,
+          title: couponTitle(coupon),
           description: [
             coupon.description
               ? coupon.description.replace(/\s+/g, " ").trim().slice(0, 160)
@@ -145,7 +146,8 @@ const CouponPage = ({ type }: { type: Coupon["type"] }) => {
           <div className="min-w-0">
             <p className="text-sm font-bold uppercase tracking-wider text-base-content/50">{isSocial ? "Social coupon" : "Coupon"}</p>
             <h1 className="mt-2 text-5xl font-black leading-[0.95] tracking-tight md:text-6xl">
-              {coupon.discount}% off at <span className="capitalize">{coupon.name}</span>
+              {dealText(coupon) ? `${dealText(coupon)} at ` : "Coupon for "}
+              <span className="capitalize">{coupon.name}</span>
             </h1>
             {coupon.description && <p className="mt-5 max-w-[60ch] whitespace-pre-line text-lg text-base-content/80">{coupon.description}</p>}
             <dl className="mt-8 grid max-w-lg grid-cols-[7rem_minmax(0,1fr)] gap-x-4 gap-y-3 text-base">

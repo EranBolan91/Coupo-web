@@ -317,6 +317,21 @@ await check("new coupon gets storeSlug and a Stores summary; rename and delete m
   await assertSucceeds(deleteDoc(doc(alice, "UserCoupons/alice/Coupons/st1")));
   await waitFor(async () => (await readRaw("Stores/zeta")) === null);
 });
+await check("fixed-amount coupon: owner can save it, and the Stores summary doesn't read the amount as a percent", async () => {
+  await assertSucceeds(setDoc(doc(alice, "UserCoupons/alice/Coupons/amt1"), {
+    ...coupon("alice"), name: "Amount Shop", discountType: "amount", discount: 50, currency: "ILS", minSpend: 200,
+  }));
+  await waitFor(async () => {
+    const s = await readRaw("Stores/amount-shop");
+    return s?.offers?.[0]?.discount === 0 && s?.offers?.[0]?.discountType === "amount";
+  });
+  const p = await readRaw("Coupons/amt1");
+  if (p?.discountType !== "amount" || p?.currency !== "ILS" || p?.minSpend !== 200) throw new Error("public copy: " + JSON.stringify(p));
+  await assertSucceeds(updateDoc(doc(alice, "UserCoupons/alice/Coupons/amt1"), { discountType: "percent", discount: 30, minSpend: null }));
+  await waitFor(async () => (await readRaw("Stores/amount-shop"))?.offers?.[0]?.discount === 30);
+  await assertSucceeds(deleteDoc(doc(alice, "UserCoupons/alice/Coupons/amt1")));
+  await waitFor(async () => (await readRaw("Stores/amount-shop")) === null);
+});
 await check("admin coupon written straight to Coupons gets storeSlug too", async () => {
   await assertSucceeds(setDoc(doc(admin, "Coupons/st2"), { ...coupon(""), name: "Big Shop!" }));
   await waitFor(async () => (await readRaw("Coupons/st2"))?.storeSlug === "big-shop" && (await readRaw("Stores/big-shop"))?.count === 1);

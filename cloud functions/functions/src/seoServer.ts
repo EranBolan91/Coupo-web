@@ -41,7 +41,7 @@ const cached = <T>(load: () => Promise<T>, label: string) => {
   };
 };
 
-const fields = ["name", "code", "discount", "category", "description", "imgUrl", "username", "likes", "dislikes", "expiry", "createdAt", "updatedAt"];
+const fields = ["name", "code", "discount", "discountType", "currency", "minSpend", "category", "description", "imgUrl", "username", "likes", "dislikes", "expiry", "createdAt", "updatedAt"];
 
 // Every public coupon (store and social), for category pages and the sitemap.
 export const getFeed = cached(async (): Promise<FeedCoupon[]> => {

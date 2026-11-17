@@ -1,3 +1,4 @@
+import { tagParts } from "../../../logic/discount";
 import { motion, useAnimationControls, useReducedMotion } from "motion/react";
 import { track } from "../../../analytics";
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
@@ -65,6 +66,7 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
   const isExpired = (shown.expiry?.toMillis?.() ?? Infinity) < Date.now();
   const shopUrl = shopLink(shown);
   const terms = termLabels(shown);
+  const tagText = tagParts(shown);
   const result = latestResult(shown);
 
   const answer = async (worked: boolean) => {
@@ -150,8 +152,8 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
                   isExpired ? "bg-base-300 text-base-content/60" : "bg-secondary text-secondary-content"
                 }`}
               >
-                <span className="text-[1.75rem] tracking-tight">{shown.discount || 0}%</span>
-                <span className="text-xs uppercase tracking-wider">off</span>
+                <span className={`${tagText.big.length > 5 || tagText.small.length > 3 ? "text-[1.3rem]" : "text-[1.75rem]"} tracking-tight`}>{tagText.big}</span>
+                <span className="text-xs uppercase tracking-wider">{tagText.small}</span>
               </span>
             </motion.div>
             <span className={`text-[0.7rem] font-bold uppercase tracking-wide ${isExpired ? "text-error" : "text-base-content/55"}`}>
