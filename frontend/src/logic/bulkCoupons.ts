@@ -1,20 +1,23 @@
 import { CouponTerms, emptyTerms, normalizeStoreUrl } from "./couponTerms";
 import { Coupon } from "../types/CouponType";
 import { Timestamp } from "firebase/firestore";
+import { dealUrlError } from "./dealLinks";
 import { CouponDeal, CurrencyCode, MAX_AMOUNT, isCurrency } from "./discount";
 
 // Bulk import on /admin/import: turns a pasted CSV (or rows copied from a spreadsheet) into
 // admin coupons, checking each row the same way the coupon form would.
 
-export const IMPORT_COLUMNS = ["brand", "code", "discount", "expiry", "category", "description", "storeUrl", "minSpend", "usableAt", "firstOrderOnly"] as const;
+export const IMPORT_COLUMNS = ["brand", "code", "discount", "expiry", "category", "description", "storeUrl", "minSpend", "usableAt", "firstOrderOnly", "dealLink"] as const;
 type Column = (typeof IMPORT_COLUMNS)[number];
-const REQUIRED: Column[] = ["brand", "code", "discount", "expiry", "category"];
+// Plus a code or a dealLink column (each row has one or the other).
+const REQUIRED: Column[] = ["brand", "discount", "expiry", "category"];
 
 export const IMPORT_TEMPLATE = [
   IMPORT_COLUMNS.join(","),
-  'asos,EXAMPLE20,20%,2026-12-31,fashion,"20% off full-price items",asos.com,,online,no',
-  "asos,EXAMPLE50,£50,2026-12-31,fashion,,asos.com,200,online,no",
-  "asos,FREESHIP,free shipping,never,fashion,,asos.com,£35,online,no",
+  'asos,EXAMPLE20,20%,2026-12-31,fashion,"20% off full-price items",asos.com,,online,no,',
+  "asos,EXAMPLE50,£50,2026-12-31,fashion,,asos.com,200,online,no,",
+  "asos,FREESHIP,free shipping,never,fashion,,asos.com,£35,online,no,",
+  "asos,,15%,never,fashion,15% off when you open the link,,,online,no,asos.com/sale",
 ].join("\n");
 
 // Currency symbols and names people write, longest first so "CA$" wins over "$".
@@ -114,6 +117,8 @@ const columnFor = (header: string): Column | undefined => {
     minorder: "minSpend",
     minimumspend: "minSpend",
     minimumorder: "minSpend",
+    deallink: "dealLink",
+    dealurl: "dealLink",
   };
   return IMPORT_COLUMNS.find((c) => c.toLowerCase() === key) ?? aliases[key];
 };
@@ -162,7 +167,8 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
   const [header, ...lines] = parseCsv(text);
   if (!header) return { rows: [] };
   const columns = header.map(columnFor);
-  const missing = REQUIRED.filter((c) => !columns.includes(c));
+  const missing: string[] = REQUIRED.filter((c) => !columns.includes(c));
+  if (!columns.includes("code") && !columns.includes("dealLink")) missing.push("code (or dealLink)");
   if (missing.length) {
     return { rows: [], error: `The first line must name the columns. Missing: ${missing.join(", ")}.` };
   }
@@ -177,6 +183,8 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
     const notes: string[] = [];
     const brand = value.brand.toLowerCase().replace(/\s+/g, " ");
     const code = value.code.toUpperCase();
+    // A row with a deal link and no code is a link coupon.
+    const dealUrl = value.dealLink.trim() ? normalizeStoreUrl(value.dealLink) : "";
     const category = context.categories.get(value.category.toLowerCase());
     const parsed = parseDiscount(value.discount);
     const noExpiry = isNoExpiry(value.expiry);
@@ -184,7 +192,11 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
 
     if (!brand) problems.push("Missing brand");
     else if (!context.brands.has(brand)) notes.push("No logo for this brand yet, so the card shows its first letter");
-    if (!code) problems.push("Missing code");
+    if (code && value.dealLink.trim()) problems.push("Give a code or a deal link, not both");
+    else if (value.dealLink.trim()) {
+      const linkIssue = dealUrlError(value.dealLink);
+      if (linkIssue) problems.push("Deal link isn't a web address");
+    } else if (!code) problems.push("Missing code (or a deal link)");
     else if (/\s/.test(code)) problems.push("Code can't contain spaces");
     if ("error" in parsed) problems.push(parsed.error);
     const minSpend = value.minSpend.trim() ? parseMoney(value.minSpend) : undefined;
@@ -211,20 +223,21 @@ export const checkImport = (text: string, context: ImportContext): ImportResult 
     else if (usableAt) problems.push('Usable at must be "online", "in-store" or "both"');
     terms.firstOrderOnly = yes(value.firstOrderOnly);
 
-    if (brand && code) {
-      const key = couponKey(brand, code);
+    if (brand && (code || dealUrl)) {
+      const key = couponKey(brand, code || dealUrl);
       if (seen.has(key)) problems.push(context.existing.has(key) ? "Already on Coupo" : "Listed twice");
       seen.add(key);
     }
 
-    const row: ImportRow = { line: i + 2, brand, code, discount: value.discount, expiry: noExpiry ? "No expiry" : expiry ?? value.expiry, problems, notes };
+    const row: ImportRow = { line: i + 2, brand, code: code || dealUrl || value.dealLink, discount: value.discount, expiry: noExpiry ? "No expiry" : expiry ?? value.expiry, problems, notes };
     if (problems.length === 0 && (expiry || noExpiry) && category && !("error" in parsed)) {
       const [y, m, d] = (expiry ?? "").split("-").map(Number);
       row.coupon = {
         name: brand,
         imgUrl: context.brands.get(brand) ?? "",
         category,
-        code,
+        code: dealUrl ? "" : code,
+        ...(dealUrl ? { dealUrl } : {}),
         discountType: parsed.type,
         discount: parsed.value,
         currency: currency ?? "USD",

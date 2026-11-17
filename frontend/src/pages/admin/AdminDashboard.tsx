@@ -1,4 +1,5 @@
 import { PiArrowRightBold, PiFlagBold } from "react-icons/pi";
+import { couponLabel } from "../../logic/dealLinks";
 import WeeklyChart, { WeekBar } from "./components/WeeklyChart";
 import { BrandImage } from "../coupons/components/CouponCard";
 import { collectionsList } from "../../../firebaseCollections";
@@ -68,7 +69,7 @@ const CouponLine = ({ coupon, aside }: { coupon: Coupon; aside: React.ReactNode 
       <BrandImage name={coupon.name} src={coupon.imgUrl} className="size-9" />
       <span className="min-w-0 flex-1">
         <span className="block truncate font-bold capitalize">{coupon.name}</span>
-        <span className="block truncate font-mono text-xs font-bold uppercase tracking-wider text-base-content/60">{coupon.code}</span>
+        <span className="block truncate font-mono text-xs font-bold uppercase tracking-wider text-base-content/60">{couponLabel(coupon)}</span>
       </span>
       <span className="shrink-0 text-right text-sm font-semibold">{aside}</span>
     </Link>

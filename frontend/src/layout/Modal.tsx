@@ -1,4 +1,6 @@
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import CouponCodeText from "../components/coupons/CouponCodeText";
+import { couponLabel } from "../logic/dealLinks";
 import { removeUserCoupon } from "../database/databaseCalls";
 import { useQueryClient } from "@tanstack/react-query";
 import ModalDialog from "../components/Modal/Modal";
@@ -21,8 +23,8 @@ const Modal = ({ coupon, open, setOpen }: Props) => {
     setOpen(false);
     toast
       .promise(removeUserCoupon(userDocument?.userUID ?? "", coupon.id, coupon.type), {
-        loading: `Removing ${coupon.code}...`,
-        success: `${coupon.code} removed`,
+        loading: `Removing ${couponLabel(coupon)}...`,
+        success: `${couponLabel(coupon)} removed`,
         error: "Couldn't remove the coupon",
       })
       .then(() => {
@@ -41,7 +43,7 @@ const Modal = ({ coupon, open, setOpen }: Props) => {
       title={`Remove ${coupon.name}?`}
       description={
         <>
-          The code <span className="font-mono font-bold text-base-content">{coupon.code}</span> will disappear from Coupo for
+          The <CouponCodeText coupon={coupon} /> will disappear from Coupo for
           everyone. This can't be undone.
         </>
       }

@@ -1,4 +1,5 @@
 import { PiArrowRightBold, PiMagnifyingGlassBold, PiPlusBold } from "react-icons/pi";
+import { couponLabel } from "../../logic/dealLinks";
 import { getSearches, SEARCH_LOG_LIMIT } from "../../database/searches";
 import { groupSearches, popularCoupons, storeStats } from "../../logic/analytics";
 import { BrandImage } from "../coupons/components/CouponCard";
@@ -277,7 +278,7 @@ const AdminAnalytics = () => {
                           <span className="min-w-0 flex-1">
                             <span className="block truncate font-bold capitalize">{c.name}</span>
                             <span className="block truncate font-mono text-xs font-bold uppercase tracking-wider text-base-content/60">
-                              {c.code}
+                              {couponLabel(c)}
                             </span>
                           </span>
                           <span className="shrink-0 text-right text-sm font-semibold">

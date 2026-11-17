@@ -1,4 +1,5 @@
 import { hasReported, reportCoupon, ReportReason, reportReasons } from "../../database/reports";
+import CouponCodeText from "./CouponCodeText";
 import LoginModal from "../../pages/coupons/components/LoginModal";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCurrentUser } from "../../hooks/useCurrentUser";
@@ -74,7 +75,7 @@ const ReportCouponButton = ({ coupon }: { coupon: Coupon }) => {
         title="Report this coupon"
         description={
           <>
-            {coupon.name}, code <span className="font-mono font-bold text-base-content">{coupon.code}</span>. Only the Coupo team sees reports.
+            {coupon.name}, <CouponCodeText coupon={coupon} />. Only the Coupo team sees reports.
           </>
         }
         footer={

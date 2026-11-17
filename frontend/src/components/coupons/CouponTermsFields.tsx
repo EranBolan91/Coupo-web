@@ -8,6 +8,8 @@ interface Props {
   idPrefix: string;
   // Show errors only after the user tried to submit (or always, in edit dialogs).
   showErrors?: boolean;
+  // Link coupons: the deal link is already where to shop.
+  hideStoreUrl?: boolean;
 }
 
 const placeOptions: { value: CouponTerms["usableAt"]; label: string }[] = [
@@ -18,13 +20,14 @@ const placeOptions: { value: CouponTerms["usableAt"]; label: string }[] = [
 ];
 
 // Store link + conditions (minimum spend is in CouponDealFields). Used by the share form and the owner/admin edit dialogs.
-const CouponTermsFields = ({ value, onChange, idPrefix, showErrors = true }: Props) => {
+const CouponTermsFields = ({ value, onChange, idPrefix, showErrors = true, hideStoreUrl = false }: Props) => {
   const set = <K extends keyof CouponTerms>(key: K, next: CouponTerms[K]) => onChange({ ...value, [key]: next });
   const legacyMinOrder = value.minOrder !== "";
 
   return (
     <div className="space-y-6">
-      <div className={`grid gap-6 ${legacyMinOrder ? "sm:grid-cols-[1fr_12rem]" : ""}`}>
+      <div className={`grid gap-6 ${legacyMinOrder && !hideStoreUrl ? "sm:grid-cols-[1fr_12rem]" : ""}`}>
+        {!hideStoreUrl && (
         <Field
           label="Store link"
           htmlFor={`${idPrefix}-storeUrl`}
@@ -44,6 +47,7 @@ const CouponTermsFields = ({ value, onChange, idPrefix, showErrors = true }: Pro
             onChange={(e) => set("storeUrl", e.target.value)}
           />
         </Field>
+        )}
         {/* Older coupons have a free-text minimum order. New ones use Minimum spend (CouponDealFields). */}
         {legacyMinOrder && (
           <Field

@@ -1,4 +1,8 @@
 import { adminDeleteCoupon, adminUpdateCoupon } from "../../database/coupons";
+import CouponCodeText from "../coupons/CouponCodeText";
+import { couponKindOf, couponLabel, dealUrlError } from "../../logic/dealLinks";
+import { normalizeStoreUrl } from "../../logic/couponTerms";
+import CouponKindToggle from "../coupons/CouponKindToggle";
 import { PiPencilSimpleBold, PiTrashBold } from "react-icons/pi";
 import { getCategories } from "../../database/databaseCalls";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -35,7 +39,9 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [kind, setKind] = useState(() => couponKindOf(coupon));
   const [code, setCode] = useState(coupon.code);
+  const [dealUrl, setDealUrl] = useState(coupon.dealUrl ?? "");
   const [category, setCategory] = useState(coupon.category);
   const [deal, setDeal] = useState(() => dealOf(coupon));
   const [expiry, setExpiry] = useState(toDateInput(coupon.expiry));
@@ -46,7 +52,9 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
   const { data: categories = [] } = useQuery({ queryKey: ["categories"], queryFn: getCategories, enabled: editOpen });
 
   const openEdit = () => {
+    setKind(couponKindOf(coupon));
     setCode(coupon.code);
+    setDealUrl(coupon.dealUrl ?? "");
     setCategory(coupon.category);
     setDeal(dealOf(coupon));
     setExpiry(toDateInput(coupon.expiry));
@@ -57,10 +65,11 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
   };
 
   const errors = {
-    code: code.trim() ? undefined : "Code is required",
+    code: kind === "link" || code.trim() ? undefined : "Code is required",
+    dealUrl: kind === "link" ? dealUrlError(dealUrl) : undefined,
     deal: dealError(deal),
     expiry: noExpiry || expiry ? undefined : "Expiry date is required",
-    terms: termsError(terms),
+    terms: termsError(kind === "link" ? { ...terms, storeUrl: "" } : terms),
   };
   const invalid = Object.values(errors).some(Boolean);
 
@@ -70,12 +79,14 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
     const [y, m, d] = expiry.split("-").map(Number);
     try {
       await adminUpdateCoupon(coupon, {
-        code: code.trim().toUpperCase(),
+        code: kind === "link" ? "" : code.trim().toUpperCase(),
+        // "" turns a link coupon back into a code coupon.
+        dealUrl: kind === "link" ? normalizeStoreUrl(dealUrl) : "",
         category,
         ...cleanDeal(deal),
         expiry: noExpiry ? null : Timestamp.fromDate(new Date(y, m - 1, d, 23, 59, 59)),
         description: description.trim(),
-        ...cleanTerms(terms),
+        ...cleanTerms(kind === "link" ? { ...terms, storeUrl: "" } : terms),
       });
       toast.success("Coupon updated");
       setEditOpen(false);
@@ -92,7 +103,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
     try {
       await adminDeleteCoupon(coupon);
       await dismissReports(coupon.id).catch(() => {});
-      toast.success(`${coupon.code} deleted`);
+      toast.success(`${couponLabel(coupon)} deleted`);
       setDeleteOpen(false);
       refreshCouponQueries(queryClient);
       onDeleted?.();
@@ -141,16 +152,31 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
         }
       >
         <div className="space-y-5">
-          <div className="grid gap-5">
-            <Field label="Coupon code" htmlFor={`admin-code-${coupon.id}`} error={errors.code}>
-              <input
-                id={`admin-code-${coupon.id}`}
-                className="input input-bordered h-12 w-full bg-base-100 font-mono font-bold uppercase tracking-wider"
-                value={code}
-                spellCheck={false}
-                onChange={(e) => setCode(e.target.value)}
-              />
-            </Field>
+          <div className="grid gap-4">
+            <CouponKindToggle value={kind} onChange={setKind} />
+            {kind === "code" ? (
+              <Field label="Coupon code" htmlFor={`admin-code-${coupon.id}`} error={errors.code}>
+                <input
+                  id={`admin-code-${coupon.id}`}
+                  className="input input-bordered h-12 w-full bg-base-100 font-mono font-bold uppercase tracking-wider"
+                  value={code}
+                  spellCheck={false}
+                  onChange={(e) => setCode(e.target.value)}
+                />
+              </Field>
+            ) : (
+              <Field label="Deal link" htmlFor={`admin-dealurl-${coupon.id}`} error={errors.dealUrl}>
+                <input
+                  id={`admin-dealurl-${coupon.id}`}
+                  type="url"
+                  inputMode="url"
+                  className="input input-bordered h-12 w-full bg-base-100"
+                  value={dealUrl}
+                  spellCheck={false}
+                  onChange={(e) => setDealUrl(e.target.value)}
+                />
+              </Field>
+            )}
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Category" htmlFor={`admin-category-${coupon.id}`}>
@@ -195,7 +221,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
             </Field>
           </div>
           <CouponDealFields idPrefix={`admin-deal-${coupon.id}`} value={deal} onChange={setDeal} />
-          <CouponTermsFields idPrefix={`admin-${coupon.id}`} value={terms} onChange={setTerms} />
+          <CouponTermsFields idPrefix={`admin-${coupon.id}`} value={terms} onChange={setTerms} hideStoreUrl={kind === "link"} />
           <Field label="Details" htmlFor={`admin-description-${coupon.id}`} hint="Optional">
             <textarea
               id={`admin-description-${coupon.id}`}
@@ -214,7 +240,7 @@ const AdminCouponActions = ({ coupon, onDeleted, size = "md" }: Props) => {
         title="Delete this coupon?"
         description={
           <>
-            {coupon.name}, code <span className="font-mono font-bold text-base-content">{coupon.code}</span>.{" "}
+            {coupon.name}, <CouponCodeText coupon={coupon} />.{" "}
             {coupon.userID ? "It's also removed from the profile of the person who shared it. " : ""}This can't be undone.
           </>
         }

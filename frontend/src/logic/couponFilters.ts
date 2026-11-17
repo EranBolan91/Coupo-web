@@ -1,4 +1,5 @@
 import { Coupon } from "../types/CouponType";
+import { dealHost } from "./dealLinks";
 import { compareDiscounts, percentValue } from "./discount";
 
 // True when every word of the search appears somewhere in the coupon (brand, code, category,
@@ -6,7 +7,7 @@ import { compareDiscounts, percentValue } from "./discount";
 export const matchesSearch = (coupon: Coupon, search: string) => {
   const words = search.toLowerCase().split(/\s+/).filter(Boolean);
   if (words.length === 0) return true;
-  const text = [coupon.name, coupon.code, coupon.category, coupon.description, coupon.username]
+  const text = [coupon.name, coupon.code, dealHost(coupon), coupon.category, coupon.description, coupon.username]
     .filter(Boolean)
     .join(" ")
     .toLowerCase();

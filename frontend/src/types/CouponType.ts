@@ -5,7 +5,11 @@ export const couponSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   likes: z.number().min(0),
+  // "" on link coupons (see dealUrl).
   code: z.string(),
+  // Link coupons: the discount applies when you open this link, there is no code. Read it with
+  // dealLink (logic/dealLinks.ts), which allows only http(s). Missing on code coupons.
+  dealUrl: z.string().optional(),
   imgUrl: z.string().url(),
   username: z.string(),
   category: z.string(),

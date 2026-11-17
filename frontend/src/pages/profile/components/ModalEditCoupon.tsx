@@ -1,4 +1,5 @@
 import { getCategories, updateCoupon } from "../../../database/databaseCalls";
+import CouponCodeText from "../../../components/coupons/CouponCodeText";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import Modal from "../../../components/Modal/Modal";
 import Field from "../../../components/ui/Field";
@@ -56,7 +57,7 @@ const ModalEditCoupon = ({ coupon, refetchData }: Props) => {
         title={`Edit ${coupon.name}`}
         description={
           <>
-            Code <span className="font-mono font-bold text-base-content">{coupon.code}</span>
+            <span className="inline-block first-letter:uppercase"><CouponCodeText coupon={coupon} /></span>
           </>
         }
         footer={
