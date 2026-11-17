@@ -22,7 +22,7 @@ const ownerCopy = async (coupon: Coupon) => {
   return (await getDoc(ref)).exists() ? ref : null;
 };
 
-export type AdminCouponEdit = Pick<Coupon, "code" | "category" | "expiry" | "description"> & CouponDeal & CouponTerms;
+export type AdminCouponEdit = Pick<Coupon, "code" | "category" | "expiry" | "description"> & { dealUrl: string } & CouponDeal & CouponTerms;
 
 // Admin edit of any coupon: the public doc and the owner's copy are updated together, so the
 // owner's profile shows the change too (the mirror trigger then copies the same values again).

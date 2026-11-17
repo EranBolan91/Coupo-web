@@ -1,4 +1,5 @@
 import { useMonthLeaderboard, useSharerStats } from "../../../hooks/useSharerStats";
+import { couponLabel, isLinkCoupon } from "../../../logic/dealLinks";
 import { POINTS, badges, impactSentence, monthName, thisMonth } from "../../../logic/points";
 import { PiCopyBold, PiThumbsDownBold, PiThumbsUpBold } from "react-icons/pi";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
@@ -90,7 +91,7 @@ const Impact = () => {
             <li key={coupon.id} className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:gap-4">
               <span className="min-w-0 flex-1">
                 <Link to={couponPath(coupon)} className="block truncate font-bold hover:underline">
-                  {brand(coupon.name)} <span className="font-mono text-sm uppercase text-base-content/60">{coupon.code}</span>
+                  {brand(coupon.name)} <span className={`font-mono text-sm text-base-content/60 ${isLinkCoupon(coupon) ? "" : "uppercase"}`}>{couponLabel(coupon)}</span>
                 </Link>
                 <span className="block text-sm text-base-content/70">{impactSentence(coupon)}</span>
               </span>

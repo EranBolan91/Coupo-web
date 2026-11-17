@@ -15,12 +15,17 @@ import { useEffect, useState } from "react";
 import SearchSelect from "../ui/SearchSelect";
 import Field from "../ui/Field";
 import { newBrandError, sameBrand } from "../../logic/newBrands";
+import { CouponKind, dealUrlError } from "../../logic/dealLinks";
+import { normalizeStoreUrl } from "../../logic/couponTerms";
+import CouponKindToggle from "../coupons/CouponKindToggle";
 
 export type CouponFormValues = {
   name: string; // brand
   imgUrl: string;
   category: string;
-  code: string;
+  kind: CouponKind; // a code to type, or a link that applies the discount
+  code: string; // "" for a link coupon
+  dealUrl: string; // the deal link (normalized on submit), "" for a code coupon
   deal: CouponDeal; // discount type, amount, currency and minimum spend (not a react-hook-form field)
   expiry: string; // yyyy-mm-dd from the date input
   noExpiry: boolean; // "No expiry date" ticked: expiry is ignored and the coupon never expires
@@ -72,7 +77,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<CouponFormValues>({
-    defaultValues: { name: "", imgUrl: "", category: "", code: "", expiry: "", noExpiry: false, description: "", terms: emptyTerms },
+    defaultValues: { name: "", imgUrl: "", category: "", kind: "code", code: "", dealUrl: "", expiry: "", noExpiry: false, description: "", terms: emptyTerms },
   });
 
   // Brand and category are required; register them so react-hook-form validates them.
@@ -92,7 +97,8 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     name: values.name,
     imgUrl: values.imgUrl,
     category: values.category,
-    code: values.code?.toUpperCase(),
+    code: values.kind === "link" ? "" : values.code?.toUpperCase(),
+    ...(values.kind === "link" ? { dealUrl: normalizeStoreUrl(values.dealUrl ?? "") } : {}),
     ...cleanDeal(deal),
     description: values.description,
     username: ownerName ?? (userDocument ? `${userDocument.firstName} ${userDocument.lastName}`.trim() : ""),
@@ -103,13 +109,21 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
     type: brandMode === "social" ? "socialCoupon" : "coupon",
-    ...cleanTerms(terms),
+    ...cleanTerms(values.kind === "link" ? { ...terms, storeUrl: "" } : terms),
   };
 
   const submit: SubmitHandler<CouponFormValues> = async (form) => {
-    if (termsError(terms) || dealError(deal)) return;
+    if (termsError(form.kind === "link" ? { ...terms, storeUrl: "" } : terms) || dealError(deal)) return;
     try {
-      await onSubmit({ ...form, code: form.code.trim().toUpperCase(), deal: cleanDeal(deal), terms: cleanTerms(terms) });
+      const isLink = form.kind === "link";
+      await onSubmit({
+        ...form,
+        code: isLink ? "" : form.code.trim().toUpperCase(),
+        dealUrl: isLink ? normalizeStoreUrl(form.dealUrl) : "",
+        deal: cleanDeal(deal),
+        // A link coupon's link is already where to shop, so it has no separate store link.
+        terms: cleanTerms(isLink ? { ...terms, storeUrl: "" } : terms),
+      });
       reset();
       setTerms(emptyTerms);
       // Keep the currency: people usually share several codes in the same one.
@@ -200,18 +214,39 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
           </Field>
         </div>
 
-        <Field label="Coupon code" htmlFor="code" className="sm:w-1/2" error={errors.code?.message}>
-          <input
-            id="code"
-            type="text"
-            placeholder="SAVE20"
-            autoCapitalize="characters"
-            spellCheck={false}
-            className="input input-bordered h-12 w-full bg-base-100 font-mono font-bold uppercase tracking-wider"
-            aria-invalid={!!errors.code}
-            {...register("code", { required: "Code is required", validate: (v) => v.trim() !== "" || "Code is required" })}
-          />
-        </Field>
+        <div className="space-y-4">
+          <CouponKindToggle value={values.kind} onChange={(kind) => setValue("kind", kind)} />
+          {values.kind === "code" ? (
+            <Field label="Coupon code" htmlFor="code" className="sm:w-1/2" error={errors.code?.message}>
+              <input
+                id="code"
+                type="text"
+                placeholder="SAVE20"
+                autoCapitalize="characters"
+                spellCheck={false}
+                className="input input-bordered h-12 w-full bg-base-100 font-mono font-bold uppercase tracking-wider"
+                aria-invalid={!!errors.code}
+                {...register("code", {
+                  validate: (v, form) => form.kind === "link" || v.trim() !== "" || "Code is required",
+                })}
+              />
+            </Field>
+          ) : (
+            <Field label="Deal link" htmlFor="dealUrl" hint="The discount applies when people open this link." error={errors.dealUrl?.message}>
+              <input
+                id="dealUrl"
+                type="url"
+                inputMode="url"
+                placeholder="nike.com/sale"
+                autoComplete="off"
+                spellCheck={false}
+                className="input input-bordered h-12 w-full bg-base-100"
+                aria-invalid={!!errors.dealUrl}
+                {...register("dealUrl", { validate: (v, form) => form.kind === "code" || (dealUrlError(v) ?? true) })}
+              />
+            </Field>
+          )}
+        </div>
 
         <CouponDealFields idPrefix="new" value={deal} onChange={setDeal} showErrors={triedSubmit} />
 
@@ -240,7 +275,7 @@ const CouponForm = ({ brandMode, submitLabel, ownerName, onSubmit }: Props) => {
           </label>
         </Field>
 
-        <CouponTermsFields idPrefix="new" value={terms} onChange={setTerms} showErrors={triedSubmit} />
+        <CouponTermsFields idPrefix="new" value={terms} onChange={setTerms} showErrors={triedSubmit} hideStoreUrl={values.kind === "link"} />
 
         <Field label="Details" htmlFor="description" hint="Optional. Anything else people should know.">
           <textarea

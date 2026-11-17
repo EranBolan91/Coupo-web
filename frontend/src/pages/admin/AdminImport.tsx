@@ -1,3 +1,4 @@
+import { dealLink } from "../../logic/dealLinks";
 import { PiDownloadSimpleBold, PiTrashBold, PiUploadSimpleBold } from "react-icons/pi";
 import { checkImport, couponKey, IMPORT_COLUMNS, IMPORT_TEMPLATE } from "../../logic/bulkCoupons";
 import { getCategories, getCouponsBrands } from "../../database/databaseCalls";
@@ -35,7 +36,7 @@ const AdminImport = () => {
     return checkImport(text, {
       brands: new Map(brands.data.map((b) => [String(b.brand).toLowerCase(), b.imgURL])),
       categories: new Map(categories.data.map((c) => [c.toLowerCase(), c])),
-      existing: new Set(feed.data.map((c) => couponKey(c.name ?? "", c.code ?? ""))),
+      existing: new Set(feed.data.map((c) => couponKey(c.name ?? "", dealLink(c) || c.code || ""))),
       today: localToday(),
     });
   }, [ready, text, brands.data, categories.data, feed.data]);
@@ -110,8 +111,10 @@ const AdminImport = () => {
           <div className="max-w-3xl space-y-3 text-base-content/70">
             <p>
               Paste rows from a spreadsheet or a CSV file. The first line names the columns:{" "}
-              <span className="font-mono text-sm text-base-content">{IMPORT_COLUMNS.join(", ")}</span>. The first five columns
-              must be there, and every row needs a brand, code, discount and category. Expiry can be 2026-12-31 or
+              <span className="font-mono text-sm text-base-content">{IMPORT_COLUMNS.join(", ")}</span>. Brand, discount,
+              expiry, category and code (or dealLink) must be there, and every row needs a brand, a discount, a category and
+              either a code or a deal link. A deal link is for deals with no code, where the discount applies when you open
+              the link (leave code blank on those rows). Expiry can be 2026-12-31 or
               31/12/2026. Leave it blank or write "never" for a coupon with no expiry date. usableAt is online, in-store
               or both. Discount is a percent (20 or 20%), an amount with its currency (₪50, 50 ILS, $10) or "free
               shipping". minSpend is optional, like ₪100 (it can leave out the currency when the discount has one).
@@ -171,7 +174,7 @@ const AdminImport = () => {
                     <tr>
                       <th>Line</th>
                       <th>Brand</th>
-                      <th>Code</th>
+                      <th>Code or link</th>
                       <th>Off</th>
                       <th>Expires</th>
                       <th>Check</th>
@@ -182,7 +185,7 @@ const AdminImport = () => {
                       <tr key={row.line}>
                         <td className="text-base-content/60">{row.line}</td>
                         <td className="font-bold capitalize">{row.brand}</td>
-                        <td className="font-mono">{row.code}</td>
+                        <td className="max-w-60 truncate font-mono">{row.code}</td>
                         <td>{row.discount}</td>
                         <td className="whitespace-nowrap">{row.expiry}</td>
                         <td className="min-w-56">

@@ -9,7 +9,9 @@ export type FeedCoupon = {
   id: string;
   type: "coupon" | "socialCoupon";
   name: string;
-  code: string;
+  code: string; // "" on link coupons
+  // Link coupons (no code; the discount applies when you open the link). Missing or "" on code coupons.
+  dealUrl?: string;
   discount: number;
   // "percent" (also when missing on older coupons), "amount" or "shipping".
   discountType?: string;
@@ -198,7 +200,7 @@ const crumbsHtml = (items: [string, string][]) =>
 const couponLine = (coupon: FeedCoupon, now: number, withStore: boolean) => {
   const bits = [
     `<a href="${h(couponPagePath(coupon))}">${h(withStore ? couponTitle(coupon) : dealText(coupon) || "Coupon")}</a>`,
-    coupon.code ? `code <code>${h(oneLine(coupon.code, 60))}</code>` : "",
+    coupon.code ? `code <code>${h(oneLine(coupon.code, 60))}</code>` : coupon.dealUrl ? "no code needed (deal link)" : "",
     coupon.description ? h(oneLine(coupon.description, 140)) : "",
     coupon.expiry ? (isExpired(coupon, now) ? `expired ${shortDate(coupon.expiry)}` : `valid until ${shortDate(coupon.expiry)}`) : "",
     coupon.likes > 0 ? `worked for ${plural(coupon.likes, "person", "people")}` : "",
@@ -321,7 +323,7 @@ export const couponBody = (coupon: FeedCoupon, now: number) => {
   return wrap([
     crumbsHtml([["Coupo", "/"], ["Stores", "/stores"], [coupon.name, storePath(coupon.name)]]),
     `<h1>${h(couponTitle(coupon))}</h1>`,
-    coupon.code ? `<p>Code: <code>${h(oneLine(coupon.code, 60))}</code></p>` : "",
+    coupon.code ? `<p>Code: <code>${h(oneLine(coupon.code, 60))}</code></p>` : coupon.dealUrl ? "<p>No code needed: the discount applies through the deal link.</p>" : "",
     coupon.description ? `<p>${h(oneLine(coupon.description, 600))}</p>` : "",
     coupon.expiry ? `<p>${expired ? "Expired" : "Valid until"} ${shortDate(coupon.expiry)}.</p>` : "",
     `<p>${link(storePath(coupon.name), `All ${coupon.name} coupon codes`)}${coupon.category ? ` · ${link(categoryPath(coupon.category), `More ${coupon.category} coupons`)}` : ""}</p>`,

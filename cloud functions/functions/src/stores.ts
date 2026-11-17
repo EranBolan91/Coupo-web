@@ -18,6 +18,7 @@ export const toFeedCoupon = (id: string, type: FeedCoupon["type"], data: Firebas
   type,
   name: text(data.name).trim(),
   code: text(data.code),
+  dealUrl: text(data.dealUrl),
   discount: Number(data.discount) || 0,
   discountType: text(data.discountType) || "percent",
   currency: text(data.currency),

@@ -1,4 +1,5 @@
 import { dealText } from "../logic/discount";
+import { isLinkCoupon } from "../logic/dealLinks";
 import { getSeenNotifications, saveSeenNotifications } from "../database/notification";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getUserWishlistCoupons } from "../logic/logic";
@@ -91,7 +92,9 @@ const useNotifications = () => {
           key: `expiring-${coupon.id}`,
           kind: "expiring",
           title: `Your saved ${brand(coupon.name)} coupon ${expiresText(daysLeft(expiry!, now))}`,
-          text: `${dealText(coupon) || "Save"} with ${coupon.code}. Use it before it's gone.`,
+          text: isLinkCoupon(coupon)
+            ? `${dealText(coupon) || "Save"} with the deal link. Use it before it's gone.`
+            : `${dealText(coupon) || "Save"} with ${coupon.code}. Use it before it's gone.`,
           href: couponPath(coupon),
         })
       );

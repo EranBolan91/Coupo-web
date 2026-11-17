@@ -16,6 +16,7 @@ export const toCoupon = (
     imgUrl: values.imgUrl ?? "",
     category: values.category,
     code: values.code,
+    ...(values.dealUrl ? { dealUrl: values.dealUrl } : {}),
     ...values.deal,
     description: values.description?.trim() ?? "",
     userID: owner.userID ?? "",

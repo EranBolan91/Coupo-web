@@ -1,4 +1,5 @@
 import { dealText } from "../../../logic/discount";
+import { couponLabel, isLinkCoupon } from "../../../logic/dealLinks";
 import AdminCouponActions from "../../../components/admin/AdminCouponActions";
 import { BrandImage } from "../../coupons/components/CouponCard";
 import { couponPath } from "../../../logic/couponLinks";
@@ -21,7 +22,7 @@ const AdminCouponRow = ({ coupon, children }: { coupon: Coupon; children?: React
           <div className="min-w-0">
             <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <span className="font-display text-lg font-black capitalize">{coupon.name}</span>
-              <code className="font-mono text-sm font-bold uppercase tracking-wider">{coupon.code}</code>
+              <code className={`font-mono text-sm font-bold tracking-wider ${isLinkCoupon(coupon) ? "" : "uppercase"}`}>{couponLabel(coupon)}</code>
               <span className="text-sm font-bold">{dealText(coupon) || "No discount"}</span>
             </p>
             <p className="mt-0.5 text-sm text-base-content/60">

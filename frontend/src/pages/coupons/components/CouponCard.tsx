@@ -3,13 +3,14 @@ import { motion, useAnimationControls, useReducedMotion } from "motion/react";
 import { track } from "../../../analytics";
 import WishlistButton from "../../../components/wishlistButton/WishlistButton";
 import ShareCouponButton from "../../../components/coupons/ShareCouponButton";
-import { PiArrowSquareOutBold, PiCheckBold, PiCheckCircleFill, PiCopyBold, PiWarningCircleFill, PiXBold } from "react-icons/pi";
+import { PiArrowSquareOutBold, PiArrowUpRightBold, PiCheckBold, PiLinkBold, PiCheckCircleFill, PiCopyBold, PiWarningCircleFill, PiXBold } from "react-icons/pi";
 import { VotingCouponsContext } from "../../../context/VotingContext";
 import { useCurrentUser } from "../../../hooks/useCurrentUser";
 import { latestResult, resultLabel } from "../../../logic/couponResults";
 import { shopHost, shopLink, termLabels } from "../../../logic/couponTerms";
 import { Coupon } from "../../../types/CouponType";
 import { couponPath } from "../../../logic/couponLinks";
+import { dealLink, dealHost } from "../../../logic/dealLinks";
 import { sharerPath } from "../../../logic/sharers";
 import { recordCopy } from "../../../database/sharerStats";
 import { Link } from "react-router-dom";
@@ -64,7 +65,9 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
   const reduceMotion = useReducedMotion();
   const shown = preview ? coupon : currentCoupon;
   const isExpired = (shown.expiry?.toMillis?.() ?? Infinity) < Date.now();
-  const shopUrl = shopLink(shown);
+  // Link coupons have a "Get deal" link instead of a code, and no separate shop link.
+  const dealUrl = dealLink(shown);
+  const shopUrl = dealUrl ? undefined : shopLink(shown);
   const terms = termLabels(shown);
   const tagText = tagParts(shown);
   const result = latestResult(shown);
@@ -83,6 +86,22 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
     }
   };
 
+  const swingTag = async () => {
+    if (reduceMotion) return;
+    await tag.start({ rotate: 14, transition: { duration: 0.12, ease: "easeOut" } });
+    tag.start({ rotate: 0, transition: { type: "spring", stiffness: 380, damping: 7 } });
+  };
+
+  // Opening a deal link counts like copying a code: points for the sharer and "Did it work?".
+  const openDeal = () => {
+    track("open_deal", { coupon_type: shown.type, brand: shown.name, signed_in: !!userDocument });
+    if (userDocument) {
+      setAskResult(true);
+      if (shown.id && shown.userID !== userDocument.userUID) recordCopy(userDocument.userUID, shown.id);
+    }
+    swingTag();
+  };
+
   const copyCode = async () => {
     try {
       await navigator.clipboard.writeText(shown.code);
@@ -94,16 +113,7 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
         if (shown.id && shown.userID !== userDocument.userUID) recordCopy(userDocument.userUID, shown.id);
       }
       toast.success(`Copied ${shown.code}`);
-      if (!reduceMotion) {
-        await tag.start({
-          rotate: 14,
-          transition: { duration: 0.12, ease: "easeOut" },
-        });
-        tag.start({
-          rotate: 0,
-          transition: { type: "spring", stiffness: 380, damping: 7 },
-        });
-      }
+      await swingTag();
       setTimeout(() => setCopied(false), 1600);
     } catch {
       toast.error("Couldn't copy the code");
@@ -181,6 +191,30 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
           </p>
         )}
 
+        {dealUrl ? (
+          <div className="mt-auto flex items-center gap-2">
+            <span
+              className="flex min-w-0 flex-1 items-center gap-2 rounded-btn border-2 border-dashed border-primary/35 bg-primary/5 px-4 py-2 text-[0.95rem] font-bold text-base-content"
+              title={dealHost(shown)}
+            >
+              <PiLinkBold className="size-4 shrink-0 text-accent" aria-hidden />
+              <span className="truncate">No code needed</span>
+            </span>
+            {!preview && (
+              <a
+                href={dealUrl}
+                target="_blank"
+                rel="noopener noreferrer nofollow"
+                onClick={openDeal}
+                className="btn btn-primary h-11 min-h-11 shrink-0 px-5"
+                aria-label={`Get deal at ${dealHost(shown)} (opens in a new tab)`}
+              >
+                Get deal
+                <PiArrowUpRightBold className="size-4" aria-hidden />
+              </a>
+            )}
+          </div>
+        ) : (
         <div className="mt-auto flex items-center gap-2">
           <code className="min-w-0 flex-1 truncate rounded-btn border-2 border-dashed border-primary/35 bg-primary/5 px-4 py-2 font-mono text-[0.95rem] font-bold uppercase tracking-wider text-base-content">
             {shown.code || "CODE"}
@@ -197,9 +231,10 @@ export default function CouponCard({ coupon, innerRef, preview = false }: Props)
             </button>
           )}
         </div>
+        )}
 
         {askResult && (
-          <div className="flex items-center gap-2 rounded-btn bg-base-200 py-1 pl-4 pr-1" role="group" aria-label="Did the code work?">
+          <div className="flex items-center gap-2 rounded-btn bg-base-200 py-1 pl-4 pr-1" role="group" aria-label={dealUrl ? "Did the deal work?" : "Did the code work?"}>
             <span className="flex-1 whitespace-nowrap text-sm font-bold">Did it work?</span>
             <button type="button" className="btn btn-primary btn-sm h-9 min-h-9 px-3" disabled={savingResult} onClick={() => answer(true)}>
               Yes
