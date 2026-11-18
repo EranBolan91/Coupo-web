@@ -16,6 +16,7 @@ import {
   Timestamp,
   orderBy,
   serverTimestamp,
+  SetOptions,
 } from "firebase/firestore";
 import { ref, uploadBytesResumable } from "firebase/storage";
 
@@ -189,9 +190,9 @@ export const updateCoupon = async (
   });
 };
 
-export const saveUserToDatabase = async (user: UserDocument) => {
+export const saveUserToDatabase = async (user: UserDocument, options: SetOptions = {}) => {
   const ref = doc(db, `${collectionsList.users}/${user.userUID}`);
-  await setDoc(ref, user);
+  await setDoc(ref, user, options);
 };
 
 export const getUserDetails = async (userUID: string): Promise<UserDocument | null> => {

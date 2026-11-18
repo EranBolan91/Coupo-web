@@ -7,7 +7,7 @@ import { FieldValue, Timestamp } from "firebase-admin/firestore";
 import { UserRecord } from "firebase-admin/auth";
 import { Storage } from "@google-cloud/storage";
 import * as functions from "firebase-functions";
-import { Coupon, CurrentUser } from "./types";
+import { Coupon } from "./types";
 import { SITE_URL, injectPreview, isPreviewBot, parseCouponPath, previewTags } from "./couponPreview";
 import { StatsChange, applyChange } from "./sharerPoints";
 
@@ -23,26 +23,62 @@ const storage = new Storage();
 // Coupon types: the owner's subcollection under UserCoupons/{uid} has the same name as the public collection.
 const couponCollections = [collectionsList.coupons, collectionsList.socialCoupons];
 
-export const createNewUserInUsersCollection = functions.auth.user().onCreate((user: UserRecord) => {
-  if (user.providerData[0]?.providerId !== "password") {
-    const newUser: CurrentUser = {
-      userUID: user.uid,
-      firstName: user?.displayName?.split(" ")[0] ?? "",
-      lastName: user?.displayName?.split(" ")[1] ?? "",
-      email: user.email ?? "",
-      isEmailVerified: user.emailVerified,
-      imageURL: user.photoURL ?? "",
-      lastLogin: user.metadata.creationTime,
-      creationDate: Timestamp.fromDate(new Date(user.metadata.creationTime)),
-      birthday: undefined,
-    };
-    return admin
-      .firestore()
-      .collection(collectionsList.users)
-      .doc(user.uid)
-      .set({ ...newUser }, { ignoreUndefinedProperties: true } as admin.firestore.SetOptions);
+// Users/{uid} for someone who signed in with Google (or another non-password provider).
+// Every field must be defined: the Admin SDK rejects `undefined` values, and an earlier version
+// passed `birthday: undefined`, so the write threw and Google users never got a Users doc.
+const usersDocFromAuth = (user: UserRecord) => {
+  const [firstName = "", ...lastNames] = (user.displayName ?? "").trim().split(/\s+/);
+  const created = Timestamp.fromDate(new Date(user.metadata.creationTime));
+  const lastSignIn = user.metadata.lastSignInTime ? Timestamp.fromDate(new Date(user.metadata.lastSignInTime)) : created;
+  return {
+    userUID: user.uid,
+    firstName,
+    lastName: lastNames.join(" "),
+    email: user.email ?? "",
+    isEmailVerified: user.emailVerified,
+    imageURL: user.photoURL ?? "",
+    lastLogin: lastSignIn,
+    creationDate: created,
+  };
+};
+
+const signedUpWithPassword = (user: UserRecord) => user.providerData.some((p) => p.providerId === "password");
+
+// Email sign-ups write their own Users doc from the browser (with the name and birthday from the form).
+export const createNewUserInUsersCollection = functions.auth.user().onCreate(async (user: UserRecord) => {
+  if (signedUpWithPassword(user)) return null;
+  try {
+    // create() never overwrites: the browser may have already saved the doc on first load.
+    await admin.firestore().collection(collectionsList.users).doc(user.uid).create(usersDocFromAuth(user));
+  } catch (error) {
+    if ((error as { code?: number }).code !== 6 /* ALREADY_EXISTS */) throw error;
   }
   return null;
+});
+
+// Admin button on /admin/users: adds a Users doc for every Firebase Auth account that doesn't have one
+// (e.g. Google users who signed up while the trigger above was broken). Never changes existing docs.
+export const syncUsersFromAuth = functions.https.onCall(async (_data, context) => {
+  if (context.auth?.token.admin !== true) {
+    throw new functions.https.HttpsError("permission-denied", "Admins only");
+  }
+  const users = admin.firestore().collection(collectionsList.users);
+  let added = 0;
+  let pageToken: string | undefined;
+  do {
+    const page = await admin.auth().listUsers(1000, pageToken);
+    const refs = page.users.map((u) => users.doc(u.uid));
+    const existing = refs.length ? await admin.firestore().getAll(...refs) : [];
+    const batch = admin.firestore().batch();
+    page.users.forEach((u, i) => {
+      if (existing[i].exists) return;
+      batch.create(refs[i], usersDocFromAuth(u));
+      added++;
+    });
+    await batch.commit();
+    pageToken = page.pageToken;
+  } while (pageToken);
+  return { added };
 });
 
 export const addUserCouponToCouponsCollection = functions.firestore
